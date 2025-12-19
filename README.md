@@ -24,11 +24,12 @@ Whether you are building a smart chatbot, an automated alert system, or a workfl
 ## 📦 Installation
 
 ```bash
-pip install tweakio-whatsapp
+pip install tweakio-SDK
 ```
 
 _Note: Requires Python 3.8+_
 
+_Currently we are supporting Whatsapp Web but in future we will add more support to different platforms_
 ---
 
 ## ⚡ Quick Start
