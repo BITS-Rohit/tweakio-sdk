@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tweakio-SDK",
-    version="0.1.3",
+    version="0.1.4",
     description="High-performance, anti-detection WhatsApp automation SDK. Features async SQLite storage, rate limiting, and human-like interaction loops.",
     author="Rohit",
     author_email="",  # Update with actual email if known, else leave blank or placeholder

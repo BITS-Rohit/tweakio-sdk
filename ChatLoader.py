@@ -1,9 +1,10 @@
 """
 Chat Class for the whatsapp module
 """
-import asyncio
 import random
-from typing import Dict, Union, Optional
+import time
+from dataclasses import dataclass, field
+from typing import Union, Optional, List
 
 from playwright.async_api import Page, Locator, ElementHandle
 
@@ -12,7 +13,21 @@ from Errors import ChatsNotFound
 from Shared_Resources import logger
 
 
-async def _is_Unread(chat: Union[ElementHandle, Locator]) -> int:
+@dataclass
+class Chat:
+    """Chat class with metadata packed"""
+    ChatUI: Union[ElementHandle, Locator]
+    name: Optional[str] = field(default="")
+    count: Optional[int] = field(default_factory=0)
+    System_Hit_Time: float = field(default_factory=time.time)
+    ID: Optional[str] = field(default=None)
+
+    @staticmethod
+    def _chat_key(chat: Chat) -> str:
+        return str(id(chat))
+
+
+async def _is_Unread(chat: Chat) -> int:
     """
     Returns:
       1 → chat has actual unread messages (numeric badge),
@@ -20,8 +35,8 @@ async def _is_Unread(chat: Union[ElementHandle, Locator]) -> int:
      -1 → error occurred
     """
     try:
-        if isinstance(chat, Locator):
-            chat = await chat.element_handle(timeout=1000)
+        chat: ElementHandle = await chat.ChatUI.element_handle(timeout=1000) \
+            if isinstance(chat.ChatUI, Locator) else chat.ChatUI
         if not chat:
             return 0
 
@@ -46,65 +61,63 @@ class ChatLoader:
     """
 
     def __init__(self, page: Page):
-        # self.chats = {}
         self.page = page
-        self.totalChats = 0
-        self.ChatMap: Dict[str, Locator] = {}
-        self.ID = 1
 
-    async def _GetChat_ID(self) -> str:
-        ChatID = f"M{self.ID}"
-        self.ID += 1
-        return ChatID
+    @staticmethod
+    async def _getWrappedChat(Max: int, page: Page) -> List["Chat"]:
+        """Wraps the chats and return the list to fetcher"""
+        try:
+            chats = sc.chat_items(page)
+            wrapped: List["Chat"] = []
+            retry = 0
+            while not (await chats.count()) and retry < 3:
+                chats = sc.chat_items(page)
+                await page.wait_for_timeout(1000)
+                retry += 1
 
-    async def ChatRoller(
-            self,
-            cycle: int,
-            MaxChat: int = 5,
-            PollingTime: float = 1.0):
+            if not (await chats.count()): return wrapped
+
+            minimum = min(await chats.count(), Max)
+            for i in range(minimum):
+                wrapperChat = Chat(
+                    ChatUI=chats.nth(i),
+                    name=await sc.getChatName(chats.nth(i))
+                )
+                wrapperChat.ID = Chat._chat_key(wrapperChat)
+                wrapped.append(wrapperChat)
+
+            return wrapped
+        except Exception as e:
+            logger.error(f"[ChatLoader -> _getWrappedChat] Error: {e}", exc_info=True)
+
+    async def Fetcher(self, MaxChat: int = 5):
         """
         Generator that yields chat elements and names.
-
         :param MaxChat: Max number of chats to process per iteration.
-        :param cycle: Number of cycles to run (0 = infinite)
-        :param PollingTime: Wait time between cycles
         """
-        page = self.page
         try:
-            count = 0
-            while True:
-
-                chats = sc.chat_items(page)
-                n_chats = await chats.count()
-
-                if n_chats == 0:
-                    await page.wait_for_timeout(1000)
-                    n_chats = await chats.count()
-                    if n_chats == 0:
-                        raise ChatsNotFound("No chats found in chat list during iteration")
-
-                n = min(n_chats, MaxChat)
-                for i in range(n):
-                    chat = chats.nth(i)
-                    name = await sc.getChatName(chat)
-                    yield chat, name
-
-                count += 1
-                if cycle != 0 and count >= cycle:
-                    break
-                await asyncio.sleep(PollingTime)
+            chatList = await ChatLoader._getWrappedChat(MaxChat, self.page)
+            if not chatList:
+                logger.error(f"Chat not found.")
+                raise ChatsNotFound("No chats found in chat list during iteration")
+            
+            for chat in chatList:
+                yield chat, chat.name
 
         except Exception as e:
             logger.critical(f"[ChatLoader] Error: {e}", exc_info=True)
 
     @staticmethod
-    async def isUnread(chat: ElementHandle) -> Optional[bool]:
+    async def isUnread(chat: Chat) -> Optional[bool]:
         """
         Checks if the chat is unread or not.
         :param chat:
         :return:
         """
-        i = await _is_Unread(chat=chat) == 1
+        chat_handle: ElementHandle = await chat.ChatUI.element_handle(timeout=1000) \
+            if isinstance(chat.ChatUI, Locator) else chat.ChatUI
+
+        i = await _is_Unread(chat=chat)
         if i == 1:
             return True
         elif i == 0:
@@ -113,30 +126,32 @@ class ChatLoader:
             return False
 
     @staticmethod
-    async def ChatClicker(chat: Union[ElementHandle, Locator]) -> None:
+    async def ChatClicker(chat: Chat) -> None:
         """
         clicks the chats with the correct timeout
         :param chat:
         """
-        await chat.click(timeout=3500)
+        chat_handle: ElementHandle = await chat.ChatUI.element_handle(timeout=1000) \
+            if isinstance(chat.ChatUI, Locator) else chat.ChatUI
+        await chat_handle.click(timeout=3500)
 
-    async def Do_Unread(self, chat: Union[ElementHandle, Locator]) -> None:
+    async def Do_Unread(self, chat: Chat) -> None:
         """
         Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'.
         If already unread, logs info instead of failing.
         """
         try:
-            page : Page = self.page
+            chat_handle: ElementHandle = await chat.ChatUI.element_handle(timeout=1000) \
+                if isinstance(chat.ChatUI, Locator) else chat.ChatUI
+            page: Page = self.page
 
-            if isinstance(chat, Locator):
-                chat = await chat.element_handle(timeout=1000)
-            if not chat:
-                print("[do_unread] Chat handle not found")
+            if not chat_handle:
+                logger.warning("[do_unread] Chat handle not found")
                 return
 
             # Right-click on chat
-            await chat.click(button="right")
-            await page.wait_for_timeout(random.uniform(1.3, 2.5))
+            await chat_handle.click(button="right")
+            await page.wait_for_timeout(random.randint(1300, 2500))  # 1.3s to 2.5s
 
             # Get the application menu as ElementHandle
             menu = await page.query_selector("role=application")
@@ -160,7 +175,7 @@ class ChatLoader:
             logger.error(f"[do_unread] Error marking unread: {e}", exc_info=True)
             # Reset by clicking WA icon if available
             try:
-                wa_icon = sc.wa_icon(page= self.page)
+                wa_icon = sc.wa_icon(page=self.page)
                 if await wa_icon.count() > 0:
                     await wa_icon.first.click()
             except Exception as e:
