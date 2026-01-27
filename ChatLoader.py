@@ -63,6 +63,7 @@ class ChatLoader:
 
     def __init__(self, page: Page):
         self.page = page
+        self.log = logger  # Production-grade instance logging
 
     @staticmethod
     async def _getWrappedChat(Max: int, page: Page) -> List[Chat]:
@@ -89,7 +90,7 @@ class ChatLoader:
 
             return wrapped
         except Exception as e:
-            logger.error(f"[ChatLoader -> _getWrappedChat] Error: {e}", exc_info=True)
+            self.log.error(f"[ChatLoader -> _getWrappedChat] Error: {e}", exc_info=True)
             return []
 
     async def Fetcher(self, MaxChat: int = 5):
@@ -100,14 +101,14 @@ class ChatLoader:
         try:
             chatList = await ChatLoader._getWrappedChat(MaxChat, self.page)
             if not chatList:
-                logger.error(f"Chat not found.")
+                self.log.error(f"Chat not found.")
                 raise ChatsNotFound("No chats found in chat list during iteration")
             
             for chat in chatList:
                 yield chat, chat.name
 
         except Exception as e:
-            logger.critical(f"[ChatLoader] Error: {e}", exc_info=True)
+            self.log.critical(f"[ChatLoader] Error: {e}", exc_info=True)
 
     @staticmethod
     async def isUnread(chat: Chat) -> Optional[bool]:
@@ -145,7 +146,7 @@ class ChatLoader:
             page: Page = self.page
 
             if not chat_handle:
-                logger.warning("[do_unread] Chat handle not found")
+                self.log.warning("[do_unread] Chat handle not found")
                 return
 
             # Right-click on chat
@@ -161,21 +162,21 @@ class ChatLoader:
             unread_option = await menu.query_selector("li >> text=/mark.*as.*unread/i")
             if unread_option:
                 await unread_option.click(timeout=random.randint(1701, 2001))
-                logger.info("[do_unread] Marked as unread ✅")
+                self.log.info("[do_unread] Marked as unread ✅")
             else:
                 # Check if already unread
                 read_option = await menu.query_selector("li >> text=/mark.*as.*read/i")
                 if read_option:
-                    logger.info("[do_unread] Chat already unread")
+                    self.log.info("[do_unread] Chat already unread")
                 else:
-                    logger.info("[do_unread] Context menu option not found ❌")
+                    self.log.info("[do_unread] Context menu option not found ❌")
 
         except Exception as e:
-            logger.error(f"[do_unread] Error marking unread: {e}", exc_info=True)
+            self.log.error(f"[do_unread] Error marking unread: {e}", exc_info=True)
             # Reset by clicking WA icon if available
             try:
                 wa_icon = sc.wa_icon(page=self.page)
                 if await wa_icon.count() > 0:
                     await wa_icon.first.click()
             except Exception as e:
-                logger.warning(f"WA Icon Error : {e}")
+                self.log.warning(f"WA Icon Error : {e}")

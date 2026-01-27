@@ -138,6 +138,9 @@ class MessageProcessor:
 
         # Persistent storage
         self.storage = SQL_Lite_Storage()
+        
+        # Production-grade instance logging
+        self.log = logger
 
     async def _wrappedMessageList(
             self,
@@ -175,7 +178,7 @@ class MessageProcessor:
                 )
             return wrapped
         except Exception as e:
-            logger.error(f"[MessageProcessor] Not  {e}", exc_info=True)
+            self.log.error(f"[MessageProcessor] Not  {e}", exc_info=True)
             return wrapped
 
     async def MessageFetcher(
@@ -199,7 +202,7 @@ class MessageProcessor:
             return self.Filter(chat, messages)
 
         except Exception as e:
-            logger.error(f"[MessageFetcher] {e}", exc_info=True)
+            self.log.error(f"[MessageFetcher] {e}", exc_info=True)
             return []
 
     def Filter(
@@ -233,7 +236,7 @@ class MessageProcessor:
 
         # Hard drop: chat deferred too long
         if state.defer_since and (now - state.defer_since) > self.LimitTime:
-            logger.warning(f"[Filter] Dropping old deferred messages for {chat_id}")
+            self.log.warning(f"[Filter] Dropping old deferred messages for {chat_id}")
             state.reset()
             return messages
 
@@ -242,7 +245,7 @@ class MessageProcessor:
             if not state.defer_since:
                 state.defer_since = now
             self.DeferQueue.put(BindChat(chat, messages, now))
-            logger.info(f"[Filter] Deferred chat {chat_id}")
+            self.log.info(f"[Filter] Deferred chat {chat_id}")
             return []
 
         # Deliver

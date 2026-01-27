@@ -40,6 +40,7 @@ class WhatsappLogin:
         self.storage_file_path = storage_file_path
         self.login_prefer = login_prefer
         self.override_login = override_login
+        self.log = logger  # Production-grade instance logging
 
     async def login(self, login_wait_time: int = 180_000, link: str = "https://web.whatsapp.com") -> bool:
         """
@@ -57,12 +58,12 @@ class WhatsappLogin:
         await self.page.wait_for_load_state("networkidle", timeout=50_000)
 
         if self.override_login is False and os.path.exists(self.storage_file_path):
-            logger.info("✅ Using saved storage state")
+            self.log.info("✅ Using saved storage state")
             return True
 
         # ------- Override ---------
         if self.override_login:
-            logger.info("Overriding login to Whatsapp Web")
+            self.log.info("Overriding login to Whatsapp Web")
             if self.storage_file_path.exists():
                 if self.storage_file_path.is_dir():
                     shutil.rmtree(self.storage_file_path)
@@ -80,7 +81,7 @@ class WhatsappLogin:
     async def _scanner_login(self, LOGIN_WAIT_TIME: int) -> Optional[bool]:
 
         canvas = sc.qr_canvas(self.page)
-        logger.info("⏳ Waiting for QR scan…")
+        self.log.info("⏳ Waiting for QR scan…")
 
         t = LOGIN_WAIT_TIME / 2
         await sc.chat_list(self.page).wait_for(timeout=t, state="visible")
@@ -90,18 +91,18 @@ class WhatsappLogin:
 
         # Todo for Screenshot for the QR, Future release
 
-        logger.info("✅ QR scan succeeded")
+        self.log.info("✅ QR scan succeeded")
         if not os.path.exists(self.storage_file_path):
             await self.page.context.storage_state(path=self.storage_file_path)
-            logger.info(f"Storage state saved to {self.storage_file_path}")
+            self.log.info(f"Storage state saved to {self.storage_file_path}")
         else:
-            logger.info(f"Storage state already exists at {self.storage_file_path}, skipping save.")
+            self.log.info(f"Storage state already exists at {self.storage_file_path}, skipping save.")
 
         return True
 
     async def _code_login(self) -> Optional[bool]:
         page: Page = self.page
-        logger.info("🔑 Starting code-based login…")
+        self.log.info("🔑 Starting code-based login…")
 
         try:
             # Click "Login with phone number" button
@@ -110,10 +111,10 @@ class WhatsappLogin:
             await btn.click(timeout=3000)
             await page.wait_for_load_state("networkidle")
         except PlaywrightTimeoutError:
-            logger.warning("⏰ Timeout waiting for login button.")
+            self.log.warning("⏰ Timeout waiting for login button.")
             return False
         except Exception as e:
-            logger.error(f"⚠️ Error clicking login button: {e}", exc_info=True)
+            self.log.error(f"⚠️ Error clicking login button: {e}", exc_info=True)
             return False
 
         # Select country
@@ -148,7 +149,7 @@ class WhatsappLogin:
                 if country_name.lower() == self.country.lower():
                     await element.click(timeout=3000)
         except Exception as e:
-            logger.error(f"⚠️ Country selection failed: {e}", exc_info=True)
+            self.log.error(f"⚠️ Country selection failed: {e}", exc_info=True)
             return False
 
         # Enter phone number
@@ -158,7 +159,7 @@ class WhatsappLogin:
             await inp.type(self.number, delay=random.randint(100, 200))
             await page.keyboard.press("Enter")
         except Exception as e:
-            logger.error(f"⚠️ Phone number input failed: {e}", exc_info=True)
+            self.log.error(f"⚠️ Phone number input failed: {e}", exc_info=True)
             return False
 
         # Retrieve login code
@@ -166,22 +167,22 @@ class WhatsappLogin:
             code_elem = page.locator("div[data-link-code]")
             await code_elem.wait_for(timeout=10_000)
             code = await code_elem.get_attribute("data-link-code")
-            logger.info(f"🔢 Received login code: {code}")
+            self.log.info(f"🔢 Received login code: {code}")
         except Exception as e:
-            logger.error(f"⚠️ Could not retrieve login code: {e}", exc_info=True)
+            self.log.error(f"⚠️ Could not retrieve login code: {e}", exc_info=True)
             return False
 
         # Wait for chats to load
         try:
-            logger.info("⏳ Waiting for chats to load…")
+            self.log.info("⏳ Waiting for chats to load…")
             await sc.chat_list(page).wait_for(timeout=180_000, state="visible")
-            logger.info("✅ Chats loaded via code login")
+            self.log.info("✅ Chats loaded via code login")
 
             # Save storage state
             await self.page.context.storage_state(path=self.storage_file_path)
-            logger.info(f"💾 Storage state saved to {self.storage_file_path}")
+            self.log.info(f"💾 Storage state saved to {self.storage_file_path}")
 
             return True
         except Exception as e:
-            logger.error(f"❌ Error waiting for chats: {e}", exc_info=True)
+            self.log.error(f"❌ Error waiting for chats: {e}", exc_info=True)
             return False
