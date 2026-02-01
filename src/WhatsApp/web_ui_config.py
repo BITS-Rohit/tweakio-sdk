@@ -7,6 +7,7 @@ Conventions:
 - Utility functions are written to extract attributes or recognize content like images, videos, or quoted messages.
 """
 import re
+import logging
 from typing import Union, Optional
 
 from playwright.async_api import ElementHandle, Locator, Page
@@ -17,15 +18,15 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 class WebSelectorConfig(WebUISelectorCapable):
     """Generic Custom Class , Different from every Platform"""
 
-    def __init__(self, page: Page) -> None:
-        super().__init__(page=page)
+    def __init__(self, page: Page, log : logging.Logger) -> None:
+        super().__init__(page=page,log=log)
         if self.page is None:
             raise ValueError("page must not be None")
 
     # Todo , Adding all the new Functions from Child to here.
     def chat_list(self) -> Locator:
         """Returns the chat list grid locator on the main UI."""
-        return page.get_by_role("grid", name=re.compile("chat list", re.I))
+        return self.page.get_by_role("grid", name=re.compile("chat list", re.I))
 
     def message_chat_panel(self) -> Locator:
         """ Gives the message container panel"""
@@ -65,16 +66,14 @@ class WebSelectorConfig(WebUISelectorCapable):
 
     async def total_chats(self) -> int:
         """Returns the total number of chats visible in the chat list."""
-        page = self.page
-        element = chat_list(page)  # await if chat_list is async
+        element = self.chat_list()
         attr = await element.get_attribute("aria-rowcount")
         return int(attr) if attr else 0
 
     def chat_items(self) -> Optional[Locator]:
         """Returns a locator for all individual chat items (buttons) in the list."""
-        page = self.page
-        row_locator = chat_list(page).get_by_role("row")
-        list_locator = chat_list(page).get_by_role("listitem")
+        row_locator = self.chat_list().get_by_role("row")
+        list_locator = self.chat_list().get_by_role("listitem")
         if row_locator:
             return row_locator
         elif list_locator:
@@ -105,7 +104,7 @@ class WebSelectorConfig(WebUISelectorCapable):
             if chat is None:
                 return ""
 
-        if await is_community(chat):
+        if await WebSelectorConfig.is_community(chat):
             spans = await chat.query_selector_all("span[title]")
             if len(spans) > 1:
                 return await spans[1].get_attribute("title") or ""
@@ -190,10 +189,10 @@ class WebSelectorConfig(WebUISelectorCapable):
         # NEW: span[data-testid="selectable-text"] OR span.copyable-text
         span = await message_element.query_selector("span[data-testid='selectable-text']")
         if not span:
-            # Fallback to class only
-            span = await message_element.inner_text()
+            # Fallback to inner_text directly if span not found
+            return await message_element.inner_text() or ""
 
-        if span and await span.is_visible():
+        if await span.is_visible():
             text = await span.text_content()
             return text or ""
         return ""
@@ -276,17 +275,12 @@ class WebSelectorConfig(WebUISelectorCapable):
                 message = await message.element_handle(timeout=1001)
             btn = await message.query_selector("button[aria-label*='reaction 👍']")
             return await btn.is_visible() if btn else False
-        except:
+        except Exception:
             return False
 
-    @staticmethod
-    async def pic_handle(message: ElementHandle) -> bool:
-        # pic = await message.query_selector(
-        #     "xpath=.//div[@role='button' and "
-        #     "translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='open picture']//img"
-        # )
-        page = self.page
-        pic = page.get_by_role("button", name=re.compile("open picture", re.I))
+    async def pic_handle(self, message: ElementHandle) -> bool:
+        """Checks if current message contains a picture."""
+        pic = self.page.get_by_role("button", name=re.compile("open picture", re.I))
         if pic and await pic.is_visible():
             return True
         pic2 = await message.query_selector("xpath=.//img[contains(@src,'data:image/')]")
@@ -354,9 +348,9 @@ class WebSelectorConfig(WebUISelectorCapable):
     async def isSticker(message: ElementHandle) -> bool:
         """Returns True if any sticker type is detected using XPath."""
         return (
-                await is_animated_sticker(message)
-                or await is_plain_sticker(message)
-                or await is_lottie_animation_sticker(message)
+                await WebSelectorConfig.is_animated_sticker(message)
+                or await WebSelectorConfig.is_plain_sticker(message)
+                or await WebSelectorConfig.is_lottie_animation_sticker(message)
         )
 
     # -------------------- Quoted Message Utilities -------------------- #
@@ -371,7 +365,8 @@ class WebSelectorConfig(WebUISelectorCapable):
     @staticmethod
     def get_QuotedText_handle(message: ElementHandle) -> str:
         """Returns the handle for the quoted-mention span inside a quoted message."""
-        return isQuotedText(message).is_visible() or ""
+        quoted = WebSelectorConfig.isQuotedText(message)
+        return quoted.is_visible() if quoted else ""
 
     # -- System -- #
 
@@ -391,7 +386,7 @@ class WebSelectorConfig(WebUISelectorCapable):
                 if await button.is_visible():
                     await button.click()
             except Exception as e:
-                print(f"[popup2] Click failed: {e}")
+                self.log.error(f"[popup2] Click failed: {e}")
 
     # ---------------------------- Message Other Option ------------------------------ #
     """

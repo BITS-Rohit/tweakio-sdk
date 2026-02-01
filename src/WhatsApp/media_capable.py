@@ -1,5 +1,4 @@
-"""WhatsApp Customized Media operations, Derived from the Media Interface"""
-
+"""WhatsApp media upload functionality."""
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +13,7 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
 class MediaCapable(MediaCapableInterface):
-    """WhatsApp media capable Obj Class"""
+    """Handles media file uploads to WhatsApp chats."""
 
     def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable) -> None:
         super().__init__(page=page, log=log, UIConfig=UIConfig)
@@ -22,9 +21,9 @@ class MediaCapable(MediaCapableInterface):
             raise ValueError("page must not be None")
 
     async def menu_clicker(self) -> None:
-        """Open WhatsApp menu for File sending selection"""
+        """Open the attachment menu."""
         try:
-            menu_icon = await self.UIConfig.plus_rounded_icon(self.page).element_handle(timeout=1000)
+            menu_icon = await self.UIConfig.plus_rounded_icon().element_handle(timeout=1000)
 
             if not menu_icon:
                 raise MenuError("Menu Locator return None/Empty / menu_clicker / MediaCapable")
@@ -33,31 +32,25 @@ class MediaCapable(MediaCapableInterface):
             await asyncio.sleep(random.uniform(1.0, 1.5))
 
         except PlaywrightTimeoutError as e:
-
-            # Revert back to the condition .
             await self.page.keyboard.press("Escape", delay=0.5)
-
             raise MediaCapableError("Time out while clicking menu") from e
 
     async def add_media(self, mtype: MediaType, file: FileTyped, **kwargs) -> bool:
-        # Open Menu
+        """Upload a media file to the current chat."""
         await self.menu_clicker()
         try:
             target = await self._getOperational(mtype=mtype)
             if not await target.is_visible(timeout=3000):
                 raise MediaCapableError("Attach option not visible")
 
-            # File option selection
-            with await self.page.expect_file_chooser() as fc:
+            async with self.page.expect_file_chooser() as fc:
                 await target.click(timeout=3000)
             chooser: FileChooser = fc.value
 
-            # file.uri , that path must be existed in the system scope and file designated should be there
             p = Path(file.uri)
             if not p.exists() or not p.is_file():
                 raise MediaCapableError(f"Invalid file path: {file.uri}")
 
-            # Set file
             await chooser.set_files(str(p.resolve()))
             self.log.debug(f" --- Sent {str(p.resolve())} , [Mtype] = [{mtype}] ")
             return True
@@ -66,14 +59,17 @@ class MediaCapable(MediaCapableInterface):
             raise MediaCapableError("Timeout while resolving media option") from e
 
         except WhatsAppError as e:
+            if isinstance(e, MediaCapableError):
+                raise e
             raise MediaCapableError("Unexpected Error in add_media") from e
 
     async def _getOperational(self, mtype: MediaType) -> Locator:
+        """Get the appropriate menu locator for the media type."""
         sc = self.UIConfig
         if mtype in (MediaType.TEXT, MediaType.IMAGE, MediaType.VIDEO):
-            return sc.photos_videos(self.page)
+            return sc.photos_videos()
 
         if mtype == MediaType.AUDIO:
-            return sc.audio(self.page)
+            return sc.audio()
 
-        return sc.document(self.page)
+        return sc.document()

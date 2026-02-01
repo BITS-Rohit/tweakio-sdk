@@ -1,8 +1,4 @@
-"""
-WhatsApp's Custom Message processor.
-It will have in Extra as incoming and outgoing Message filters ,
-
-"""
+"""WhatsApp message processor with storage and filtering support."""
 from __future__ import annotations
 
 import logging
@@ -22,6 +18,7 @@ from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 class MessageProcessor(MessageProcessorInterface):
+    """Extracts and processes messages from WhatsApp Web UI."""
 
     def __init__(
             self,
@@ -44,12 +41,7 @@ class MessageProcessor(MessageProcessorInterface):
 
     @staticmethod
     async def sort_messages(msgList: Sequence[whatsapp_message], incoming: bool) -> List[whatsapp_message]:
-        """
-        params :
-        msgList: Iterable list of WhatsApp messages.
-        Returns incoming messages sorted by direction.
-        incoming : if true gives incoming messages , else false gives outgoing messages.
-        """
+        """Filter messages by direction (incoming or outgoing)."""
         if not msgList:
             raise MessageListEmptyError("Empty list passed in sort messages.")
 
@@ -57,7 +49,7 @@ class MessageProcessor(MessageProcessorInterface):
             return [msg for msg in msgList if msg.direction == "in"]
         return [msg for msg in msgList if msg.direction == "out"]
 
-    @ensure_chat_clicked(lambda self, chat: self.ChatProcessor._click_chat(chat))
+    @ensure_chat_clicked(lambda self, chat: self.chat_processor._click_chat(chat))
     async def _get_wrapped_Messages(
             self,
             chat: whatsapp_chat,
@@ -99,7 +91,6 @@ class MessageProcessor(MessageProcessorInterface):
                         raw_data=text,
                         parent_chat=chat,
                         data_id=data_id
-                        # Todo , Adding proper Type Checking Message. [txt , ing , vid, quoted]
                     )
                 )
 
@@ -108,10 +99,17 @@ class MessageProcessor(MessageProcessorInterface):
             raise MessageProcessorError("failed to wrap messages") from e
 
     async def Fetcher(self, chat: whatsapp_chat, retry: int, *args, **kwargs) -> List[whatsapp_message]:
+        """Fetch, store, and filter messages from a chat."""
         msgList = await self._get_wrapped_Messages(chat, retry, *args, **kwargs)
 
-        if self.storage:
-            await self.storage.enqueue_insert(msgList)
+        if self.storage and msgList:
+            new_msgs = [
+                msg for msg in msgList
+                if not self.storage.check_message_if_exists(msg.message_id)
+            ]
+            if new_msgs:
+                await self.storage.enqueue_insert(new_msgs)
+                self.log.debug(f"Enqueued {len(new_msgs)}/{len(msgList)} new messages for storage.")
 
         if self.filter:
             msgList = self.filter.apply(msgList)

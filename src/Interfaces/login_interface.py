@@ -1,3 +1,4 @@
+"""Abstract base class for login handlers."""
 import logging
 from abc import ABC, abstractmethod
 
@@ -7,7 +8,7 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
 class LoginInterface(ABC):
-    """All Must Implementable functions Interface"""
+    """Base interface for authentication handlers."""
 
     def __init__(self, page: Page, UIConfig: WebUISelectorCapable, log: logging.Logger) -> None:
         self.page = page
@@ -15,8 +16,14 @@ class LoginInterface(ABC):
         self.log = log
 
     @abstractmethod
-    async def login(self, **kwargs) -> bool: ...
+    async def login(self, **kwargs) -> bool:
+        """Perform login authentication."""
+        ...
 
-    async def logout(self, **kwargs) -> bool: ...
+    async def logout(self, **kwargs) -> bool:
+        """Perform logout and cleanup."""
+        ...
 
-    async def is_login_successful(self, **kwargs) -> bool: ...
+    async def is_login_successful(self, **kwargs) -> bool:
+        """Check if login was successful."""
+        ...

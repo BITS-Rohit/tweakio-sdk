@@ -1,4 +1,4 @@
-"""Message Capable Interface , with custom metadata classes"""
+"""Abstract base class for media upload functionality."""
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -11,7 +11,7 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
 class MediaType(str, Enum):
-    """Constant Media Type to restrict it to same names & constraint."""
+    """Supported media types for upload."""
     TEXT = "text"
     IMAGE = "image"
     VIDEO = "video"
@@ -21,15 +21,15 @@ class MediaType(str, Enum):
 
 @dataclass(frozen=True)
 class FileTyped:
-    """Custom File  type for sending"""
-    uri: str  # local path or URL
+    """File metadata for media upload."""
+    uri: str
     name: str
     mime_type: Optional[str] = None
     size_bytes: Optional[int] = None
 
 
 class MediaCapableInterface(ABC):
-    """Media Capable Interface"""
+    """Base interface for media upload operations."""
 
     @abstractmethod
     def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable, **kwargs) -> None:
@@ -38,4 +38,6 @@ class MediaCapableInterface(ABC):
         self.UIConfig = UIConfig
 
     @abstractmethod
-    async def add_media(self, mtype: MediaType, file: FileTyped, **kwargs) -> bool: ...
+    async def add_media(self, mtype: MediaType, file: FileTyped, **kwargs) -> bool:
+        """Upload media file to a chat."""
+        ...

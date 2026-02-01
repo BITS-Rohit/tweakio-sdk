@@ -1,5 +1,4 @@
-"""WhatsApp Customized Reply Module"""
-
+"""WhatsApp reply functionality with message targeting."""
 from __future__ import annotations
 
 import logging
@@ -9,14 +8,16 @@ from typing import Optional
 from playwright.async_api import Page, Locator, Position
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
-from humanized_operations import HumanizedOperations
-from src.Exceptions.base import ReplyCapableError
+from src.WhatsApp.humanized_operations import HumanizedOperations
+from src.Exceptions.whatsapp import ReplyCapableError
 from src.Interfaces.reply_capable_interface import ReplyCapableInterface
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 from src.WhatsApp.DerivedTypes.Message import whatsapp_message
 
 
 class ReplyCapable(ReplyCapableInterface):
+    """Enables replying to specific WhatsApp messages."""
+
     def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable):
         super().__init__(page=page, log=log, UIConfig=UIConfig)
         if self.page is None:
@@ -29,22 +30,11 @@ class ReplyCapable(ReplyCapableInterface):
             text: Optional[str],
             **kwargs
     ) -> bool:
-        """
-        reply to the message.
-        params :
-            text : text to add while replying.
-            humanize : humanize_operation module or custom module to type humanized
-            message : target element
-
-        return True on success, False otherwise
-
-        raises :
-            Timeout error with ReplyCapableError wrapped
-        """
+        """Reply to a message with optional text."""
         try:
             await self._side_edge_click(message)
 
-            in_box = self.UIConfig.message_box(self.page)
+            in_box = self.UIConfig.message_box()
             await in_box.click(timeout=3000)
 
             text = text or ""
@@ -64,15 +54,8 @@ class ReplyCapable(ReplyCapableInterface):
             ) from e
 
     async def _side_edge_click(self, message: whatsapp_message) -> bool:
-        """
-        Clicks edges of the message based on direction.
-
-        returns True on success, False otherwise
-
-        Raises
-            - Timeout error as PlaywrightTimeoutError with ReplyCapableError wrapped
-        """
-        ui = message.MessageUI
+        """Double-click on message edge to trigger reply action."""
+        ui = message.message_ui
         try:
             if isinstance(ui, Locator):
                 ui = await ui.element_handle(timeout=1000)

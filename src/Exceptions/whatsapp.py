@@ -10,7 +10,7 @@ Hierarchy:
     ├──MediaCapableError
     └── LoginError
 """
-from base import TweakioError
+from src.Exceptions.base import TweakioError
 
 
 class WhatsAppError(TweakioError):
@@ -28,6 +28,12 @@ class ChatError(WhatsAppError):
 class ChatClickError(ChatError):
     """Click Chat Error"""
     pass
+
+
+class ChatNotFoundError(ChatError):
+    """Chat Not Found Error"""
+    pass
+
 
 
 class ChatListEmptyError(ChatError):

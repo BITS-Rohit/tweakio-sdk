@@ -1,4 +1,4 @@
-"""Message Processor Interface Must be implemented by every Message Processor implementation."""
+"""Abstract base class for message processors."""
 from __future__ import annotations
 
 import logging
@@ -8,16 +8,14 @@ from typing import List, Optional
 from playwright.async_api import Page
 
 from src.Interfaces.storage_interface import StorageInterface
-from message_interface import MessageInterface
+from src.Interfaces.message_interface import MessageInterface
 from src.FIlter.message_filter import MessageFilter
 from src.Interfaces.chat_interface import ChatInterface
 from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 class MessageProcessorInterface(ABC):
-    """
-    Message Processor Interface for Messages
-    """
+    """Base interface for message extraction and processing."""
 
     def __init__(
             self,
@@ -34,7 +32,11 @@ class MessageProcessorInterface(ABC):
         self.UIConfig = UIConfig
 
     @abstractmethod
-    async def _get_wrapped_Messages(self, retry: int, *args, **kwargs) -> List[MessageInterface]: ...
+    async def _get_wrapped_Messages(self, retry: int, *args, **kwargs) -> List[MessageInterface]:
+        """Extract and wrap messages from UI elements."""
+        ...
 
     @abstractmethod
-    async def Fetcher(self, chat: ChatInterface, retry: int, *args, **kwargs) -> List[MessageInterface]: ...
+    async def Fetcher(self, chat: ChatInterface, retry: int, *args, **kwargs) -> List[MessageInterface]:
+        """Fetch messages from a chat with storage and filtering."""
+        ...

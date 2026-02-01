@@ -1,5 +1,4 @@
-"""Every Reply must implement a ReplyCapable interface"""
-
+"""Abstract base class for reply functionality."""
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -12,7 +11,7 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
 class ReplyCapableInterface(ABC):
-    """AAbstract class to represent ReplyCapable interface"""
+    """Base interface for message reply operations."""
 
     def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable, **kwargs) -> None:
         self.page = page
@@ -26,4 +25,6 @@ class ReplyCapableInterface(ABC):
             humanize: HumanizeOperation,
             text: Optional[str],
             **kwargs
-    ) -> bool: ...
+    ) -> bool:
+        """Send a reply to a message."""
+        ...

@@ -1,6 +1,7 @@
 """
 Browser Manager Class for whatsapp Module
 """
+import json
 import os
 import pickle
 import shutil

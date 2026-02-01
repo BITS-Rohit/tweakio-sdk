@@ -1,9 +1,11 @@
+"""WhatsApp Web login handler supporting QR and phone number authentication."""
 from __future__ import annotations
 
 import asyncio
 import logging
 import random
 import re
+import shutil
 from pathlib import Path
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
@@ -15,7 +17,7 @@ from src.WhatsApp.web_ui_config import WebSelectorConfig
 
 
 class Login(LoginInterface):
-    """WhatsApp Web Login Handler (QR / Code Based)"""
+    """Handles WhatsApp Web authentication via QR code or phone number."""
 
     def __init__(
             self,
@@ -23,86 +25,44 @@ class Login(LoginInterface):
             UIConfig: WebSelectorConfig,
             log: logging.Logger
     ) -> None:
-        super().__init__(page=page, UIConfig=UIConfig, log=log)
         if page is None:
             raise ValueError("page must not be None")
 
-    async def is_login_successful(self) -> bool:
-        # Will be implemented later
-        return False
+        super().__init__(page=page, UIConfig=UIConfig, log=log)
+        self.UIConfig: WebSelectorConfig = UIConfig
+
+    async def is_login_successful(self, **kwargs) -> bool:
+        """Verify if login was successful by checking for chat list visibility."""
+        timeout: int = kwargs.get("timeout", 10_000)
+        chats = self.UIConfig.chat_list()
+        try:
+            await chats.wait_for(timeout=timeout, state="visible")
+            return True
+        except PlaywrightTimeoutError as e:
+            raise TimeoutError("Timeout while checking for chat list.") from e
 
     async def login(self, **kwargs) -> bool:
         """
-        This is Login File for WhatsApp.
+        Authenticate to WhatsApp Web.
 
-        Login to WhatsApp Web supports two authentication routes:
-
-        1) QR-Based Login
-            - Requires scanning a QR code from a mobile device.
-            - Used when login_prefer = 0.
-
-        2) Code-Based Login
-            - Login using phone number and country selection.
-            - A temporary login code is generated on the screen.
-            - Used when login_prefer = 1 (default).
-
-        Parameters:
-        -----------
-        number:
-            Phone number for the WhatsApp account.
-            Example: 983283xxxx (country code included separately)
-
-        country:
-            Country name of the phone number.
-            Example: India, india, Japan
-
-        login_prefer:
-            0 → QR-based login
-            1 → Code-based login (default)
-
-        page:
-            Playwright Page object.
-            Must be created before invoking login.
-
-        storage_file_path:
-            Path to browser storage state.
-            Used to persist login session (cookies, local storage).
-
-        override_login:
-            If False:
-                Uses existing storage file if present.
-            If True:
-                Forces fresh login and deletes old storage state.
-
-        Behavior:
-        ---------
-        - Navigates to https://web.whatsapp.com
-            - If storage state exists and override_login is False:
-                Login is skipped.
-            - Otherwise:
-                Performs login based on selected method.
-            - On successful login:
-                Storage state is saved for future reuse.
-
-        Returns:
-        --------
-        True  → Login successful
-        False → Login failed in controlled scenarios
-        Raises specific exceptions for invalid states.
+        Args:
+            method: 0 for QR, 1 for phone number (default: 1)
+            wait_time: Timeout for QR scan in ms (default: 180_000)
+            url: WhatsApp Web URL
+            number: Phone number for code-based login
+            country: Country name for phone login
+            save_path: Path to store session state
         """
-
-        method: int | None = kwargs.get("method")
+        method: int = kwargs.get("method", 1)
         wait_time: int = kwargs.get("wait_time", 180_000)
-        link: str  = kwargs.get("url") or "https://web.whatsapp.com"
+        link: str = kwargs.get("url", "https://web.whatsapp.com")
         number: int | None = kwargs.get("number")
         country: str | None = kwargs.get("country")
-        save_path: Path = kwargs.get("save_path", dirs.storage_state_file)
+        save_path: Path = Path(kwargs.get("save_path", dirs.storage_state_file))
 
         try:
             await self.page.goto(link, timeout=60_000)
             await self.page.wait_for_load_state("networkidle", timeout=50_000)
-
-            # Todo , check if the given link is correct or not .
         except PlaywrightTimeoutError as e:
             raise LoginError("Timeout while loading WhatsApp Web") from e
 
@@ -111,13 +71,21 @@ class Login(LoginInterface):
             return True
 
         if method == 0:
-            return await self.__qr_login(wait_time)
-        if method == 1:
-            return await self.__code_login(number, country)
+            success = await self.__qr_login(wait_time)
+        elif method == 1:
+            success = await self.__code_login(number, country)
+        else:
+            raise LoginError("Invalid login method. Use method=0 (QR) or method=1 (Code).")
 
-        raise LoginError("Invalid login method. Use method=0 (QR) or method=1 (Code).")
+        if success:
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            await self.page.context.storage_state(path=save_path)
+            self.log.info("WhatsApp login session stored successfully.")
+
+        return success
 
     async def __qr_login(self, wait_time: int) -> bool:
+        """Wait for user to scan QR code."""
         canvas = self.UIConfig.qr_canvas()
         self.log.info("Waiting for QR scan (%s seconds)...", wait_time // 1000)
 
@@ -133,6 +101,7 @@ class Login(LoginInterface):
             raise LoginError("QR login timeout.") from e
 
     async def __code_login(self, number: int | None, country: str | None) -> bool:
+        """Perform phone number based login with linking code."""
         if not number or not country:
             raise LoginError("Both number and country are required for code login.")
 
@@ -151,7 +120,6 @@ class Login(LoginInterface):
         except PlaywrightTimeoutError as e:
             raise LoginError("Failed to open phone login screen.") from e
 
-        # Country selection
         ctl = self.page.locator("button:has(span[data-icon='chevron'])")
         if await ctl.count() == 0:
             raise LoginError("Country selector not found.")
@@ -167,11 +135,13 @@ class Login(LoginInterface):
         def normalize(name: str) -> str:
             return "".join(c for c in name if c.isalpha() or c.isspace()).lower().strip()
 
+        target_country = normalize(country)
         selected = False
+
         for i in range(await countries.count()):
             el = countries.nth(i)
             name = normalize(await el.inner_text())
-            if name == country.lower():
+            if name == target_country:
                 await el.click(timeout=3000)
                 selected = True
                 break
@@ -179,7 +149,6 @@ class Login(LoginInterface):
         if not selected:
             raise LoginError(f"Country '{country}' not selectable.")
 
-        # Phone number
         inp = self.page.locator("form >> input")
         if await inp.count() == 0:
             raise LoginError("Phone number input not found.")
@@ -187,7 +156,6 @@ class Login(LoginInterface):
         await inp.type(str(number), delay=random.randint(80, 120))
         await self.page.keyboard.press("Enter")
 
-        # Login code
         code_el = self.page.locator("div[data-link-code]")
         try:
             await code_el.wait_for(timeout=10_000)
@@ -200,6 +168,24 @@ class Login(LoginInterface):
 
         return True
 
-    async def logout(self, **kwargs) -> bool:
-        # Will be implemented later
-        return False
+    async def logout(self, state_dir: str) -> bool:
+        """Clear session data from the specified directory."""
+        try:
+            path = Path(state_dir)
+
+            if not path.exists() or not path.is_dir():
+                self.log.warning(f"Logout skipped: invalid path {state_dir}")
+                return False
+
+            for item in path.iterdir():
+                if item.is_file() or item.is_symlink():
+                    item.unlink()
+                elif item.is_dir():
+                    shutil.rmtree(item)
+
+            self.log.info(f"Logout cleanup successful for {state_dir}")
+            return True
+
+        except Exception as e:
+            self.log.error(f"Logout cleanup failed: {e}", exc_info=True)
+            return False

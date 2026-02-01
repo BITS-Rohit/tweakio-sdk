@@ -1,14 +1,25 @@
 """Tweakio SDK Exceptions Package"""
 from src.Exceptions.base import (
     TweakioError,
+    AuthenticationError,
+    ElementNotFoundError,
+    HumanizedOperationError,
+)
+from src.Exceptions.whatsapp import (
     ChatError,
     ChatNotFoundError,
     ChatClickError,
+    ChatUnreadError,
+    ChatProcessorError,
     MessageError,
     MessageNotFoundError,
-    MessageDataError,
-    AuthenticationError,
-    QRNotScannedError,
+    MessageListEmptyError,
+    WhatsAppError,
+    LoginError,
+    ReplyCapableError,
+    MediaCapableError,
+    MenuError,
+    MessageProcessorError,
 )
 
 __all__ = [
@@ -16,9 +27,18 @@ __all__ = [
     "ChatError",
     "ChatNotFoundError",
     "ChatClickError",
+    "ChatUnreadError",
+    "ChatProcessorError",
     "MessageError",
     "MessageNotFoundError",
-    "MessageDataError",
+    "MessageListEmptyError",
     "AuthenticationError",
-    "QRNotScannedError",
+    "WhatsAppError",
+    "LoginError",
+    "ReplyCapableError",
+    "MediaCapableError",
+    "MenuError",
+    "MessageProcessorError",
+    "ElementNotFoundError",
+    "HumanizedOperationError",
 ]
