@@ -179,6 +179,102 @@ tweakio-sdk/
 
 ---
 
+## 📖 API Reference
+
+### BrowserManager
+
+```python
+from src.BrowserManager import BrowserManager
+
+browser = BrowserManager(
+    headless=False,              # Show browser UI
+    locale="en-US",              # Browser locale
+    enable_cache=True,           # Enable browser caching
+    addons=["path/to/addon"],    # Browser extensions
+    override_fingerprint=False,  # Force new fingerprint
+    debug_fingerprint=False,     # Save fingerprint JSON for debugging
+)
+
+# Get browser instance
+context = await browser.getInstance()  # Returns BrowserContext
+
+# Get a page
+page = await browser.getPage()  # Returns Page (blank or new)
+
+# Cleanup
+await browser.CloseBrowser()
+```
+
+### Login
+
+```python
+from src.WhatsApp.login import Login
+
+login = Login(page=page, UIConfig=ui_config, log=logger)
+
+# Login with QR code (saves session)
+await login.login(save_path="./session.json")
+
+# Check login status
+is_logged = await login.is_login_successful()
+```
+
+### ChatProcessor
+
+```python
+from src.WhatsApp.chat_processor import ChatProcessor
+
+processor = ChatProcessor(page=page, UIConfig=ui_config, log=logger)
+
+# Async iterate over chats
+async for chat, name in processor.Fetcher(MaxChat=10):
+    print(f"Chat: {name}")
+    # chat is a whatsapp_chat dataclass
+```
+
+### MessageProcessor
+
+```python
+from src.WhatsApp.message_processor import MessageProcessor
+
+msg_processor = MessageProcessor(
+    page=page,
+    UIConfig=ui_config,
+    chat_processor=chat_processor,
+    log=logger,
+    storage_obj=storage,   # Optional: auto-save messages
+    filter_obj=filter,     # Optional: filter messages
+)
+
+# Fetch messages from a chat
+messages = await msg_processor.Fetcher(chat=chat, retry=3)
+
+# Filter by direction
+incoming = await msg_processor.sort_messages(messages, incoming=True)
+outgoing = await msg_processor.sort_messages(messages, incoming=False)
+```
+
+### SQLITE_DB Storage
+
+```python
+from src.StorageDB.sqlite_db import SQLITE_DB
+
+queue = asyncio.Queue()
+async with SQLITE_DB(queue=queue, log=logger, db_path="messages.db") as storage:
+    # Storage automatically handles:
+    # - Table creation
+    # - Background batch writes
+    # - Deduplication
+    
+    # Check if message exists
+    exists = storage.check_message_if_exists(msg_id)
+    
+    # Get all messages
+    all_msgs = storage.get_all_messages()
+```
+
+---
+
 ## 🛠️ How It Works
 
 ### Message Processing Flow

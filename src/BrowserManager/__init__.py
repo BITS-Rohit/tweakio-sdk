@@ -7,7 +7,7 @@ import pickle
 import shutil
 from dataclasses import asdict
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import camoufox.exceptions
 from browserforge.fingerprints import FingerprintGenerator
@@ -79,17 +79,17 @@ class BrowserManager:
 
     def __init__(
             self,
-            addons=None,
+            addons: Optional[List[str]] = None,
             cache_dir_path: Path = dirs.cache_dir,
             override_cookies: bool = False,
             headless: bool = False,
             locale: str = "en-US",
             enable_cache: bool = True,
-            fingerprint=None,
+            fingerprint: Optional[Any] = None,
             override_fingerprint: bool = False,
             debug_fingerprint: bool = False,
             debug_fingerprint_json_path: Path = dirs.fingerprint_debug_json,
-    ):
+    ) -> None:
 
         if override_cookies:
             shutil.rmtree(cache_dir_path) if os.path.exists(cache_dir_path) else None
