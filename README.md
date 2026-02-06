@@ -62,7 +62,7 @@ playwright install chromium
 
 ```python
 import asyncio
-from BrowserManager import BrowserManager
+from src.BrowserManager import BrowserManager
 from src.WhatsApp.login import Login
 from src.WhatsApp.chat_processor import ChatProcessor
 from src.WhatsApp.web_ui_config import WebSelectorConfig
@@ -92,7 +92,7 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from BrowserManager import BrowserManager
+from src.BrowserManager import BrowserManager
 from src.WhatsApp.login import Login
 from src.WhatsApp.chat_processor import ChatProcessor
 from src.WhatsApp.message_processor import MessageProcessor
