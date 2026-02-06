@@ -16,6 +16,7 @@ from playwright.async_api import BrowserContext, Page
 
 import directory as dirs
 from Custom_logger import logger
+from src.browser_logger import browser_logger
 
 
 class BrowserManager:
@@ -130,18 +131,18 @@ class BrowserManager:
 
             # Force new fingerprint if override is enabled
             if self.override_fingerprint:
-                logger.info("♻️ Override enabled. Generating a fresh fingerprint...")
+                browser_logger.info("♻️ Override enabled. Generating a fresh fingerprint...")
                 fg = None
 
             # Try loading existing fingerprint if override not set
             if fg is None and not self.override_fingerprint and path.exists():
-                logger.info("📦 Loading existing fingerprint from file...")
+                browser_logger.info("📦 Loading existing fingerprint from file...")
                 with open(path, 'rb') as fh:
                     fg = pickle.load(fh)
 
             # Generate new fingerprint if none found or override=True
             if fg is None:
-                logger.info("🧬 Generating new fingerprint...")
+                browser_logger.info("🧬 Generating new fingerprint...")
                 gen = FingerprintGenerator()
                 real_w, real_h = get_screen_size()
                 tolerance = 0.1  # 10% tolerance
@@ -153,27 +154,27 @@ class BrowserManager:
                     attempt += 1
 
                     if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
-                        logger.info(f"✅ Fingerprint screen OK: {w}x{h}")
+                        browser_logger.info(f"✅ Fingerprint screen OK: {w}x{h}")
                         break
 
-                    logger.warning(
+                    browser_logger.warning(
                         f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
                     )
                     if attempt >= 10:
-                        logger.error("⚠️ Could not get matching fingerprint after 10 attempts. Using last one.")
+                        browser_logger.error("⚠️ Could not get matching fingerprint after 10 attempts. Using last one.")
                         break
 
                 with open(path, 'wb') as fh:
                     pickle.dump(fg, fh)
-                logger.info("💾 New fingerprint saved successfully.")
+                browser_logger.info("💾 New fingerprint saved successfully.")
 
             if self.debug_fingerprint:
                 try:
                     with open(self.debug_fingerprint_json_path, "w", encoding="utf-8") as f:
                         json.dump(asdict(fg), f, indent=2)
-                    logger.info(f"🪶 Fingerprint debug JSON saved at: {self.debug_fingerprint_json_path}")
+                    browser_logger.info(f"🪶 Fingerprint debug JSON saved at: {self.debug_fingerprint_json_path}")
                 except Exception as e:
-                    logger.error(f"⚠️ Failed to save fingerprint debug JSON: {e}")
+                    browser_logger.error(f"⚠️ Failed to save fingerprint debug JSON: {e}")
 
             return fg
 
@@ -203,9 +204,9 @@ class BrowserManager:
                 ).__aenter__()
         except camoufox.exceptions.InvalidIP:
             if tries == 5 :
-                logger.error(f"Max Tries done {tries} . Exiting.")
+                browser_logger.error(f"Max Tries done {tries} . Exiting.")
             else :
-                logger.info(f"Camoufox IP failed ,Trials: {tries} retrying...")
+                browser_logger.info(f"Camoufox IP failed ,Trials: {tries} retrying...")
                 await self.__GetBrowser__(tries=tries+1)
         return Browser
 
@@ -220,7 +221,7 @@ class BrowserManager:
                     await page.close()
                 await self.browser.__aexit__(None, None, None)
             except Exception as e:
-                logger.error(f"Error while closing browser: {e}", exc_info=True)
+                browser_logger.error(f"Error while closing browser: {e}", exc_info=True)
 
     async def getPage(self) -> Page:
         """
@@ -236,13 +237,13 @@ class BrowserManager:
                 if page.url == "about:blank":
                     return page
             except Exception as e:
-                logger.warning(f"⚠️ Error checking page URL: {e}")
+                browser_logger.warning(f"⚠️ Error checking page URL: {e}")
 
         try:
             new_page = await Browser.new_page()
             return new_page
         except Exception as e:
-            logger.error(f"❌ Failed to create new page: {e}", exc_info=True)
+            browser_logger.error(f"❌ Failed to create new page: {e}", exc_info=True)
             raise
 
 
