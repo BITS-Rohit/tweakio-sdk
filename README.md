@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Coverage](https://img.shields.io/badge/coverage-%3E90%25-brightgreen)](https://github.com/BITS-Rohit/tweakio-sdk)
 
-**[Documentation](https://github.com/BITS-Rohit/tweakio-sdk#readme)** · **[PyPI](https://pypi.org/project/tweakio-sdk/)** · **[Issues](https://github.com/BITS-Rohit/tweakio-sdk/issues)** · **[Contributing](#contributing)**
+**[Documentation](https://github.com/BITS-Rohit/tweakio-sdk#readme)** · **[PyPI](https://pypi.org/project/tweakio-sdk/)** · **[Issues](https://github.com/BITS-Rohit/tweakio-sdk/issues)** · **[Contributing](OSCG_CONTRIBUTOR_Guidelines.md)**  ·  **[Mentors](OSCG_MENTORS_Guidelines.md)**
 
 ---
 
