@@ -141,7 +141,8 @@ Each mentor **must** open a Pull Request adding the following entry to the
 `OSCG_CONTRIBUTOR_Guidelines.md` file:
 
 ```
-Name : GitHub Profile Link
+ANVSLD SRI Harshitha : https://github.com/Harshi-max
+
 ```
 
 This step is **mandatory** for all mentors.
