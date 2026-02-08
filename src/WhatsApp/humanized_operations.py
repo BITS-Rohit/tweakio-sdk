@@ -10,11 +10,11 @@ from playwright.async_api import Page, ElementHandle, Locator
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError, Error as PlaywrightError
 
 from src.Exceptions.base import ElementNotFoundError, HumanizedOperationError
-from src.Interfaces.humanize_operation_interface import HumanizeOperation
+from src.Interfaces.humanize_operation_interface import HumanizeOperationInterface
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
-class HumanizedOperations(HumanizeOperation):
+class HumanizedOperations(HumanizeOperationInterface):
     """Simulates human-like typing with variable delays."""
 
     def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable):

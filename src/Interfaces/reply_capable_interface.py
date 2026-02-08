@@ -5,7 +5,7 @@ from typing import Optional
 
 from playwright.async_api import Page
 
-from src.Interfaces.humanize_operation_interface import HumanizeOperation
+from src.Interfaces.humanize_operation_interface import HumanizeOperationInterface
 from src.Interfaces.message_interface import MessageInterface
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
@@ -22,7 +22,7 @@ class ReplyCapableInterface(ABC):
     async def reply(
             self,
             Message: MessageInterface,
-            humanize: HumanizeOperation,
+            humanize: HumanizeOperationInterface,
             text: Optional[str],
             **kwargs
     ) -> bool:

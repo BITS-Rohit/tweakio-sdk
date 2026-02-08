@@ -7,7 +7,7 @@ import logging
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
 
-class HumanizeOperation(ABC):
+class HumanizeOperationInterface(ABC):
     """
     All Humanized Altered Operation here.
     """
