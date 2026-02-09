@@ -1,9 +1,17 @@
-"""Tweakio SDK Exceptions Package"""
+"""
+Exception hierarchy for tweakio operations.
+
+Defines structured exceptions for chat operations, message handling,
+authentication, storage, and platform-specific errors. All exceptions
+inherit from TweakioError for consistent error handling.
+"""
 from src.Exceptions.base import (
     TweakioError,
     AuthenticationError,
     ElementNotFoundError,
     HumanizedOperationError,
+    MessageFilterError,
+    StorageError
 )
 from src.Exceptions.whatsapp import (
     ChatError,
@@ -11,6 +19,8 @@ from src.Exceptions.whatsapp import (
     ChatClickError,
     ChatUnreadError,
     ChatProcessorError,
+    ChatListEmptyError,
+    ChatMenuError,
     MessageError,
     MessageNotFoundError,
     MessageListEmptyError,
@@ -29,6 +39,8 @@ __all__ = [
     "ChatClickError",
     "ChatUnreadError",
     "ChatProcessorError",
+    "ChatListEmptyError",
+    "ChatMenuError",
     "MessageError",
     "MessageNotFoundError",
     "MessageListEmptyError",
@@ -41,4 +53,6 @@ __all__ = [
     "MessageProcessorError",
     "ElementNotFoundError",
     "HumanizedOperationError",
+    "StorageError",
+    "MessageFilterError"
 ]

@@ -9,7 +9,6 @@ from typing import Optional, Protocol, Union
 from playwright.async_api import ElementHandle, Locator
 
 
-
 class ChatInterface(Protocol):
     """Chat Interface, """
     chat_name: str
