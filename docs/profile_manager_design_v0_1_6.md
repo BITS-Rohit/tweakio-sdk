@@ -2,307 +2,292 @@
 
 ---
 
-## 1. Executive Summary
+## 1. Objective
 
-This specification defines a **CLI/API-first Profile Manager** system enables seamless multi-account handling for WhatsApp (with extensibility to Telegram, Discord, and other platforms). The design guarantees:
+Design a user-friendly, platform-first Profile Manager that enables seamless multi-account handling while ensuring:
 
-- ✅ Complete profile isolation with atomic operations  
-- ✅ Active profile protection against accidental deletion  
-- ✅ Thread-safe concurrency handling via file locking  
-- ✅ Corruption detection and recovery mechanisms  
-- ✅ Zero breaking changes for existing single-account users  
-- ✅ Platform-agnostic architecture for future extensibility  
+* Platform-organized storage (platforms/{platform}/{profile})
+* Explicit and visible file paths
+* Safe activation and deletion handling
+* Simple and maintainable backup strategy
+* Clear console awareness of active profile
+* Full backward compatibility
+* No over-engineering
 
-*No GUI components are included in v0.1.6 scope. All interactions occur via CLI commands or Python API.*
-
----
-
-## 2. Core Design Philosophy
-
-### 2.1 Profile = Platform + Account Context
-Each profile is a self-contained unit with:
-```text
-Profile
-├── Platform Type (whatsapp | telegram | discord | ...)
-├── Account Context (session, credentials, state)
-├── Browser Fingerprint (isolated per profile)
-├── Metadata (creation time, last used, status)
-└── Lock State (active/inactive protection)
-```
-
-### 2.2 Key Principles
-| Principle | Implementation |
-|-----------|----------------|
-| **Isolation** | Zero shared state between profiles; separate directories for all artifacts |
-| **Safety** | Atomic operations with rollback on failure; active profile deletion blocked |
-| **Concurrency** | File-based locking with stale lock detection |
-| **Recoverability** | Corruption detection + soft/hard recovery modes |
-| **Extensibility** | Platform-agnostic interfaces; metadata-driven configuration |
+This design prioritizes clarity, user control, and long-term maintainability.
 
 ---
 
-## 3. Directory Structure
+## 2. Platform-First Directory Structure
 
-```
-profiles/
-├── default/                     # ← Backward-compatible default profile
-│   ├── metadata.json
-│   ├── session.json
-│   ├── browser_profile/
-│   ├── cache/
-│   └── .lock                    # ← Active profile lock file
-│
-├── support_bot/
-│   ├── metadata.json
-│   ├── session.json
-│   ├── browser_profile/
-│   ├── cache/
-│   └── .lock
-│
-└── sales_team/
-    ├── metadata.json
-    ├── session.json
-    ├── browser_profile/
-    ├── cache/
-    └── .lock
-```
+### OS-Compliant Base Path
 
-### `metadata.json` Schema
-```json
-{
-  "profile_id": "string (alphanumeric, max 32 chars)",
-  "platform": "whatsapp | telegram | discord | custom",
-  "platform_version": "string (optional)",
-  "created_at": "ISO 8601 timestamp",
-  "last_used": "ISO 8601 timestamp",
-  "status": "active | inactive | corrupted",
-  "lock_pid": "integer (optional, OS process ID)"
-}
-```
+The base directory is resolved using the platformdirs library:
+
+Linux: ~/.local/share/tweakio/
+macOS: ~/Library/Application Support/tweakio/
+Windows: %APPDATA%/tweakio/
+
+All profile paths are derived from this base directory.
 
 ---
 
-## 4. Component Architecture
-
-### 4.1 System Diagram
-```mermaid
-flowchart TD
-    A[CLI / Python API] --> B[ProfileManager]
-    B --> C[ProfileRegistry]
-    B --> D[ProfileLockManager]
-    B --> E[ProfileMetadataHandler]
-    B --> F[ProfileValidator]
-    
-    C --> G[(In-Memory Registry)]
-    D --> H[(File System Locks)]
-    E --> I[(metadata.json)]
-    F --> J[Validation Rules]
+### Directory Layout
 ```
+tweakio/
+└── platforms/
+    ├── whatsapp/
+    │   ├── default/
+    │   │   ├── metadata.json
+    │   │   ├── session.json
+    │   │   ├── fingerprint.pkl
+    │   │   ├── cookies.json
+    │   │   ├── cache/
+    │   │   └── backups/
+    │   │
+    │   ├── support_bot/
+    │   │   ├── metadata.json
+    │   │   ├── session.json
+    │   │   ├── fingerprint.pkl
+    │   │   ├── cookies.json
+    │   │   ├── cache/
+    │   │   └── backups/
+    │   │
+    │   └── sales_team/
+    │       ├── metadata.json
+    │       ├── session.json
+    │       ├── fingerprint.pkl
+    │       ├── cookies.json
+    │       ├── cache/
+    │       └── backups/
+    │
+    ├── telegram/
+    │   └── news_bot/
+    │       ├── metadata.json
+    │       ├── session.json
+    │       ├── cache/
+    │       └── backups/
+    │
+    └── discord/
+        └── community_bot/
+            ├── metadata.json
+            ├── session.json
+            ├── cache/
+            └── backups/
+ 
+```
+### Design Rationale
 
-### 4.2 Core Classes (`src/BrowserManager/profile_manager.py`)
-
-| Class | Responsibilities | Key Methods |
-|-------|------------------|-------------|
-| **`ProfileManager`** | Primary interface for all profile operations | `create()`, `activate()`, `deactivate()`, `delete()`, `list()`, `recover()` |
-| **`ProfileRegistry`** | In-memory registry of profiles; prevents duplicates | `register()`, `unregister()`, `get_active()`, `is_active()` |
-| **`ProfileLockManager`** | File-based locking with stale lock detection | `acquire()`, `release()`, `is_locked()`, `cleanup_stale()` |
-| **`ProfileMetadataHandler`** | Atomic metadata reads/writes with validation | `load()`, `save()`, `validate()`, `mark_corrupted()` |
-| **`ProfileValidator`** | Business rule enforcement | `validate_id()`, `validate_platform()`, `can_delete()` |
+* Users can manually browse and inspect profile folders.
+* Platform separation prevents confusion.
+* Backups are isolated per profile.
+* No hidden directories or implicit storage.
 
 ---
 
-## 5. Profile Lifecycle Flows
+## 3. Profile Metadata (metadata.json)
 
-### 5.1 Creation Flow (Atomic)
-```python
-def create_profile(profile_id: str, platform: str) -> ProfileContext:
-    with atomic_transaction():  # ← Rollback on ANY failure
-        validate_id_uniqueness(profile_id)
-        create_directory_structure(profile_id)
-        initialize_metadata(profile_id, platform)
-        create_empty_session(profile_id)
-        register_in_memory(profile_id)
-    return ProfileContext(profile_id)
-```
+Each profile contains a metadata file that explicitly defines its configuration and storage paths.
 
-### 5.2 Activation Flow (Safe Switching)
-```python
-def activate_profile(profile_id: str):
-    if not exists(profile_id):
-        raise ProfileNotFoundError
-    
-    if registry.get_active() == profile_id:
-        return  # Already active
-    
-    with lock_manager.acquire(profile_id):  # ← Blocks if locked by another process
-        if registry.has_active():
-            deactivate_current()  # ← Auto-deactivate previous profile
-        
-        update_metadata(profile_id, status="active", last_used=now())
-        registry.set_active(profile_id)
-```
+Example structure:
 
-### 5.3 Deletion Flow (Protected)
-```python
-def delete_profile(profile_id: str, force: bool = False):
-    if lock_manager.is_locked(profile_id) and not force:
-        raise ProfileActiveError(
-            f"Profile '{profile_id}' is active. Deactivate first or use --force."
-        )
-    
-    if not force and registry.get_active() == profile_id:
-        raise ProfileActiveError("Cannot delete currently active profile")
-    
-    safe_remove_directory(profile_id)  # ← Handles partial deletions
-    registry.unregister(profile_id)
-```
+profile_id: support_bot
+name: Support WhatsApp
+platform: whatsapp
+version: 0.1.6
+
+created_at: ISO timestamp
+last_used: ISO timestamp
+
+paths:
+
+* profile_dir: resolved absolute path
+* session_file: session.json
+* fingerprint_file: fingerprint.pkl
+* cookies_file: cookies.json
+* cache_dir: cache/
+* backup_dir: backups/
+
+backup:
+
+* enabled: true
+* max_backups: 10
+
+status:
+
+* is_active: false
+* last_active_pid: null
+* lock_file: .lock
+
+Key principles:
+
+* All file locations are visible in metadata.
+* No hidden storage locations.
+* Backup strategy is intentionally simple.
+* Active state is explicitly tracked.
 
 ---
 
-## 6. Edge Case Handling
+## 4. Core Runtime Rule
 
-| Edge Case | Detection Mechanism | Resolution Strategy |
-|-----------|---------------------|---------------------|
-| **Active Profile Deletion** | File lock + registry check | Block operation; require explicit `--force` flag |
-| **Concurrent Access** | File-based lock with PID tracking | Block until lock released; timeout after 30s |
-| **Stale Lock** | PID validation + process existence check | Auto-remove lock after warning log |
-| **Metadata Corruption** | JSON schema validation on load | Mark status=`corrupted`; block activation; offer `recover()` |
-| **Partial Creation** | Atomic transaction wrapper | Full rollback on any failure during creation |
-| **Disk Full During Write** | Atomic file replacement pattern | Preserve previous valid state; fail operation cleanly |
+Each platform may have only one active profile at a time.
 
-### Corruption Recovery Modes
-```python
-manager.recover_profile("support_bot", mode="soft")
-# → Recreates metadata.json from directory structure
+Activation behavior:
 
-manager.recover_profile("support_bot", mode="hard")
-# → Resets session.json + browser_profile/ (loses auth state)
-```
+* If another profile for the same platform is active, it is automatically deactivated.
+* The previous profile’s lock is released.
+* Metadata for both profiles is updated accordingly.
+* Console context reflects the new active profile.
+
+Profiles from different platforms may be active independently.
 
 ---
 
-## 7. CLI / API Interface (v0.1.6)
+## 5. Active State Enforcement
 
-### 7.1 CLI Commands
-```bash
-# Profile lifecycle
-tweakio profile create <id> --platform whatsapp
-tweakio profile activate <id>
-tweakio profile deactivate
-tweakio profile delete <id> [--force]
+Active state is enforced through:
 
-# Discovery & diagnostics
-tweakio profile list [--all | --active | --corrupted]
-tweakio profile status <id>
-tweakio profile recover <id> [--mode soft|hard]
+1. A .lock file stored inside the profile directory.
+2. An in-memory registry tracking active profile per platform.
 
-# Backward compatibility (uses 'default' profile)
-tweakio whatsapp login   # ← Implicitly uses 'default' profile
-```
+This ensures:
 
-### 7.2 Python API
-```python
-from tweakio import ProfileManager
-
-pm = ProfileManager()
-
-# Create and activate
-pm.create_profile("support_bot", platform="whatsapp")
-pm.activate_profile("support_bot")
-
-# Safe deletion
-try:
-    pm.delete_profile("support_bot")  # ← Fails if active
-except ProfileActiveError:
-    pm.deactivate_profile()
-    pm.delete_profile("support_bot")
-
-# List with metadata
-profiles = pm.list_profiles()
-for p in profiles:
-    print(f"{p.id} ({p.platform}): {p.status} | last used: {p.last_used}")
-```
+* No concurrent activation conflicts.
+* Active profiles cannot be deleted.
+* Safe profile switching.
+* Clear runtime state management.
 
 ---
 
-## 8. Multi-Platform Extensibility
+## 6. Runtime Activation Flow (Concrete Example)
 
-### Platform Registration Pattern
-```python
-# Future extension (post v0.1.6)
-from tweakio.platforms import register_platform
+Command:
 
-register_platform(
-    name="telegram",
-    session_handler=TelegramSessionHandler,
-    fingerprint_generator=TelegramFingerprintGenerator
-)
-```
+tweakio profile activate whatsapp support_bot
 
-### Profile Metadata Evolution
-```json
-{
-  "profile_id": "news_bot",
-  "platform": "telegram",
-  "platform_config": {
-    "api_id": "******",
-    "api_hash": "******"
-  },
-  "created_at": "2026-02-10T14:30:00Z",
-  "status": "inactive"
-}
-```
+Execution steps:
 
-*No changes required to `ProfileManager` core for new platforms.*
+1. Resolve absolute path:
+   ~/.local/share/tweakio/platforms/whatsapp/support_bot/
 
----
+2. Load metadata.json.
 
-## 9. Backward Compatibility Guarantees
+3. Acquire .lock file for this profile.
 
-| Existing Behavior | v0.1.6 Behavior |
-|-------------------|-----------------|
-| `tweakio whatsapp login` | Uses `profiles/default/` implicitly | 
-| Single `browser_profile/` dir | Migrated to `profiles/default/browser_profile/` on first run |  
-| Existing `session.json` | Moved to `profiles/default/session.json` | 
-| Direct `BrowserManager` usage | Unchanged; operates on active profile | 
+4. If another whatsapp profile is active:
 
-*Migration occurs silently on first profile operation with user notification.*
+   * Release its lock.
+   * Update its metadata (is_active = false).
+
+5. Update current profile metadata:
+
+   * is_active = true
+   * last_used = current timestamp
+
+6. Initialize Session and BrowserManager using this profile path.
+
+7. Console updates to:
+   [whatsapp:support_bot] $
+
+This provides a clear, linear activation sequence without abstraction.
 
 ---
 
-## 10. Future Roadmap (Post v0.1.6)
+## 7. Backup Strategy (Simple and Practical)
 
-| Feature | Complexity | Notes |
-|---------|------------|-------|
-| Parallel multi-account execution | Medium | Requires process isolation |
-| Profile encryption at rest | High | Key management complexity |
-| Profile import/export (ZIP) | Low | Useful for backup/migration |
-| Remote profile management API | High | Requires auth/security design |
-| Lightweight TUI dashboard | Medium | Built atop CLI API |
+Backups are stored at:
+
+platforms/{platform}/{profile}/backups/
+
+Backup behavior:
+
+* Auto-backup enabled by default.
+* Keep only the most recent max_backups (default: 10).
+* When the limit is exceeded, the oldest backup is deleted.
+* Manual backup and restore commands are available.
+
+Commands:
+
+tweakio profile backup whatsapp support_bot
+tweakio profile restore whatsapp support_bot
+
+There are no complex retention tiers.
+Encryption is out of scope for v0.1.6.
 
 ---
 
-## 11. Implementation Quality Gates
+## 8. CLI Transparency and User Awareness
 
-- ✅ 100% type-hinted Python 3.10+ code  
-- ✅ Dependency injection ready (for testability)  
-- ✅ >90% unit test coverage (pytest)  
-- ✅ Atomic file operations using ` tempfile + rename` pattern  
-- ✅ Comprehensive logging at DEBUG/INFO/WARNING levels  
-- ✅ Windows/Linux/macOS path compatibility  
+Users can inspect profile paths:
+
+tweakio profile path whatsapp support_bot
+
+Example output:
+
+Profile Directory:
+~/.local/share/tweakio/platforms/whatsapp/support_bot
+
+Session File:
+session.json
+
+Backup Directory:
+backups/
+
+Console awareness:
+
+[whatsapp:support_bot] $
+
+The active platform and profile are always visible to the user.
 
 ---
 
-## 12. Conclusion
+## 9. Backward Compatibility and Migration
 
-This design delivers a **production-ready foundation** for multi-account management that:
+On first run of v0.1.6:
 
-1. Solves immediate WhatsApp multi-account needs with safety guarantees  
-2. Provides extensible architecture for multi-platform support  
-3. Maintains full backward compatibility for existing users  
-4. Establishes patterns for concurrency safety and corruption recovery  
-5. Delivers CLI/API-first interface suitable for automation and future GUI layers  
+If legacy single-profile structure exists:
 
-The proposal intentionally avoids GUI complexity in v0.1.6 to ensure a **robust, testable core** that can support any presentation layer in subsequent releases.
+1. Move legacy profile to:
+   platforms/whatsapp/default/
+2. Generate metadata.json.
+3. Enable backups.
+4. Notify user via console.
+
+No data loss occurs.
+No manual migration required.
+Existing CLI commands continue to function.
+
+---
+
+## 10. Internal Component Overview
+
+Single entry point: ProfileManager
+
+ProfileManager responsibilities:
+
+* Platform-aware path resolution
+* Active profile registry (per platform)
+* Lock manager (.lock handling)
+* Metadata handler (read/write metadata.json)
+* Backup manager
+
+The architecture remains simple, clear, and maintainable.
+
+---
+
+## 11. Conclusion
+
+This design satisfies all functional and structural requirements:
+
+* Platform-first organization
+* Explicit path transparency
+* Safe activation and deletion handling
+* Simple backup strategy
+* Clear runtime activation flow
+* Console awareness of active profile
+* Full backward compatibility
+* No unnecessary complexity
+
+This proposal is ready for architectural approval and implementation in v0.1.6.
 
 ---
