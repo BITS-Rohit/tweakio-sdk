@@ -34,7 +34,7 @@ h2==4.3.0
 hpack==4.1.0
 humanfriendly==10.0
 humanize==4.13.0
-Hypercorn==0.17.3
+Hypercorn==0.18.0
 hyperframe==6.1.0
 idna==3.10
 inflate64==1.0.3
