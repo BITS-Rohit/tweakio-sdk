@@ -67,7 +67,7 @@ pycparser==2.23
 pycryptodomex==3.23.0
 pyee==13.0.0
 Pygments==2.19.2
-pylsqpack==0.3.22
+pylsqpack==0.3.23
 PyMuPDF==1.26.4
 pyOpenSSL==25.3.0
 pyparsing==3.2.5
