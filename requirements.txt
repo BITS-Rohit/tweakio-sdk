@@ -83,7 +83,7 @@ referencing==0.36.2
 regex==2025.9.18
 requests==2.32.5
 rich==14.1.0
-rich-argparse==1.7.1
+rich-argparse==1.7.2
 rpds-py==0.27.1
 ruamel.yaml==0.18.15
 ruamel.yaml.clib==0.2.14
