@@ -53,7 +53,7 @@ multivolumefile==0.2.3
 nh3==0.3.0
 numpy==2.3.3
 orderly-set==5.5.0
-pillow==11.3.0
+pillow==12.1.1
 platformdirs==4.4.0
 playwright==1.55.0
 priority==2.0.0
