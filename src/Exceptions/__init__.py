@@ -11,7 +11,8 @@ from src.Exceptions.base import (
     ElementNotFoundError,
     HumanizedOperationError,
     MessageFilterError,
-    StorageError
+    StorageError,
+    BrowserException
 )
 from src.Exceptions.whatsapp import (
     ChatError,
@@ -34,6 +35,7 @@ from src.Exceptions.whatsapp import (
 
 __all__ = [
     "TweakioError",
+    "BrowserException",
     "ChatError",
     "ChatNotFoundError",
     "ChatClickError",

@@ -42,3 +42,8 @@ class HumanizedOperationError(TweakioError):
 class ElementNotFoundError(HumanizedOperationError):
     """Element not found error  , expects Element/target empty"""
     pass
+
+# -------------------- Browser Exceptions --------------------
+class BrowserException(TweakioError):
+    """Base exception for browser errors"""
+    pass

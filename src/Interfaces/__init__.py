@@ -3,26 +3,22 @@ Abstract interfaces and protocols for tweakio components.
 
 These interfaces define contracts that platform-specific implementations
 must follow, enabling clean separation between core logic and platform integrations.
+
+NOTE: To avoid circular dependencies, import interfaces directly from their module files:
+    from src.Interfaces.browser_interface import BrowserInterface
+    from src.Interfaces.chat_interface import ChatInterface
+    
+Do NOT import from this __init__.py file.
 """
-from .chat_interface import ChatInterface
-from .chat_processor_interface import ChatProcessorInterface
-from .humanize_operation_interface import HumanizeOperationInterface
-from .login_interface import LoginInterface
-from .message_interface import MessageInterface
-from .media_capable_interface import MediaCapableInterface
-from .reply_capable_interface import ReplyCapableInterface
-from .storage_interface import StorageInterface
-from .web_ui_selector import WebUISelectorCapable
 
-__all__ = [
-    'ChatInterface',
-    'ChatProcessorInterface',
-    'HumanizeOperationInterface',
-    'LoginInterface',
-    'MessageInterface',
-    'MediaCapableInterface',
-    'ReplyCapableInterface',
-    'StorageInterface',
-    'WebUISelectorCapable'
-]
+# This file intentionally left minimal to avoid circular import issues.
+# Import interfaces directly from their respective module files.
 
+#browserforge_manager.py
+#   → imports BrowserForgeCapable from Interfaces.browserforge_capable_interface
+#     → TRIGGERS Interfaces/__init__.py
+#       → imports ChatProcessorInterface
+#         → imports WebSelectorConfig from WhatsApp.web_ui_config  
+#           → TRIGGERS WhatsApp/__init__.py
+#             → imports ChatProcessor
+#               → imports ChatProcessorInterface (CIRCULAR)
