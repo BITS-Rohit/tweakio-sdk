@@ -18,6 +18,8 @@ class whatsapp_message:
     data_id: str
 
     raw_data: str
+    encrypted_message: Optional[bytes] = None
+    encryption_nonce: Optional[bytes] = None
     parent_chat: whatsapp_chat
     message_ui: Optional[Union[ElementHandle, Locator]]
 

@@ -7,6 +7,7 @@ from typing import List, Optional, Sequence
 from playwright.async_api import Page
 
 from src.Decorators.Chat_Click_decorator import ensure_chat_clicked
+from src.Encryption import MessageEncryptor
 from src.Exceptions.whatsapp import MessageNotFoundError, WhatsAppError, MessageProcessorError, MessageListEmptyError
 from src.FIlter.message_filter import MessageFilter
 from src.Interfaces.message_processor_interface import MessageProcessorInterface
@@ -27,7 +28,8 @@ class MessageProcessor(MessageProcessorInterface):
             chat_processor: ChatProcessor,
             page: Page,
             log: logging.Logger,
-            UIConfig: WebSelectorConfig
+            UIConfig: WebSelectorConfig,
+            encryption_key: Optional[bytes] = None
     ) -> None:
         super().__init__(
             storage_obj=storage_obj,
@@ -38,6 +40,9 @@ class MessageProcessor(MessageProcessorInterface):
         self.chat_processor = chat_processor
         if self.page is None:
             raise ValueError("page must not be None")
+
+        self.encryption_key = encryption_key
+        self.encryptor = MessageEncryptor(encryption_key) if encryption_key else None
 
     @staticmethod
     async def sort_messages(msgList: Sequence[whatsapp_message], incoming: bool) -> List[whatsapp_message]:
@@ -84,11 +89,27 @@ class MessageProcessor(MessageProcessorInterface):
                     self.log.debug("Data ID in WA / get wrapped Messages , None/Empty. Skipping")
                     continue
 
+                encrypted_message = None
+                encryption_nonce = None
+
+                if self.encryptor and text:
+                    try:
+                        encryption_nonce, encrypted_message = self.encryptor.encrypt_message(
+                            text,
+                            data_id
+                        )
+                    except Exception as e:
+                        self.log.warning(f"Encryption failed for message {data_id}: {e}")
+                        encrypted_message = None
+                        encryption_nonce = None
+
                 wrapped_list.append(
                     whatsapp_message(
                         message_ui=msg,
                         direction="in" if await msg.locator(".message-in").count() > 0 else "out",
                         raw_data=text,
+                        encrypted_message=encrypted_message,
+                        encryption_nonce=encryption_nonce,
                         parent_chat=chat,
                         data_id=data_id
                     )

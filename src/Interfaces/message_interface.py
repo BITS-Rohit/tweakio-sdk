@@ -11,6 +11,8 @@ class MessageInterface(Protocol):
 
     system_hit_time: float
     raw_data: str
+    encrypted_message: Optional[bytes]
+    encryption_nonce: Optional[bytes]
     data_type: Optional[str]
     parent_chat: ChatInterface
     message_ui: Optional[Union[ElementHandle, Locator]]
