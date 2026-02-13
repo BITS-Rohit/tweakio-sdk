@@ -73,6 +73,8 @@ class SQLITE_DB(StorageInterface):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message_id TEXT UNIQUE NOT NULL,
             raw_data TEXT,
+            encrypted_message BLOB,
+            encryption_nonce BLOB,
             data_type TEXT,
             direction TEXT,
             parent_chat_name TEXT,
@@ -159,9 +161,9 @@ class SQLITE_DB(StorageInterface):
             return
 
         insert_sql = """
-        INSERT OR IGNORE INTO messages 
-        (message_id, raw_data, data_type, direction, parent_chat_name, parent_chat_id, system_hit_time)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT OR IGNORE INTO messages
+        (message_id, raw_data, encrypted_message, encryption_nonce, data_type, direction, parent_chat_name, parent_chat_id, system_hit_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
         records = []
@@ -188,6 +190,8 @@ class SQLITE_DB(StorageInterface):
         """Convert MessageInterface to database record tuple."""
         message_id = getattr(msg, 'message_id', None) or getattr(msg, 'data_id', 'unknown')
         raw_data = getattr(msg, 'raw_data', '')
+        encrypted_message = getattr(msg, 'encrypted_message', None)
+        encryption_nonce = getattr(msg, 'encryption_nonce', None)
         data_type = getattr(msg, 'data_type', None)
         direction = getattr(msg, 'direction', None)
         system_hit_time = getattr(msg, 'system_hit_time', 0.0)
@@ -202,6 +206,8 @@ class SQLITE_DB(StorageInterface):
         return (
             str(message_id),
             str(raw_data) if raw_data else '',
+            bytes(encrypted_message) if encrypted_message else None,
+            bytes(encryption_nonce) if encryption_nonce else None,
             str(data_type) if data_type else None,
             str(direction) if direction else None,
             str(parent_chat_name),
