@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import List, Optional
 
 
-from directory import DirectoryManager
+from src.directory import DirectoryManager   
+
 from .profile_info import ProfileInfo
 
 
@@ -119,33 +120,15 @@ class ProfileManager:
 
         return results
     
-    def _deactivate_current_profile(self, platform: str):
-        platform_dir = self.directory.get_platform_dir(platform)
-
-
-        for profile in platform_dir.iterdir():
-            metadata_file = profile / "metadata.json"
-            if metadata_file.exists():
-                with open(metadata_file, "r") as f:
-                    data = json.load(f)
-
-                if data["status"]["is_active"]:
-                    data["status"]["is_active"] = False
-                    data["status"]["last_active_pid"] = None
-
-                    lock_file = profile / ".lock"
-                    if lock_file.exists():
-                        lock_file.unlink()
-
-                    with open(metadata_file, "w") as f:
-                        json.dump(data, f, indent=4)
+    
 
     def activate_profile(self, platform: str, profile_id: str) -> None:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
-
         if not profile_dir.exists():
-            raise ValueError(f"Profile '{profile_id}' does not exist for platform '{platform}'")
+            raise ValueError(
+                f"Profile '{profile_id}' does not exist for platform '{platform}'"
+            )
 
         metadata_file = profile_dir / "metadata.json"
 
@@ -154,14 +137,12 @@ class ProfileManager:
 
         if not metadata.get("paths"):
             raise ValueError("Corrupted metadata file.")
-        
+
+        # If already active and process still alive, do nothing
         if metadata["status"]["is_active"]:
             return
 
-        # Deactivate previous profile
-        self._deactivate_current_profile(platform)
-
-        # Activate this profile
+        # Activate only THIS profile
         metadata["status"]["is_active"] = True
         metadata["status"]["last_active_pid"] = os.getpid()
         metadata["last_used"] = datetime.now().isoformat()
@@ -169,10 +150,9 @@ class ProfileManager:
         with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=4)
 
-        # Create lock file
         lock_file = profile_dir / ".lock"
         lock_file.write_text(str(os.getpid()))
-        
+
 
     def delete_profile(self, platform: str, profile_id: str, force: bool = False) -> None:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
