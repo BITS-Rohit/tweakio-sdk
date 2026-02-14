@@ -10,7 +10,8 @@ from pathlib import Path
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
 
-import directory as dirs
+from src import directory as dirs
+
 from src.Exceptions.whatsapp import LoginError
 from src.Interfaces.login_interface import LoginInterface
 from src.WhatsApp.web_ui_config import WebSelectorConfig

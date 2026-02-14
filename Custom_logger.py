@@ -5,7 +5,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from colorlog import ColoredFormatter
-import directory as dirs
+from src import directory as dirs
+
 
 # ------ Logger Configs ---------
 logger = logging.getLogger("tweakio")

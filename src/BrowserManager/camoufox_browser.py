@@ -14,6 +14,9 @@ from src.Exceptions.base import BrowserException
 from src.Interfaces.browser_interface import BrowserInterface
 from src.Interfaces.browserforge_capable_interface import BrowserForgeCapable
 
+from src.BrowserManager.profile_info import ProfileInfo
+
+
 
 class CamoufoxBrowser(BrowserInterface):
     """
@@ -24,21 +27,18 @@ class CamoufoxBrowser(BrowserInterface):
     """
 
     def __init__(
-            # Removed old dependencies of
-            # debug_fingerprint , fingerprint , debug_fingerprint_json_path, override_cookies option, override_fingerprint
-            # override ones creates ambiguity and not good to overwrite.
-            # As having same cookies with diff fingerprint next time , would cause mismatch error at platform side , gives potential Ban issue.
-            # Better we will just create a new login for it. Clean and safe trackable path
-            self,
-            cache_dir_path: Path,
-            fingerprint_path: Path,
-        BrowserForge: BrowserForgeCapable,
-            log: logging.Logger = None,
-            addons=None,
-            headless: bool = False,
-            locale: str = "en-US",
-            enable_cache: bool = True,
-    ) -> None:
+        self,
+        cache_dir_path: Path = None,
+        fingerprint_path: Path = None,
+        BrowserForge: BrowserForgeCapable = None,
+        log: logging.Logger = None,
+        profile: Optional[ProfileInfo] = None,
+        addons=None,
+        headless: bool = False,
+        locale: str = "en-US",
+        enable_cache: bool = True,
+) -> None:
+
         """
         :param cache_dir_path: saves the browser cache dir
         :param BrowserForge: Obj of BrowserForge
@@ -54,9 +54,29 @@ class CamoufoxBrowser(BrowserInterface):
         """
         if addons is None:
             addons = []
+        if profile is not None and (cache_dir_path is not None or fingerprint_path is not None):
+            raise BrowserException(
+                "Provide either ProfileInfo OR direct paths, not both."
+            )
         self.BrowserForge = BrowserForge
-        self.fingerprint_path = fingerprint_path
-        self.cache_dir_path = cache_dir_path
+        # Profile Mode
+        if profile is not None:
+            self.profile = profile
+
+            if profile.fingerprint_path is None:
+                raise BrowserException("Profile fingerprint_path is missing.")
+
+            if profile.cache_dir is None:
+                raise BrowserException("Profile cache_dir is missing.")
+
+            self.fingerprint_path = profile.fingerprint_path
+            self.cache_dir_path = profile.cache_dir
+
+        else:
+            self.profile = None
+            self.fingerprint_path = fingerprint_path
+            self.cache_dir_path = cache_dir_path
+
         self.enable_cache = enable_cache
         self.locale = locale
         self.headless = headless
@@ -71,11 +91,13 @@ class CamoufoxBrowser(BrowserInterface):
         if self.BrowserForge is None:
             raise BrowserException("BrowserForge is missing from the browser instance.")
 
-        if self.cache_dir_path is None:
-            raise BrowserException("Cache dir path is missing from the browser instance.")
+        if profile is None:
+            if self.cache_dir_path is None:
+                raise BrowserException("Cache dir path is missing.")
 
-        if self.fingerprint_path is None:
-            raise BrowserException("Fingerprint path is missing from the browser instance.")
+            if self.fingerprint_path is None:
+                raise BrowserException("Fingerprint path is missing.")
+
 
         if not self.headless:
             self.log.info("Opening Browser into visible Mode. Change headless to True for Invisible Browser.")
