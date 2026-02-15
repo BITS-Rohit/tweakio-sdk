@@ -19,69 +19,72 @@ from src.Interfaces.browserforge_capable_interface import BrowserForgeCapable
 
 class BrowserForgeCompatible(BrowserForgeCapable):
     """
-    BrowserForge fingerprint manager.
-    
-    Generates fingerprints that match system screen size to avoid detection.
-    Reuses existing fingerprints from disk when available.
+    Manages fingerprint generation and persistence.
+
+    Ensures fingerprint matches real system screen size.
+    Reuses saved fingerprint for account stability.
     """
 
     def __init__(self, log: logging.Logger = None) -> None:
-        self.log = log
-
         if log is None:
-            raise BrowserException("log not given in BrowserForgeCompatible")
+            raise BrowserException("Logger must be provided")
+
+        self.log = log
 
     def get_fg(self, profile_path: Path) -> Fingerprint:
         """
-        profile_path : certified path for fingerprint to be saved and re-use later
-        Returns : Fingerprint
-
-        work :
-        if data is already there on the file , it will be reused.
-        if not it will then generate and save at the given file path.
-
+        Load existing fingerprint if present.
+        Otherwise generate and persist a new compatible fingerprint.
         """
-        if profile_path.exists():
-            if os.stat(profile_path).st_size > 0:
-                # Pick the old fg , changing fg for an account enables security issues for platform
-                # Potential in Account Ban
-                with open(profile_path, 'rb') as fh:
-                    fg = pickle.load(fh)
-            else:
-                # Create new fg there compatible to the current device.
-                fg: Fingerprint = self.__gen_fg__()
-                if fg is not None:
-                    with open(profile_path, 'wb') as fh:
-                        pickle.dump(fg, fh)  # Save to same file
-            return fg
-        else:
-            raise BrowserException("path given does not exist")
+
+        if not profile_path.exists():
+            raise BrowserException("Fingerprint path does not exist")
+
+        if profile_path.stat().st_size > 0:
+            with open(profile_path, "rb") as fh:
+                return pickle.load(fh)
+
+        fg = self.__gen_fg__()
+
+        with open(profile_path, "wb") as fh:
+            pickle.dump(fg, fh)
+
+        return fg
 
     def __gen_fg__(self) -> Fingerprint:
         gen = FingerprintGenerator()
-        real_w, real_h = BrowserForgeCompatible.get_screen_size()
-        tolerance = 0.1
-        attempt = 0
+        real_w, real_h = self.get_screen_size()
 
         if real_w <= 0 or real_h <= 0:
-            raise BrowserException("Invalid real screen dimensions")
+            raise BrowserException("Invalid screen dimensions")
+
+        tolerance = 0.1
+        attempt = 0
 
         while True:
             fg = gen.generate()
             w, h = fg.screen.width, fg.screen.height
             attempt += 1
 
-            if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
-                self.log.info(f"✅ Fingerprint screen OK: {w}x{h}")
+            if (
+                abs(w - real_w) / real_w < tolerance
+                and abs(h - real_h) / real_h < tolerance
+            ):
+                self.log.info(
+                    f"[OK] Fingerprint matched screen size: {w}x{h}"
+                )
                 return fg
 
             self.log.warning(
-                f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
+                f"[RETRY] Fingerprint mismatch ({w}x{h}) vs ({real_w}x{real_h}) attempt {attempt}"
             )
 
             if attempt >= 10:
-                self.log.warning("⚠️ Using last generated fingerprint after 10 attempts")
+                self.log.warning(
+                    "Max attempts reached. Using last generated fingerprint."
+                )
                 return fg
+
 
     @staticmethod
     def get_screen_size() -> Tuple[int, int]:

@@ -31,7 +31,8 @@ class ProfileManager:
             "created_at": now,
             "last_used": now,
             "paths": {
-                    "profile_dir": str(self.directory.get_profile_dir(platform, profile_id)),
+                    "profile_dir": str(self.directory.platforms_dir / platform.lower() / profile_id),
+                                
 
                     "session_file": "session.json",
                     "fingerprint_file": "fingerprint.pkl",
@@ -60,24 +61,28 @@ class ProfileManager:
             }
         }
     
-    def create_profile(self, platform: str, profile_id: str) -> None:
-        profile_dir = self.directory.get_profile_dir(platform, profile_id)
+    def create_profile(self, platform: str, profile_id: str) -> ProfileInfo:
+    # DO NOT use get_profile_dir here
+        profile_dir = self.directory.platforms_dir / platform.lower() / profile_id
 
         if profile_dir.exists():
             raise ValueError(
                 f"Profile '{profile_id}' already exists for platform '{platform}'"
             )
 
-        # NOW create the directory
+        # Now create manually
         profile_dir.mkdir(parents=True, exist_ok=True)
 
-        self.directory.get_cache_dir(platform, profile_id)
-        self.directory.get_backup_dir(platform, profile_id)
-        self.directory.get_media_images_dir(platform, profile_id)
-        self.directory.get_media_videos_dir(platform, profile_id)
-        self.directory.get_media_voice_dir(platform, profile_id)
-        self.directory.get_media_documents_dir(platform, profile_id)
+        # Create subfolders
+        (profile_dir / "cache").mkdir()
+        (profile_dir / "backups").mkdir()
+        (profile_dir / "media").mkdir()
+        (profile_dir / "media" / "images").mkdir(parents=True)
+        (profile_dir / "media" / "videos").mkdir(parents=True)
+        (profile_dir / "media" / "voice").mkdir(parents=True)
+        (profile_dir / "media" / "documents").mkdir(parents=True)
 
+        # Create files
         (profile_dir / "session.json").write_text("{}")
         (profile_dir / "cookies.json").write_text("{}")
         (profile_dir / "fingerprint.pkl").write_bytes(b"")
@@ -86,11 +91,13 @@ class ProfileManager:
 
         with open(profile_dir / "metadata.json", "w") as f:
             json.dump(metadata, f, indent=4)
+
         return ProfileInfo.from_metadata(metadata, self.directory)
 
-        
+            
     def get_profile(self, platform: str, profile_id: str):
-        profile_dir = self.directory.get_profile_dir(platform, profile_id)
+        profile_dir = self.directory.platforms_dir / platform.lower() / profile_id
+
         metadata_file = profile_dir / "metadata.json"
 
         if not metadata_file.exists():
@@ -119,11 +126,52 @@ class ProfileManager:
                             results.append(f"{plat.name}:{profile.name}")
 
         return results
+    """
+    Returns list of currently active profiles for a platform.
+
+    Used to determine whether multi-profile headless override
+    should be enabled to prevent UI conflicts when multiple
+    visible browser instances are running.
+    """
     
+    def get_active_profiles(self, platform: str):
+        platform_dir = self.directory.get_platform_dir(platform)
+
+        active_profiles = []
+
+        for profile in platform_dir.iterdir():
+            metadata_file = profile / "metadata.json"
+
+            if metadata_file.exists():
+                with open(metadata_file, "r") as f:
+                    data = json.load(f)
+
+                if data["status"]["is_active"]:
+                    active_profiles.append(data["profile_id"])
+
+        return active_profiles
+    """
+    Checks whether the profile already has stored session data.
+
+    If session and cookies files exist and contain data,
+    profile is considered logged in and login flow can be skipped.
+    """
+
+
+    def is_logged_in(self, platform: str, profile_id: str) -> bool:
+        profile = self.get_profile(platform, profile_id)
+
+        if profile.session_path.exists() and profile.cookies_path.exists():
+            if profile.session_path.stat().st_size > 2:
+                return True
+
+        return False
+
     
 
     def activate_profile(self, platform: str, profile_id: str) -> None:
-        profile_dir = self.directory.get_profile_dir(platform, profile_id)
+        profile_dir = self.directory.platforms_dir / platform.lower() / profile_id
+
 
         if not profile_dir.exists():
             raise ValueError(
@@ -132,17 +180,21 @@ class ProfileManager:
 
         metadata_file = profile_dir / "metadata.json"
 
+        # 🔥 ADD THIS CHECK
+        if not metadata_file.exists():
+            raise ValueError(
+                f"Profile '{profile_id}' is corrupted (metadata.json missing)."
+            )
+
         with open(metadata_file, "r") as f:
             metadata = json.load(f)
 
         if not metadata.get("paths"):
             raise ValueError("Corrupted metadata file.")
 
-        # If already active and process still alive, do nothing
         if metadata["status"]["is_active"]:
             return
 
-        # Activate only THIS profile
         metadata["status"]["is_active"] = True
         metadata["status"]["last_active_pid"] = os.getpid()
         metadata["last_used"] = datetime.now().isoformat()
@@ -155,7 +207,8 @@ class ProfileManager:
 
 
     def delete_profile(self, platform: str, profile_id: str, force: bool = False) -> None:
-        profile_dir = self.directory.get_profile_dir(platform, profile_id)
+        profile_dir = self.directory.platforms_dir / platform.lower() / profile_id
+
 
 
         if not profile_dir.exists():
