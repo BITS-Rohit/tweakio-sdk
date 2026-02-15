@@ -123,101 +123,16 @@ class BrowserManager:
             self.browser = await self.__GetBrowser__()
         return self.browser
 
-    # async def __GetBrowser__(self, tries : int  = 1) -> BrowserContext:
-    #     Browser = self.browser
+    """
+    Handles both legacy mode (direct path usage) and
+    profile mode (ProfileManager integration).
 
-    #     def fingerprintFile():
-    #         """
-    #         Generates or loads a BrowserForge Fingerprint object for the current system.
+    In profile mode:
+    - Auto-detects login state
+    - Applies multi-profile headless override
+    - Delegates browser creation to CamoufoxBrowser
+    """
 
-    #         Behavior:
-    #             - If override_fingerprint=True → always generate a new fingerprint.
-    #             - If fingerprint.pkl exists and override=False → loads from file.
-    #             - Ensures screen dimensions match real display size within tolerance.
-    #         """
-    #         path = dirs.fingerprint_file
-    #         fg = self.fg
-
-    #         # Force new fingerprint if override is enabled
-    #         if self.override_fingerprint:
-    #             logger.info("♻️ Override enabled. Generating a fresh fingerprint...")
-    #             fg = None
-
-    #         # Try loading existing fingerprint if override not set
-    #         if fg is None and not self.override_fingerprint and path.exists():
-    #             logger.info("📦 Loading existing fingerprint from file...")
-    #             with open(path, 'rb') as fh:
-    #                 fg = pickle.load(fh)
-
-    #         # Generate new fingerprint if none found or override=True
-    #         if fg is None:
-    #             logger.info("🧬 Generating new fingerprint...")
-    #             gen = FingerprintGenerator()
-    #             real_w, real_h = get_screen_size()
-    #             tolerance = 0.1  # 10% tolerance
-    #             attempt = 0
-
-    #             while True:
-    #                 fg = gen.generate()
-    #                 w, h = fg.screen.width, fg.screen.height
-    #                 attempt += 1
-
-    #                 if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
-    #                     logger.info(f"✅ Fingerprint screen OK: {w}x{h}")
-    #                     break
-
-    #                 logger.warning(
-    #                     f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
-    #                 )
-    #                 if attempt >= 10:
-    #                     logger.error("⚠️ Could not get matching fingerprint after 10 attempts. Using last one.")
-    #                     break
-
-    #             with open(path, 'wb') as fh:
-    #                 pickle.dump(fg, fh)
-    #             logger.info("💾 New fingerprint saved successfully.")
-
-    #         if self.debug_fingerprint:
-    #             try:
-    #                 with open(self.debug_fingerprint_json_path, "w", encoding="utf-8") as f:
-    #                     json.dump(asdict(fg), f, indent=2)
-    #                 logger.info(f"🪶 Fingerprint debug JSON saved at: {self.debug_fingerprint_json_path}")
-    #             except Exception as e:
-    #                 logger.error(f"⚠️ Failed to save fingerprint debug JSON: {e}")
-
-    #         return fg
-
-    #     self.fg = fingerprintFile()
-
-    #     try :
-    #         if Browser is None:
-    #             Browser = await AsyncCamoufox(
-    #                 **launch_options(
-    #                     locale=self.locale,
-    #                     headless=self.headless,
-    #                     humanize=True,
-    #                     geoip=True,
-    #                     fingerprint=self.fg,
-    #                     enable_cache=self.enable_cache,
-    #                     i_know_what_im_doing=True,
-    #                     firefox_user_prefs={
-    #                         "dom.event.clipboardevents.enabled": True,
-    #                         "dom.allow_cut_copy": True,
-    #                         "dom.allow_copy": True,
-    #                         "dom.allow_paste": True,
-    #                         "dom.events.testing.asyncClipboard": True,
-    #                     },
-    #                     main_world_eval=True),
-    #                 persistent_context=True,
-    #                 user_data_dir=self.cache_dir_path
-    #             ).__aenter__()
-    #     except camoufox.exceptions.InvalidIP:
-    #         if tries == 5 :
-    #             logger.error(f"Max Tries done {tries} . Exiting.")
-    #         else :
-    #             logger.info(f"Camoufox IP failed ,Trials: {tries} retrying...")
-    #             await self.__GetBrowser__(tries=tries+1)
-    #     return Browser
     async def __GetBrowser__(self, tries: int = 1) -> BrowserContext:
 
         # If profile mode
@@ -225,16 +140,31 @@ class BrowserManager:
             pm = ProfileManager(app_name="tweakio")
             profile = pm.get_profile(self.platform, self.profile_id)
 
+            if not pm.is_logged_in(self.platform, self.profile_id):
+                logger.info(f"Profile '{self.profile_id}' requires login.")
+                # Future: call login flow
+            else:
+                logger.info(f"Profile '{self.profile_id}' already logged in.")
+
+
             bf = BrowserForgeCompatible(log=logger)
+
+            active_profiles = pm.get_active_profiles(self.platform)
+
+            if len(active_profiles) > 1:
+                effective_headless = True
+            else:
+                effective_headless = self.headless
 
             cam_browser = CamoufoxBrowser(
                 profile=profile,
                 BrowserForge=bf,
                 log=logger,
-                headless=self.headless,
+                headless=effective_headless,
                 locale=self.locale,
                 enable_cache=self.enable_cache
             )
+
 
             self.browser = await cam_browser.getInstance()
             return self.browser
@@ -244,7 +174,8 @@ class BrowserManager:
 
         cam_browser = CamoufoxBrowser(
             cache_dir_path=self.cache_dir_path,
-            fingerprint_path=dirs.fingerprint_file,
+            fingerprint_path = self.cache_dir_path / "fingerprint.pkl" ,
+
             BrowserForge=bf,
             log=logger,
             headless=self.headless,

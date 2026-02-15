@@ -10,7 +10,7 @@ from pathlib import Path
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
 
-from src import directory as dirs
+
 
 from src.Exceptions.whatsapp import LoginError
 from src.Interfaces.login_interface import LoginInterface
@@ -59,7 +59,15 @@ class Login(LoginInterface):
         link: str = kwargs.get("url", "https://web.whatsapp.com")
         number: int | None = kwargs.get("number")
         country: str | None = kwargs.get("country")
-        save_path: Path = Path(kwargs.get("save_path", dirs.storage_state_file))
+        save_path = kwargs.get("save_path")
+
+        if save_path is None:
+            raise LoginError(
+                "save_path is required. Profile session path must be provided."
+            )
+
+        save_path = Path(save_path)
+
 
         try:
             await self.page.goto(link, timeout=60_000)
