@@ -2,8 +2,8 @@
 Persistent storage backends for tweakio.
 
 Handles message caching, session persistence, and local data storage
-using SQLite and other lightweight database solutions.
+using SQLAlchemy ORM with support for SQLite, PostgreSQL, and MySQL.
 """
-from .sqlite_db import SQLITE_DB
+from .sqlalchemy_storage import SQLAlchemyStorage
 
-__all__ = ['SQLITE_DB']
+__all__ = ['SQLAlchemyStorage']
