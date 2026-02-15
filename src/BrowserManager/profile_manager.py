@@ -161,11 +161,18 @@ class ProfileManager:
     def is_logged_in(self, platform: str, profile_id: str) -> bool:
         profile = self.get_profile(platform, profile_id)
 
-        if profile.session_path.exists() and profile.cookies_path.exists():
-            if profile.session_path.stat().st_size > 2:
-                return True
+        required_files = [
+            profile.session_path,
+            profile.cookies_path,
+            profile.fingerprint_path
+        ]
 
-        return False
+        for file in required_files:
+            if not file.exists() or file.stat().st_size == 0:
+                return False
+
+        return True
+
 
     
 
