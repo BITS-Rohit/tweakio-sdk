@@ -20,7 +20,7 @@ comicbox-pdffile==0.3.0
 comicfn2dict==0.2.5
 confuse==2.0.1
 cryptography==46.0.5
-dateparser==1.2.2
+dateparser==1.3.0
 deepdiff==8.6.1
 dill==0.4.1
 drf-spectacular==0.28.0
