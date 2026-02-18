@@ -15,7 +15,7 @@ cffi==2.0.0
 charset-normalizer==3.4.3
 click==8.3.0
 colorlog==6.10.1
-comicbox==2.0.3
+comicbox==2.1.1
 comicbox-pdffile==0.3.0
 comicfn2dict==0.2.5
 confuse==2.0.1
