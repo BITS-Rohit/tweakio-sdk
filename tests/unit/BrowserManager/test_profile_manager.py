@@ -3,10 +3,10 @@ from pathlib import Path
 import importlib.util
 
 # Add src to sys.path
-sys.path.append(str(Path("src").resolve()))
+sys.path.append(str(Path("../../../src").resolve()))
 
 # Load profile_manager directly without loading BrowserManager __init__
-file_path = Path("src/BrowserManager/profile_manager.py").resolve()
+file_path = Path("../../../src/BrowserManager/profile_manager.py").resolve()
 
 spec = importlib.util.spec_from_file_location(
     "BrowserManager.profile_manager",

@@ -6,18 +6,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import List, Dict, Any, Optional
-from contextlib import asynccontextmanager
 
 from sqlalchemy import select, exists
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncEngine,
     AsyncSession,
     async_sessionmaker
 )
-from sqlalchemy.exc import IntegrityError
 
 from src.Exceptions.base import StorageError
 from src.Interfaces.message_interface import MessageInterface
@@ -28,13 +26,13 @@ from src.StorageDB.models import Base, Message
 class SQLAlchemyStorage(StorageInterface):
     """
     Generic SQLAlchemy storage implementation for MessageInterface data.
-    
+
     Features:
     - Async queue-based batch insertion
     - Background writer task for performance
     - Support for SQLite, PostgreSQL, MySQL via connection string
     - Generic message storage (works with any MessageInterface implementation)
-    
+
     Connection string examples:
     - SQLite: sqlite+aiosqlite:///path/to/messages.db
     - PostgreSQL: postgresql+asyncpg://user:pass@host/db
@@ -42,17 +40,17 @@ class SQLAlchemyStorage(StorageInterface):
     """
 
     def __init__(
-        self,
-        queue: asyncio.Queue,
-        log: logging.Logger,
-        database_url: str = "sqlite+aiosqlite:///messages.db",
-        batch_size: int = 50,
-        flush_interval: float = 2.0,
-        echo: bool = False
+            self,
+            queue: asyncio.Queue,
+            log: logging.Logger,
+            database_url: str = "sqlite+aiosqlite:///messages.db",
+            batch_size: int = 50,
+            flush_interval: float = 2.0,
+            echo: bool = False
     ) -> None:
         """
         Initialize SQLAlchemy storage.
-        
+
         Args:
             queue: Async queue for message batching
             log: Logger instance
@@ -66,7 +64,7 @@ class SQLAlchemyStorage(StorageInterface):
         self.batch_size = batch_size
         self.flush_interval = flush_interval
         self.echo = echo
-        
+
         self._engine: Optional[AsyncEngine] = None
         self._session_factory: Optional[async_sessionmaker[AsyncSession]] = None
         self._writer_task: Optional[asyncio.Task] = None
@@ -74,23 +72,23 @@ class SQLAlchemyStorage(StorageInterface):
 
     @classmethod
     def from_profile(
-        cls,
-        profile,  # ProfileInfo type (avoiding import)
-        queue: asyncio.Queue,
-        log: logging.Logger,
-        batch_size: int = 50,
-        flush_interval: float = 2.0
+            cls,
+            profile,  # ProfileInfo type (avoiding import)
+            queue: asyncio.Queue,
+            log: logging.Logger,
+            batch_size: int = 50,
+            flush_interval: float = 2.0
     ) -> "SQLAlchemyStorage":
         """
         Create storage from ProfileInfo.
-        
+
         Args:
             profile: ProfileInfo from ProfileManager
             queue: Async queue
             log: Logger
             batch_size: Batch size
             flush_interval: Flush interval
-            
+
         Returns:
             Configured SQLAlchemyStorage instance
         """
@@ -110,20 +108,20 @@ class SQLAlchemyStorage(StorageInterface):
             self._engine = create_async_engine(
                 self.database_url,
                 echo=self.echo,
-                pool_pre_ping=True,      # Verify connections before using
-                pool_recycle=3600,       # Recycle connections after 1 hour
-                pool_size=5,             # Max number of connections in pool
-                max_overflow=10,         # Max overflow connections beyond pool_size
-                pool_timeout=30          # Seconds to wait for connection from pool
+                pool_pre_ping=True,  # Verify connections before using
+                pool_recycle=3600,  # Recycle connections after 1 hour
+                pool_size=5,  # Max number of connections in pool
+                max_overflow=10,  # Max overflow connections beyond pool_size
+                pool_timeout=30  # Seconds to wait for connection from pool
             )
-            
+
             # Create session factory
             self._session_factory = async_sessionmaker(
                 self._engine,
                 class_=AsyncSession,
                 expire_on_commit=False
             )
-            
+
             self.log.info(f"SQLAlchemy engine initialized: {self.database_url}")
         except Exception as e:
             raise StorageError(f"Failed to initialize database: {e}") from e
@@ -132,7 +130,7 @@ class SQLAlchemyStorage(StorageInterface):
         """Create tables if not exists."""
         if not self._engine:
             raise StorageError("Database not initialized. Call init_db() first.")
-        
+
         try:
             async with self._engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
@@ -145,7 +143,7 @@ class SQLAlchemyStorage(StorageInterface):
         if self._writer_task and not self._writer_task.done():
             self.log.warning("Writer task already running.")
             return
-        
+
         self._running = True
         self._writer_task = asyncio.create_task(self._writer_loop())
         self.log.info("Background writer started.")
@@ -154,7 +152,7 @@ class SQLAlchemyStorage(StorageInterface):
         """Background loop that consumes queue and writes batches."""
         batch: List[MessageInterface] = []
         last_flush = asyncio.get_event_loop().time()
-        
+
         while self._running:
             try:
                 try:
@@ -169,22 +167,22 @@ class SQLAlchemyStorage(StorageInterface):
                     self.queue.task_done()
                 except asyncio.TimeoutError:
                     pass
-                
+
                 current_time = asyncio.get_event_loop().time()
                 should_flush = (
-                    len(batch) >= self.batch_size or
-                    (batch and current_time - last_flush >= self.flush_interval)
+                        len(batch) >= self.batch_size or
+                        (batch and current_time - last_flush >= self.flush_interval)
                 )
-                
+
                 if should_flush and batch:
                     await self._insert_batch_internally(batch)
                     batch.clear()
                     last_flush = current_time
-            
+
             except Exception as e:
                 self.log.error(f"Writer loop error: {e}", exc_info=True)
                 await asyncio.sleep(1)
-        
+
         # Flush remaining messages on shutdown
         if batch:
             await self._insert_batch_internally(batch)
@@ -193,35 +191,40 @@ class SQLAlchemyStorage(StorageInterface):
         """Add messages to queue for batch insertion."""
         if not msgs:
             return
-        
+
         for msg in msgs:
             await self.queue.put(msg)
-        
+
         self.log.debug(f"Enqueued {len(msgs)} messages for insertion.")
 
     async def _insert_batch_internally(self, msgs: List[MessageInterface], **kwargs) -> None:
         """Insert batch of messages into database."""
         if not self._session_factory:
             raise StorageError("Database not initialized.")
-        
+
         if not msgs:
             return
-        
+
         # Convert messages to Message models
         message_models = []
         for msg in msgs:
             try:
-                model = self._message_to_model(msg)
+                model = SQLAlchemyStorage._message_to_model(msg=msg)
                 message_models.append(model)
             except Exception as e:
                 self.log.warning(f"Failed to convert message: {e}")
                 continue
-        
+
         if not message_models:
             return
-        
+
         # Insert batch
-        async with self._session_factory() as session:
+        session_factory = self._session_factory
+        if session_factory is None:
+            raise StorageError("Database not initialized.")
+
+        session_factory = self._get_session_factory()
+        async with session_factory() as session:
             try:
                 session.add_all(message_models)
                 await session.commit()
@@ -233,7 +236,8 @@ class SQLAlchemyStorage(StorageInterface):
                 success_count = 0
                 for model in message_models:
                     try:
-                        async with self._session_factory() as single_session:
+                        session_factory = self._get_session_factory()
+                        async with session_factory() as single_session:
                             single_session.add(model)
                             await single_session.commit()
                             success_count += 1
@@ -241,28 +245,29 @@ class SQLAlchemyStorage(StorageInterface):
                         continue  # Skip duplicate
                     except Exception as e:
                         self.log.warning(f"Failed to insert message {model.message_id}: {e}")
-                
+
                 self.log.debug(f"Inserted {success_count}/{len(message_models)} messages (some duplicates).")
             except Exception as e:
                 await session.rollback()
                 self.log.error(f"Batch insert failed: {e}", exc_info=True)
                 raise StorageError(f"Batch insert failed: {e}") from e
 
-    def _message_to_model(self, msg: MessageInterface) -> Message:
+    @staticmethod
+    def _message_to_model(msg: MessageInterface) -> Message:
         """Convert MessageInterface to Message model."""
         message_id = getattr(msg, 'message_id', None) or getattr(msg, 'data_id', 'unknown')
         raw_data = getattr(msg, 'raw_data', '')
         data_type = getattr(msg, 'data_type', None)
         direction = getattr(msg, 'direction', None)
         system_hit_time = getattr(msg, 'system_hit_time', 0.0)
-        
+
         parent_chat = getattr(msg, 'parent_chat', None)
         parent_chat_name = ''
         parent_chat_id = ''
         if parent_chat:
             parent_chat_name = getattr(parent_chat, 'chatName', '') or getattr(parent_chat, 'chat_name', '')
             parent_chat_id = getattr(parent_chat, 'chatID', '') or getattr(parent_chat, 'chat_id', '')
-        
+
         return Message(
             message_id=str(message_id),
             raw_data=str(raw_data) if raw_data else '',
@@ -289,8 +294,9 @@ class SQLAlchemyStorage(StorageInterface):
         """Async version of existence check."""
         if not self._session_factory:
             return False
-        
-        async with self._session_factory() as session:
+
+        session_factory = self._get_session_factory()
+        async with session_factory() as session:
             try:
                 stmt = select(exists().where(Message.message_id == msg_id))
                 result = await session.execute(stmt)
@@ -314,11 +320,12 @@ class SQLAlchemyStorage(StorageInterface):
         """Async version of get all messages."""
         if not self._session_factory:
             return []
-        
+
         limit = kwargs.get('limit', 1000)
         offset = kwargs.get('offset', 0)
-        
-        async with self._session_factory() as session:
+
+        session_factory = self._get_session_factory()
+        async with session_factory() as session:
             try:
                 stmt = (
                     select(Message)
@@ -337,10 +344,11 @@ class SQLAlchemyStorage(StorageInterface):
         """Get messages filtered by chat name."""
         if not self._session_factory:
             return []
-        
+
         limit = kwargs.get('limit', 100)
-        
-        async with self._session_factory() as session:
+        session_factory = self._get_session_factory()
+
+        async with session_factory() as session:
             try:
                 stmt = (
                     select(Message)
@@ -355,10 +363,15 @@ class SQLAlchemyStorage(StorageInterface):
                 self.log.error(f"Get messages by chat failed: {e}")
                 return []
 
+    def _get_session_factory(self) -> async_sessionmaker[AsyncSession]:
+        if self._session_factory is None:
+            raise StorageError("Database not initialized.")
+        return self._session_factory
+
     async def close_db(self, **kwargs) -> None:
         """Close connection and stop writer."""
         self._running = False
-        
+
         if self._writer_task:
             self._writer_task.cancel()
             try:
@@ -366,7 +379,7 @@ class SQLAlchemyStorage(StorageInterface):
             except asyncio.CancelledError:
                 pass
             self._writer_task = None
-        
+
         if self._engine:
             await self._engine.dispose()
             self._engine = None
