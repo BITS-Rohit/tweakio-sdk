@@ -23,7 +23,7 @@ cryptography==46.0.5
 dateparser==1.2.2
 deepdiff==8.6.1
 dill==0.4.1
-drf-spectacular==0.28.0
+drf-spectacular==0.29.0
 face==24.0.0
 filetype==1.2.0
 fnvhash==0.2.1
