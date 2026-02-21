@@ -18,7 +18,7 @@ from src.Exceptions import base
 
 CamoufoxBrowser = camoufox_browser.CamoufoxBrowser
 BrowserException = base.BrowserException
-
+from src.BrowserManager.profile_info import ProfileInfo
 
 # ============================================================================
 # FIXTURES
@@ -37,6 +37,26 @@ def mock_browserforge():
     bf.get_fg.return_value = Mock()  # Return mock fingerprint
     return bf
 
+@pytest.fixture
+def mock_profile(tmp_path):
+    return ProfileInfo(
+        profile_id="test",
+        platform="whatsapp",
+        version="1",
+        created_at="now",
+        last_used="now",
+        profile_dir=tmp_path,
+        session_path=tmp_path / "session.json",
+        fingerprint_path=tmp_path / "fingerprint.pkl",
+        cookies_path=tmp_path / "cookies.json",
+        cache_dir=tmp_path / "cache",
+        backup_dir=tmp_path,
+        media_dir=tmp_path,
+        database_path=tmp_path / "db.sqlite",
+        is_active=False,
+        last_active_pid=None,
+        encryption={}
+    )
 
 @pytest.fixture
 def camoufox_browser(tmp_path, mock_logger, mock_browserforge):
@@ -48,12 +68,11 @@ def camoufox_browser(tmp_path, mock_logger, mock_browserforge):
     fg_path.touch()
     
     return CamoufoxBrowser(
-        cache_dir_path=cache_dir,
-        fingerprint_path=fg_path,
-        BrowserForge=mock_browserforge,
-        log=mock_logger,
-        headless=True
-    )
+    profile_info=mock_profile,
+    BrowserForge=mock_browserforge,
+    log=mock_logger,
+    headless=False
+)
 
 
 # ============================================================================
@@ -68,12 +87,11 @@ def test_init_success(tmp_path, mock_logger, mock_browserforge):
     fg_path.touch()
     
     browser = CamoufoxBrowser(
-        cache_dir_path=cache_dir,
-        fingerprint_path=fg_path,
-        BrowserForge=mock_browserforge,
-        log=mock_logger,
-        headless=False
-    )
+    profile_info=mock_profile,
+    BrowserForge=mock_browserforge,
+    log=mock_logger,
+    headless=False
+)
     
     assert browser.cache_dir_path == cache_dir
     assert browser.BrowserForge == mock_browserforge
@@ -90,11 +108,11 @@ def test_init_missing_logger(tmp_path, mock_browserforge):
     
     with pytest.raises(BrowserException, match="Logger is missing"):
         CamoufoxBrowser(
-            cache_dir_path=cache_dir,
-            fingerprint_path=fg_path,
-            BrowserForge=mock_browserforge,
-            log=None
-        )
+    profile_info=mock_profile,
+    BrowserForge=mock_browserforge,
+    log=mock_logger,
+    headless=False
+)
 
 
 def test_init_missing_browserforge(tmp_path, mock_logger):
@@ -106,12 +124,11 @@ def test_init_missing_browserforge(tmp_path, mock_logger):
     
     with pytest.raises(BrowserException, match="BrowserForge is missing"):
         CamoufoxBrowser(
-            cache_dir_path=cache_dir,
-            fingerprint_path=fg_path,
-            BrowserForge=None,
-            log=mock_logger
-        )
-
+    profile_info=mock_profile,
+    BrowserForge=mock_browserforge,
+    log=mock_logger,
+    headless=False
+)
 
 def test_init_missing_cache_dir(tmp_path, mock_logger, mock_browserforge):
     """Test CamoufoxBrowser raises error without cache directory."""
@@ -120,11 +137,11 @@ def test_init_missing_cache_dir(tmp_path, mock_logger, mock_browserforge):
     
     with pytest.raises(BrowserException, match="Cache dir path is missing"):
         CamoufoxBrowser(
-            cache_dir_path=None,
-            fingerprint_path=fg_path,
-            BrowserForge=mock_browserforge,
-            log=mock_logger
-        )
+    profile_info=mock_profile,
+    BrowserForge=mock_browserforge,
+    log=mock_logger,
+    headless=False
+)
 
 
 def test_init_missing_fingerprint_path(tmp_path, mock_logger, mock_browserforge):
@@ -134,11 +151,11 @@ def test_init_missing_fingerprint_path(tmp_path, mock_logger, mock_browserforge)
     
     with pytest.raises(BrowserException, match="Fingerprint path is missing"):
         CamoufoxBrowser(
-            cache_dir_path=cache_dir,
-            fingerprint_path=None,
-            BrowserForge=mock_browserforge,
-            log=mock_logger
-        )
+    profile_info=mock_profile,
+    BrowserForge=mock_browserforge,
+    log=mock_logger,
+    headless=False
+)
 
 
 # ============================================================================
