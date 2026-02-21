@@ -126,15 +126,17 @@ class ProfileManager:
                             results.append(f"{plat.name}:{profile.name}")
 
         return results
-    """
-    Returns list of currently active profiles for a platform.
-
-    Used to determine whether multi-profile headless override
-    should be enabled to prevent UI conflicts when multiple
-    visible browser instances are running.
-    """
+    
     
     def get_active_profiles(self, platform: str):
+        """
+        Returns list of currently active profiles for a platform.
+
+        Used to determine whether multi-profile headless override
+        should be enabled to prevent UI conflicts when multiple
+        visible browser instances are running.
+        """
+        
         platform_dir = self.directory.get_platform_dir(platform)
 
         active_profiles = []
@@ -150,15 +152,17 @@ class ProfileManager:
                     active_profiles.append(data["profile_id"])
 
         return active_profiles
-    """
-    Checks whether the profile already has stored session data.
-
-    If session and cookies files exist and contain data,
-    profile is considered logged in and login flow can be skipped.
-    """
+ 
 
 
     def is_logged_in(self, platform: str, profile_id: str) -> bool:
+        """
+        Returns list of currently active profiles for a platform.
+
+        Used to determine whether multi-profile headless override
+        should be enabled to prevent UI conflicts when multiple
+        visible browser instances are running.
+        """
         profile = self.get_profile(platform, profile_id)
 
         required_files = [
@@ -187,7 +191,7 @@ class ProfileManager:
 
         metadata_file = profile_dir / "metadata.json"
 
-        # 🔥 ADD THIS CHECK
+        
         if not metadata_file.exists():
             raise ValueError(
                 f"Profile '{profile_id}' is corrupted (metadata.json missing)."

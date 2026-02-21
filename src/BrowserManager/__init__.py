@@ -13,6 +13,7 @@ import camoufox.exceptions
 from browserforge.fingerprints import FingerprintGenerator
 from camoufox.async_api import launch_options, AsyncCamoufox
 from playwright.async_api import BrowserContext, Page
+from src.BrowserManager.profile_info import ProfileInfo
 
 from src import directory as dirs
 
@@ -21,6 +22,7 @@ from Custom_logger import logger
 from src.BrowserManager.camoufox_browser import CamoufoxBrowser
 from src.BrowserManager.profile_manager import ProfileManager
 from src.BrowserManager.browserforge_manager import BrowserForgeCompatible
+from src.BrowserManager import runtime_state
 
 class BrowserManager:
     """
@@ -140,6 +142,8 @@ class BrowserManager:
             pm = ProfileManager(app_name="tweakio")
             profile = pm.get_profile(self.platform, self.profile_id)
 
+            runtime_state.register(self.profile_id)
+
             if not pm.is_logged_in(self.platform, self.profile_id):
                 logger.info(f"Profile '{self.profile_id}' requires login.")
                 # Future: call login flow
@@ -151,13 +155,13 @@ class BrowserManager:
 
             active_profiles = pm.get_active_profiles(self.platform)
 
-            if len(active_profiles) > 1:
+            if len(active_profiles) > 0:
                 effective_headless = True
             else:
                 effective_headless = self.headless
 
             cam_browser = CamoufoxBrowser(
-                profile=profile,
+                profile_info=profile,
                 BrowserForge=bf,
                 log=logger,
                 headless=effective_headless,
@@ -169,36 +173,29 @@ class BrowserManager:
             self.browser = await cam_browser.getInstance()
             return self.browser
 
-        # Fallback to legacy mode
-        bf = BrowserForgeCompatible(log=logger)
-
-        cam_browser = CamoufoxBrowser(
-            cache_dir_path=self.cache_dir_path,
-            fingerprint_path = self.cache_dir_path / "fingerprint.pkl" ,
-
-            BrowserForge=bf,
-            log=logger,
-            headless=self.headless,
-            locale=self.locale,
-            enable_cache=self.enable_cache
-        )
-
-        self.browser = await cam_browser.getInstance()
-        return self.browser
-
-
-
+    
     async def CloseBrowser(self):
         """
-        To close the current Browser, Invoke this for no-resource leak
+        Safely close the browser and unregister runtime profile.
         """
         if self.browser:
             try:
-                for page in self.browser.pages:
-                    await page.close()
-                await self.browser.__aexit__(None, None, None)
-            except Exception as e:
-                logger.error(f"Error while closing browser: {e}", exc_info=True)
+                # Close pages safely
+                for page in list(self.browser.pages):
+                    try:
+                        await page.close()
+                    except Exception:
+                        pass  # ignore page close errors
+
+                try:
+                    await self.browser.__aexit__(None, None, None)
+                except Exception:
+                    pass
+
+            finally:
+                from src.BrowserManager import runtime_state
+                runtime_state.unregister(self.profile_id)
+                self.browser = None
 
     async def getPage(self) -> Page:
         """
