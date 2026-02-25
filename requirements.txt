@@ -91,7 +91,7 @@ ruamel.yaml.clib==0.2.14
 ruff==0.14.0
 screeninfo==0.8.1
 service-identity==24.2.0
-simplejson==3.20.1
+simplejson==3.20.2
 six==1.17.0
 sqlalchemy[asyncio]>=2.0.0
 sqlparse==0.5.5
