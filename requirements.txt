@@ -10,7 +10,7 @@ Brotli==1.2.0
 browserforge==1.2.4
 camoufox==0.4.11
 case-converter==1.2.0
-certifi==2025.8.3
+certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.3
 click==8.3.0
