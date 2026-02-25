@@ -97,7 +97,7 @@ sqlalchemy[asyncio]>=2.0.0
 sqlparse==0.5.5
 texttable==1.7.0
 tomlkit==0.14.0
-tqdm==4.67.1
+tqdm==4.67.3
 typing_extensions==4.15.0
 tzlocal==5.3.1
 ua-parser==1.0.1
