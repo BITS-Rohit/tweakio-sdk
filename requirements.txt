@@ -27,7 +27,7 @@ drf-spectacular==0.29.0
 face==24.0.0
 filetype==1.2.0
 fnvhash==0.2.1
-geoip2==5.1.0
+geoip2==5.2.0
 glom==25.12.0
 greenlet==3.2.4
 h11==0.16.0
