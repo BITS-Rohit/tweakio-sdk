@@ -52,8 +52,8 @@ class ChatProcessor(ChatProcessorInterface):
             minimum = min(count, limit)
             for i in range(minimum):
                 wrapperChat = whatsapp_chat(
-                    chatUI=chats.nth(i),
-                    chatName=await sc.getChatName(chats.nth(i))
+                    chat_ui=chats.nth(i),
+                    chat_name=await sc.getChatName(chats.nth(i))
                 )
                 wrapped.append(wrapperChat)
 
