@@ -158,7 +158,7 @@ async def test_getInstance_creates_browser(camoufox_browser, mock_browserforge):
     
     with patch('src.BrowserManager.camoufox_browser.AsyncCamoufox', return_value=mock_camoufox):
         with patch('src.BrowserManager.camoufox_browser.launch_options', return_value={}):
-            result = await camoufox_browser.getInstance()
+            result = await camoufox_browser.get_instance()
             
             assert result == mock_context
             assert camoufox_browser.browser == mock_context
@@ -171,7 +171,7 @@ async def test_getInstance_reuses_existing(camoufox_browser):
     mock_context = AsyncMock(spec=BrowserContext)
     camoufox_browser.browser = mock_context
     
-    result = await camoufox_browser.getInstance()
+    result = await camoufox_browser.get_instance()
     
     assert result == mock_context
 

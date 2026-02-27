@@ -18,7 +18,7 @@ class BrowserInterface(ABC):
     """
 
     @abstractmethod
-    async def getInstance(self, **kwargs) -> BrowserContext:
+    async def get_instance(self) -> BrowserContext:
         """Get or create the browser context instance."""
         ...
 
@@ -28,6 +28,6 @@ class BrowserInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_page(self, **kwargs) -> Page:
+    async def get_page(self) -> Page:
         """Get an available page or create a new one."""
         ...

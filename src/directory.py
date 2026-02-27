@@ -89,7 +89,7 @@ class DirectoryManager:
     def get_log_root(self) -> Path:
         return self.log_dir
     
-    # ================================
+# ================================
 # Backward compatibility layer
 # ================================
 
@@ -107,6 +107,6 @@ fingerprint_debug_json = root_dir / "BrowserManager" / "fingerprint.json"
 storage_state_file = root_dir / "BrowserManager" / "StorageState.json"
 
 ErrorTrace_file = _default_directory.get_error_trace_file()
-MessageTrace_file = _default_directory.get_message_trace_file()
+# MessageTrace_file = _default_directory.get_message_trace_file() # we are not using it anywhere
 
 

@@ -1,18 +1,19 @@
+"""Camoufox Browser integration """
 from __future__ import annotations
 
-import importlib
 import logging
-from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 import camoufox.exceptions
 from browserforge.fingerprints import Fingerprint
 from camoufox.async_api import AsyncCamoufox, launch_options
 from playwright.async_api import Page, BrowserContext
 
+from BrowserManager import ProfileInfo
 from src.Exceptions.base import BrowserException
 from src.Interfaces.browser_interface import BrowserInterface
-from src.Interfaces.browserforge_capable_interface import BrowserForgeCapable
+from src.BrowserManager.browser_config import BrowserConfig
+
 
 
 class CamoufoxBrowser(BrowserInterface):
@@ -22,6 +23,8 @@ class CamoufoxBrowser(BrowserInterface):
     Handles browser lifecycle, fingerprint loading, and retry logic for IP issues.
     Uses dependency injection for logging and fingerprint generation.
     """
+    # handles Multiple Profiles to multi browser context handling
+    Map : Dict[int , BrowserContext] = {}
 
     def __init__(
             # Removed old dependencies of
@@ -29,15 +32,24 @@ class CamoufoxBrowser(BrowserInterface):
             # override ones creates ambiguity and not good to overwrite.
             # As having same cookies with diff fingerprint next time , would cause mismatch error at platform side , gives potential Ban issue.
             # Better we will just create a new login for it. Clean and safe trackable path
+
+            # ---------
+            # adding BrowserConfig which handles :
+            # addons=None,
+            # headless: bool = False,
+            # locale: str = "en-US",
+            # enable_cache: bool = True,
+            # BrowserForge: BrowserForgeCapable, # object of browserforge fingerprint as that is also a Browser based Config
+
+            # adding profileInfo which handles :
+            # cache_dir_path: Path,
+            # fingerprint_path: Path,
+
             self,
-            cache_dir_path: Path,
-            fingerprint_path: Path,
-        BrowserForge: BrowserForgeCapable,
-            log: logging.Logger = None,
-            addons=None,
-            headless: bool = False,
-            locale: str = "en-US",
-            enable_cache: bool = True,
+            config : BrowserConfig,
+            profileInfo : ProfileInfo,
+            log: logging.Logger
+
     ) -> None:
         """
         :param cache_dir_path: saves the browser cache dir
@@ -52,15 +64,9 @@ class CamoufoxBrowser(BrowserInterface):
         :param enable_cache: good for when debugging, makes the browser to remember last/forward visited pages.
         Default is True .
         """
-        if addons is None:
-            addons = []
-        self.BrowserForge = BrowserForge
-        self.fingerprint_path = fingerprint_path
-        self.cache_dir_path = cache_dir_path
-        self.enable_cache = enable_cache
-        self.locale = locale
-        self.headless = headless
-        self.addons = addons
+        self.config = config
+        self.profileInfo = profileInfo
+        self.BrowserForge = config.fingerprint_obj # streamline the same flow
         self.browser: Optional[BrowserContext] = None
         self.log = log
 
@@ -71,18 +77,19 @@ class CamoufoxBrowser(BrowserInterface):
         if self.BrowserForge is None:
             raise BrowserException("BrowserForge is missing from the browser instance.")
 
-        if self.cache_dir_path is None:
+        if self.profileInfo.cache_dir is None:
             raise BrowserException("Cache dir path is missing from the browser instance.")
 
-        if self.fingerprint_path is None:
+        if self.profileInfo.fingerprint_path is None:
             raise BrowserException("Fingerprint path is missing from the browser instance.")
 
         if not self.headless:
             self.log.info("Opening Browser into visible Mode. Change headless to True for Invisible Browser.")
 
-    async def getInstance(self, **kwargs) -> BrowserContext:
+    async def get_instance(self) -> BrowserContext:
         if self.browser is None:
             self.browser = await self.__GetBrowser__()
+            self.Map[self.config.PID] = self.browser
         return self.browser
 
     async def __GetBrowser__(self, tries: int = 1) -> BrowserContext:
@@ -93,30 +100,24 @@ class CamoufoxBrowser(BrowserInterface):
             raise BrowserException("Max Camoufox IP retry attempts exceeded")
 
         fg: Fingerprint = self.BrowserForge.get_fg(
-            profile_path=self.fingerprint_path
+            profile_path=self.profileInfo.fingerprint_path
         )
 
         try:
             self.browser = await AsyncCamoufox(
                 **launch_options(
-                    locale=self.locale,
-                    headless=self.headless,
+                    locale=self.config.locale,
+                    headless=self.config.headless,
                     humanize=True,
                     geoip=True,
                     fingerprint=fg,
-                    enable_cache=self.enable_cache,
+                    enable_cache=self.config.enable_cache,
                     i_know_what_im_doing=True,
-                    firefox_user_prefs={
-                        "dom.event.clipboardevents.enabled": True,
-                        "dom.allow_cut_copy": True,
-                        "dom.allow_copy": True,
-                        "dom.allow_paste": True,
-                        "dom.events.testing.asyncClipboard": True,
-                    },
+                    firefox_user_prefs=self.config.prefs if self.config.prefs else None,
                     main_world_eval=True,
                 ),
                 persistent_context=True,
-                user_data_dir=self.cache_dir_path,
+                user_data_dir=self.profileInfo.cache_dir,
             ).__aenter__()
 
             return self.browser
@@ -130,7 +131,7 @@ class CamoufoxBrowser(BrowserInterface):
         except Exception as e:
             raise BrowserException("Failed to launch Camoufox browser") from e
 
-    async def get_page(self, **kwargs) -> Page:
+    async def get_page(self) -> Page:
         """
         Returns an available blank page if one exists,
         otherwise creates and returns a new page.
@@ -138,7 +139,7 @@ class CamoufoxBrowser(BrowserInterface):
         """
         browser = self.browser
         if browser is None:
-            browser = await self.getInstance()
+            browser = await self.get_instance()
 
         # Reuse an existing blank page if possible
         for page in browser.pages:
@@ -155,22 +156,15 @@ class CamoufoxBrowser(BrowserInterface):
             self.log.error("Failed to create new page", exc_info=True)
             raise BrowserException("Could not create a new page") from e
 
-    async def close_browser(self) -> bool:
-        """
-        Closes the browser context safely.
-        Returns True if closed, False otherwise.
-        """
-        if self.browser is None:
+    @classmethod
+    async def close_browser_by_pid(cls, pid: int) -> bool:
+        browser = cls.Map.get(pid)
+        if not browser:
             return True
 
         try:
-            await self.browser.__aexit__(None, None, None)
-            self.browser = None
+            await browser.__aexit__(None, None, None)
+            cls.Map.pop(pid, None)
             return True
-
-        except Exception as e:
-            self.log.error(f"Failed to close browser: {e}")
+        except Exception:
             return False
-
-
-
