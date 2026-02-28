@@ -26,8 +26,8 @@ class HumanizedOperations(HumanizeOperationInterface):
         """
         Type text with human-like delays.
 
-        Args:
-            text: Text to type
+        :param text: Text to type
+        Kwargs:
             source: Target element (ElementHandle or Locator)
         """
         source: Optional[Union[ElementHandle, Locator]] = kwargs.get("source") or None

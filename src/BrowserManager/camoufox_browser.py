@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Optional, Dict
 
 import camoufox.exceptions
@@ -19,7 +20,7 @@ from src.BrowserManager.browser_config import BrowserConfig
 class CamoufoxBrowser(BrowserInterface):
     """
     Camoufox browser implementation with fingerprint support.
-    
+
     Handles browser lifecycle, fingerprint loading, and retry logic for IP issues.
     Uses dependency injection for logging and fingerprint generation.
     """
@@ -83,13 +84,15 @@ class CamoufoxBrowser(BrowserInterface):
         if self.profileInfo.fingerprint_path is None:
             raise BrowserException("Fingerprint path is missing from the browser instance.")
 
-        if not self.headless:
+        if not self.config.headless:
             self.log.info("Opening Browser into visible Mode. Change headless to True for Invisible Browser.")
 
     async def get_instance(self) -> BrowserContext:
         if self.browser is None:
             self.browser = await self.__GetBrowser__()
-            self.Map[self.config.PID] = self.browser
+            pid = os.getpid()
+            self.Map[pid] = self.browser
+            self.profileInfo.last_active_pid = pid  # keep in-memory snapshot in sync
         return self.browser
 
     async def __GetBrowser__(self, tries: int = 1) -> BrowserContext:

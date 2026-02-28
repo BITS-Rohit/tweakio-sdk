@@ -15,9 +15,7 @@ class ProfileInfo:
     last_used: str
 
     profile_dir: Path
-    session_path: Path
     fingerprint_path: Path
-    cookies_path: Path
     cache_dir: Path
     backup_dir: Path
     media_dir: Path
@@ -43,9 +41,7 @@ class ProfileInfo:
             last_used=metadata["last_used"],
 
             profile_dir=profile_dir,
-            session_path=profile_dir / "session.json",  # OK if not in DirectoryManager yet
             fingerprint_path=profile_dir / "fingerprint.pkl",
-            cookies_path=profile_dir / "cookies.json",
 
             cache_dir=directory.get_cache_dir(platform, profile_id),
             backup_dir=directory.get_backup_dir(platform, profile_id),

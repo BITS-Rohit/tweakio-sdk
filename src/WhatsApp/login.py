@@ -10,7 +10,6 @@ from pathlib import Path
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
 
-import directory as dirs
 from src.Exceptions.whatsapp import LoginError
 from src.Interfaces.login_interface import LoginInterface
 from src.WhatsApp.web_ui_config import WebSelectorConfig
@@ -45,30 +44,24 @@ class Login(LoginInterface):
         """
         Authenticate to WhatsApp Web.
 
-        Args:
+        kwargs:
             method: 0 for QR, 1 for phone number (default: 1)
             wait_time: Timeout for QR scan in ms (default: 180_000)
             url: WhatsApp Web URL
             number: Phone number for code-based login
             country: Country name for phone login
-            save_path: Path to store session state
         """
         method: int = kwargs.get("method", 1)
         wait_time: int = kwargs.get("wait_time", 180_000)
         link: str = kwargs.get("url", "https://web.whatsapp.com")
         number: int | None = kwargs.get("number")
         country: str | None = kwargs.get("country")
-        save_path: Path = Path(kwargs.get("save_path", dirs.storage_state_file))
 
         try:
             await self.page.goto(link, timeout=60_000)
             await self.page.wait_for_load_state("networkidle", timeout=50_000)
         except PlaywrightTimeoutError as e:
             raise LoginError("Timeout while loading WhatsApp Web") from e
-
-        if save_path.is_file() and save_path.stat().st_size > 0:
-            self.log.info("Using existing WhatsApp session storage.")
-            return True
 
         if method == 0:
             success = await self.__qr_login(wait_time)
@@ -78,9 +71,7 @@ class Login(LoginInterface):
             raise LoginError("Invalid login method. Use method=0 (QR) or method=1 (Code).")
 
         if success:
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            await self.page.context.storage_state(path=save_path)
-            self.log.info("WhatsApp login session stored successfully.")
+            self.log.info("WhatsApp login session stored successfully via persistent context.")
 
         return success
 
