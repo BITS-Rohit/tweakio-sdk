@@ -35,9 +35,7 @@ class ProfileManager:
             "paths": {
                 "profile_dir": str(self.directory.get_profile_dir(platform, profile_id)),
 
-                "session_file": "session.json",
                 "fingerprint_file": "fingerprint.pkl",
-                "cookies_file": "cookies.json",
                 "cache_dir": "cache",
                 "backup_dir": "backups",
                 "media_dir": "media",
@@ -94,8 +92,6 @@ class ProfileManager:
         self.directory.get_media_voice_dir(platform, profile_id)
         self.directory.get_media_documents_dir(platform, profile_id)
 
-        (profile_dir / "session.json").write_text("{}")
-        (profile_dir / "cookies.json").write_text("{}")
         (profile_dir / "fingerprint.pkl").write_bytes(b"")
 
         metadata = self._generate_metadata(platform, profile_id)
@@ -250,7 +246,8 @@ class ProfileManager:
                 lock_file.unlink()
 
         # ----- Headless override for multi-profile runtime -----
-        if ProfileManager.__p_count__() > 1:
+        # p_count is checked BEFORE __inc__(), so >= 1 means "at least 1 already running"
+        if ProfileManager.__p_count__() >= 1:
             browser_obj.config.headless = True
 
         ProfileManager.__inc__()
