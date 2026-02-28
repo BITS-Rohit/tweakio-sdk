@@ -5,7 +5,7 @@ import signal
 from datetime import datetime
 from typing import List, Optional, Dict
 
-from directory import DirectoryManager
+from src.directory import DirectoryManager
 from src.BrowserManager.camoufox_browser import CamoufoxBrowser
 from src.BrowserManager.platform_manager import Platform
 from src.BrowserManager.profile_info import ProfileInfo

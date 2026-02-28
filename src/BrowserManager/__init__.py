@@ -1,4 +1,26 @@
-# Todo add browsers ex : camoufoxbrowser but with caution to not addup a cyclic import  bug.
+# BrowserManager package — exposes core browser and profile classes.
+# Old BrowserManager class (monolithic) has been refactored into:
+#   - CamoufoxBrowser: browser lifecycle with fingerprint support
+#   - BrowserConfig: clean browser configuration dataclass
+#   - ProfileManager: creates, activates, closes profiles
+#   - ProfileInfo: per-profile data and path resolution
+#   - Platform: enum for supported platforms (no more raw strings)
+
+from src.BrowserManager.camoufox_browser import CamoufoxBrowser
+from src.BrowserManager.browser_config import BrowserConfig
+from src.BrowserManager.profile_manager import ProfileManager
+from src.BrowserManager.profile_info import ProfileInfo
+from src.BrowserManager.platform_manager import Platform
+
+__all__ = [
+    "CamoufoxBrowser",
+    "BrowserConfig",
+    "ProfileManager",
+    "ProfileInfo",
+    "Platform",
+]
+
+
 
 
 # ------------------------------------------ Removal of old code ----------------------

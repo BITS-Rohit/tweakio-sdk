@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Dict
 
-from BrowserManager.platform_manager import Platform
+from src.BrowserManager.platform_manager import Platform
 
 
 @dataclass

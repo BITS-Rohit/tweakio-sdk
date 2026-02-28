@@ -10,7 +10,7 @@ from browserforge.fingerprints import Fingerprint
 from camoufox.async_api import AsyncCamoufox, launch_options
 from playwright.async_api import Page, BrowserContext
 
-from BrowserManager import ProfileInfo
+from src.BrowserManager.profile_info import ProfileInfo
 from src.Exceptions.base import BrowserException
 from src.Interfaces.browser_interface import BrowserInterface
 from src.BrowserManager.browser_config import BrowserConfig
