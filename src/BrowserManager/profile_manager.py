@@ -3,7 +3,6 @@ import os
 import shutil
 import signal
 from datetime import datetime
-from pathlib import Path
 from typing import List, Optional, Dict
 
 from directory import DirectoryManager
@@ -37,7 +36,6 @@ class ProfileManager:
 
                 "fingerprint_file": "fingerprint.pkl",
                 "cache_dir": "cache",
-                "backup_dir": "backups",
                 "media_dir": "media",
                 "media_images": "media/images",
                 "media_videos": "media/videos",
@@ -45,12 +43,8 @@ class ProfileManager:
                 "database_file": "messages.db",
                 "media_documents": "media/documents"
             },
-
-            "backup": {
-                "enabled": True,
-                "max_backups": 10
-            },
             "encryption": {},
+
 
             "status": {
                 "is_active": False,
@@ -86,7 +80,6 @@ class ProfileManager:
         profile_dir.mkdir(parents=True, exist_ok=True)
 
         self.directory.get_cache_dir(platform, profile_id)
-        self.directory.get_backup_dir(platform, profile_id)
         self.directory.get_media_images_dir(platform, profile_id)
         self.directory.get_media_videos_dir(platform, profile_id)
         self.directory.get_media_voice_dir(platform, profile_id)
@@ -284,40 +277,3 @@ class ProfileManager:
         # Remove directory safely
         shutil.rmtree(profile_dir)
 
-    def create_backup(self, platform: Platform, profile_id: str) -> None:
-
-        profile_dir = self.directory.get_profile_dir(platform, profile_id)
-
-        if not profile_dir.exists():
-            raise ValueError("Profile does not exist.")
-
-        metadata_file = profile_dir / "metadata.json"
-
-        with open(metadata_file) as f:
-            metadata = json.load(f)
-
-        if not metadata["backup"]["enabled"]:
-            return
-
-        backup_dir = profile_dir / "backups"
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        backup_file = backup_dir / f"session_{timestamp}.json"
-
-        session_file = profile_dir / "session.json"
-
-        shutil.copy2(session_file, backup_file)
-
-        self._prune_backups(profile_dir, metadata["backup"]["max_backups"])
-
-    def _prune_backups(self, profile_dir: Path, max_backups: int) -> None:
-        backup_dir = profile_dir / "backups"
-
-        backups = sorted(
-            backup_dir.glob("session_*.json"),
-            key=lambda x: x.stat().st_mtime,
-            reverse=True
-        )
-
-        for old_backup in backups[max_backups:]:
-            old_backup.unlink()

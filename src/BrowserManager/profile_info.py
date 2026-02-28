@@ -17,8 +17,11 @@ class ProfileInfo:
     profile_dir: Path
     fingerprint_path: Path
     cache_dir: Path
-    backup_dir: Path
     media_dir: Path
+    media_images_dir: Path
+    media_videos_dir: Path
+    media_voice_dir: Path
+    media_documents_dir: Path
     database_path: Path
 
     is_active: bool
@@ -44,8 +47,11 @@ class ProfileInfo:
             fingerprint_path=profile_dir / "fingerprint.pkl",
 
             cache_dir=directory.get_cache_dir(platform, profile_id),
-            backup_dir=directory.get_backup_dir(platform, profile_id),
             media_dir=directory.get_media_dir(platform, profile_id),
+            media_images_dir=directory.get_media_images_dir(platform, profile_id),
+            media_videos_dir=directory.get_media_videos_dir(platform, profile_id),
+            media_voice_dir=directory.get_media_voice_dir(platform, profile_id),
+            media_documents_dir=directory.get_media_documents_dir(platform, profile_id),
             database_path=directory.get_database_path(platform, profile_id),
 
             is_active=metadata["status"]["is_active"],
