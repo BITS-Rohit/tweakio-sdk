@@ -18,7 +18,7 @@ from src.WhatsApp.web_ui_config import WebSelectorConfig
 class ChatProcessor(ChatProcessorInterface):
     """Fetches and manages WhatsApp chats from the Web UI."""
 
-    def __init__(self, page: Page, log: logging.Logger, UIConfig: WebSelectorConfig) -> None:
+    def __init__(self, page: Page, log: logging.Logger, UIConfig: WebSelectorConfig) :
         super().__init__(page=page, log=log, UIConfig=UIConfig)
         self.capabilities: Dict[str, bool] = {}
         if self.page is None:
