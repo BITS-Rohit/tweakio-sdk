@@ -14,6 +14,7 @@ from src.WhatsApp.DerivedTypes.Chat import whatsapp_chat
 @dataclass
 class whatsapp_message:
     """Should inherit the protocol from Message Interface Template"""
+
     direction: Literal["in", "out"]
     data_id: str
 
@@ -24,6 +25,8 @@ class whatsapp_message:
     data_type: Optional[str] = None
     message_id: str = field(init=False)
     system_hit_time: float = field(default_factory=time.time)
+    encrypted_message: Optional[str] = None
+    encryption_nonce: Optional[str] = None
 
     def isIncoming(self) -> Optional[bool]:
         """
