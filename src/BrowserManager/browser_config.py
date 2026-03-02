@@ -7,17 +7,12 @@ from src.BrowserManager.platform_manager import Platform
 from src.Interfaces.browserforge_capable_interface import BrowserForgeCapable
 
 
-# Here we will add a new BrowserConfig data class
-# this would help us to override the data and clean abstraction
 @dataclass
 class BrowserConfig:
     """
     Config dataclass for browser.
     """
-    # This can be extended this way for further capabilities
-    # we are using real OS which is os bound process ,
-    # removing these prefs won't harm the browser & maintain stealth better
-    # we would need then async locking for OS bound pasting
+
     # {
     #     "dom.event.clipboardevents.enabled": True,
     #     "dom.allow_cut_copy": True,
@@ -33,4 +28,15 @@ class BrowserConfig:
     prefs: Optional[Dict[str, bool]] = None
     addons: List[str] = field(default_factory=list)
 
+    @classmethod
+    def from_dict(cls, data: Dict) -> BrowserConfig:
+        """dict should expose exact same name in the above given params."""
+        return (
+            cls(platform=data["platform"],
+                locale=data["locale"],
+                enable_cache=data["enable_cache"],
+                headless=data["headless"],
+                prefs=data["prefs"],
+                addons=data["addons"],
+                fingerprint_obj=data["fingerprint_obj"],))
 

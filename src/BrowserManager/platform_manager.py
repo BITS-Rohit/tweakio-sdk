@@ -2,8 +2,6 @@ from enum import Enum
 from typing import List
 
 
-# Introducing a Platform dataclass to absolute the platform name for naming issues fixing
-# Example right now platform : str -> can be whatsapp , WhatsAPP etc anything . It is not absolute to a fixed name.
 
 class Platform(str, Enum):
     """Absolute names"""

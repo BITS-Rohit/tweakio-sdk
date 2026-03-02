@@ -3,10 +3,10 @@ from platformdirs import PlatformDirs
 
 
 class DirectoryManager:
-    def __init__(self, app_name: str = "tweakio"):
+    def __init__(self, app_name: str = "Tweakio_sdk"):
         self.dirs = PlatformDirs(
             appname=app_name,
-            appauthor="Rohit"
+            appauthor="BITS-Rohit"
         )
 
         self.root_dir = Path(self.dirs.user_data_dir)
@@ -37,7 +37,6 @@ class DirectoryManager:
 
     def get_message_trace_file(self) -> Path:
         return self.cache_dir / "MessageTrace.txt"
-
 
 
     # ----------------------------

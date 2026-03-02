@@ -28,23 +28,6 @@ class CamoufoxBrowser(BrowserInterface):
     Map : Dict[int , BrowserContext] = {}
 
     def __init__(
-            # Removed old dependencies of
-            # debug_fingerprint , fingerprint , debug_fingerprint_json_path, override_cookies option, override_fingerprint
-            # override ones creates ambiguity and not good to overwrite.
-            # As having same cookies with diff fingerprint next time , would cause mismatch error at platform side , gives potential Ban issue.
-            # Better we will just create a new login for it. Clean and safe trackable path
-
-            # ---------
-            # adding BrowserConfig which handles :
-            # addons=None,
-            # headless: bool = False,
-            # locale: str = "en-US",
-            # enable_cache: bool = True,
-            # BrowserForge: BrowserForgeCapable, # object of browserforge fingerprint as that is also a Browser based Config
-
-            # adding profileInfo which handles :
-            # cache_dir_path: Path,
-            # fingerprint_path: Path,
 
             self,
             config : BrowserConfig,

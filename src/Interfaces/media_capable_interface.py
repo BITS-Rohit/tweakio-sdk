@@ -32,7 +32,7 @@ class MediaCapableInterface(ABC):
     """Base interface for media upload operations."""
 
     @abstractmethod
-    def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable, **kwargs) -> None:
+    def __init__(self, page: Page, log: logging.Logger, UIConfig: WebUISelectorCapable, **kwargs) :
         self.page = page
         self.log = log
         self.UIConfig = UIConfig

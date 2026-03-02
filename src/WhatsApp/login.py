@@ -9,7 +9,7 @@ import shutil
 from pathlib import Path
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
-
+from typing import Optional
 from src.Exceptions.whatsapp import LoginError
 from src.Interfaces.login_interface import LoginInterface
 from src.WhatsApp.web_ui_config import WebSelectorConfig
@@ -23,7 +23,7 @@ class Login(LoginInterface):
             page: Page,
             UIConfig: WebSelectorConfig,
             log: logging.Logger
-    ) -> None:
+    ) :
         if page is None:
             raise ValueError("page must not be None")
 
@@ -54,8 +54,8 @@ class Login(LoginInterface):
         method: int = kwargs.get("method", 1)
         wait_time: int = kwargs.get("wait_time", 180_000)
         link: str = kwargs.get("url", "https://web.whatsapp.com")
-        number: int | None = kwargs.get("number")
-        country: str | None = kwargs.get("country")
+        number: Optional[int] = kwargs.get("number")
+        country: Optional[str] = kwargs.get("country")
 
         try:
             await self.page.goto(link, timeout=60_000)

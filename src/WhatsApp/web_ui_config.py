@@ -18,7 +18,7 @@ from src.Interfaces.web_ui_selector import WebUISelectorCapable
 class WebSelectorConfig(WebUISelectorCapable):
     """Generic Custom Class , Different from every Platform"""
 
-    def __init__(self, page: Page, log : logging.Logger) -> None:
+    def __init__(self, page: Page, log : logging.Logger) :
         super().__init__(page=page,log=log)
         if self.page is None:
             raise ValueError("page must not be None")

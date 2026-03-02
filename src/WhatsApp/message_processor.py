@@ -28,7 +28,7 @@ class MessageProcessor(MessageProcessorInterface):
             page: Page,
             log: logging.Logger,
             UIConfig: WebSelectorConfig
-    ) -> None:
+    ) :
         super().__init__(
             storage_obj=storage_obj,
             filter_obj=filter_obj,

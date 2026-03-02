@@ -24,7 +24,7 @@ class MessageProcessorInterface(ABC):
             UIConfig: WebSelectorConfig,
             storage_obj: Optional[StorageInterface] = None,
             filter_obj: Optional[MessageFilter] = None
-    ) -> None:
+    ) :
         self.storage = storage_obj
         self.filter = filter_obj
         self.log = log
