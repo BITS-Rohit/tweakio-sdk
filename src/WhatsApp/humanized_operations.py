@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import logging
 import random
+import asyncio
+import os
+from filelock import FileLock
 from typing import Union, Optional
 
 import pyperclip
@@ -13,6 +16,11 @@ from src.Exceptions.base import ElementNotFoundError, HumanizedOperationError
 from src.Interfaces.humanize_operation_interface import HumanizeOperationInterface
 from src.Interfaces.web_ui_selector import WebUISelectorCapable
 
+
+_clipboard_async_lock = asyncio.Lock()
+
+_lock_file_path = os.path.join(tempfile.gettempdir(), "whatsapp_clipboard.lock")
+_clipboard_file_lock = FileLock(_lock_file_path)
 
 class HumanizedOperations(HumanizeOperationInterface):
     """Simulates human-like typing with variable delays."""
@@ -48,8 +56,7 @@ class HumanizedOperations(HumanizeOperationInterface):
             else:
                 for i, line in enumerate(lines):
                     if len(line) > 50:
-                        pyperclip.copy(line)
-                        await self.page.keyboard.press("Control+V")
+                        await self._safe_clipboard_paste(line)
                     else:
                         await self.page.keyboard.type(text=line, delay=random.randint(80, 100))
 
@@ -75,3 +82,29 @@ class HumanizedOperations(HumanizeOperationInterface):
             raise HumanizedOperationError(
                 "Instant fill failed. Typing operation was not successful."
             ) from e
+    async def _safe_clipboard_paste(self, text:str) -> None:
+        """
+        Safely copy text to OS clipboard and paste atomically.
+        Prevents race conditions across and concurrent profiles.
+        """
+
+        loop = asyncio.get_running_loop()
+
+        async with _clipboard_async_lock:
+            # Acquire OS-level file lock in executor (blocking operation)
+            await loop.run_in_executor(None, _clipboard_file_lock.acquire)
+
+            try:
+                previous_clipboard = pyperclip.paste()
+
+                pyperclip.copy(text)
+
+                # Small delay ensures clipboard propagation
+                await asyncio.sleep(0.05)
+
+                await self.page.keyboard.press("Control+V")
+            finally:
+                # Restore previous clipboard content
+                if previous_clipboard:
+                    pyperclip.copy(previous_clipboard)
+                _clipboard_file_lock.release()
