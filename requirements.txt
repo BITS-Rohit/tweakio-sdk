@@ -37,7 +37,7 @@ humanfriendly==10.0
 humanize==4.13.0
 Hypercorn==0.18.0
 hyperframe==6.1.0
-idna==3.10
+idna==3.11
 inflate64==1.0.4
 inflection==0.5.1
 isort==8.0.1
