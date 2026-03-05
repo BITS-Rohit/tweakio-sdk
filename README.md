@@ -1,75 +1,70 @@
-![Project Banner](assets/OSCG_Banner.jpeg)
+<div align="center">
 
-# Tweakio-SDK
+# ⚡ Tweakio-SDK
 
-> **Production-Grade WhatsApp Web Automation for Python**  
-> _Anti-detection browser automation built on Playwright + Camoufox._
+### Production-Grade WhatsApp Web Automation for Python
 
-[![PyPI - Version](https://img.shields.io/pypi/v/tweakio-sdk?label=tweakio-sdk)](https://pypi.org/project/tweakio-sdk/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tweakio-sdk)](https://pypi.org/project/tweakio-sdk/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test Coverage](https://img.shields.io/badge/coverage-%3E90%25-brightgreen)](https://github.com/BITS-Rohit/tweakio-sdk)
+*Anti-detection browser automation built on Playwright + Camoufox*
 
-**[Documentation](https://github.com/BITS-Rohit/tweakio-sdk#readme)** · **[PyPI](https://pypi.org/project/tweakio-sdk/)** · **[Issues](https://github.com/BITS-Rohit/tweakio-sdk/issues)** · **[Contributing](OSCG_CONTRIBUTOR_Guidelines.md)**  ·  **[Mentors](OSCG_MENTORS_Guidelines.md)**
+<br>
 
----
+[![PyPI Version](https://img.shields.io/pypi/v/tweakio-sdk?style=flat-square&label=tweakio-sdk&color=22c55e)](https://pypi.org/project/tweakio-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/tweakio-sdk?style=flat-square&color=3b82f6)](https://pypi.org/project/tweakio-sdk/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Coverage](https://img.shields.io/badge/coverage->90%25-brightgreen?style=flat-square)](https://github.com/BITS-Rohit/tweakio-sdk)
 
-## 🔴 The Problem
+<br>
 
-WhatsApp automation is broken:
+[**Docs**](https://github.com/BITS-Rohit/tweakio-sdk#readme) · [**PyPI**](https://pypi.org/project/tweakio-sdk/) · [**Issues**](https://github.com/BITS-Rohit/tweakio-sdk/issues) · [**Contributing**](OSCG_CONTRIBUTOR_Guidelines.md) · [**Mentors**](OSCG_MENTORS_Guidelines.md)
 
-1. **Detection & Bans** — Standard Selenium/Playwright scripts are fingerprinted and banned within hours
-2. **Fragile Scripts** — When WhatsApp updates its UI, your selectors break. You spend weeks patching instead of building
-3. **No Production Patterns** — Most automation tools are throwaway scripts, not production software with proper architecture
-4. **Platform Lock-In** — Want to add Telegram later? Start from scratch
-
-**The industry treats automation as disposable code. We don't.**
+</div>
 
 ---
 
-## 💡 The Solution
+## The Problem with WhatsApp Automation
 
-**Tweakio-SDK** is a WhatsApp automation framework built with production-grade patterns:
+Every existing solution fails in one of four ways:
 
-| Problem | Tweakio Solution |
-|---------|------------------|
-| Detection | **Camoufox + BrowserForge** fingerprinting (indistinguishable from humans) |
-| Fragile selectors | **Interface-driven architecture** — when WhatsApp breaks, only `src/WhatsApp/` needs updates |
-| No persistence | **Async SQLite storage** with background queue workers |
-| No typing | **Type-safe dataclasses** for Chat and Message objects |
+- **Bans within hours** — Standard Selenium/Playwright scripts are fingerprinted immediately
+- **Fragile selectors** — A single WhatsApp UI update breaks your entire bot
+- **No production patterns** — Most tools are throwaway scripts, not maintainable software
+- **Platform lock-in** — Adding Telegram means starting from scratch
 
-**Current**: WhatsApp Web (v0.1.5)  
-**Roadmap**: Telegram (Q2 2026), Instagram (Q3 2026)
+Tweakio-SDK was built to solve all four.
 
 ---
-# OSCG26_Guidelines
 
-This gist provides templates for the following 2 files 
+## What Makes Tweakio Different
 
-1. [OSCG_CONTRIBUTOR_Guidelines.md](OSCG_CONTRIBUTOR_Guidelines.md)
-2. [OSCG_MENTORS_Guidelines.md](OSCG_MENTORS_Guidelines.md)
+| Problem | Solution |
+|---|---|
+| Bot detection | **Camoufox + BrowserForge** fingerprinting — indistinguishable from human traffic |
+| Breaking UI changes | **Interface-driven architecture** — only `src/WhatsApp/` ever needs updating |
+| Lost messages | **Async SQLite storage** with background queue workers |
+| Runtime errors | **Type-safe dataclasses** for every Chat and Message object |
 
-Contributors are to strictly follow `OSCG_CONTRIBUTOR_Guidelines.md` and mentors are to follow `OSCG_MENTORS_Guidelines.md` respectively 
+> **Current:** WhatsApp Web `v0.1.5` · **Roadmap:** Telegram (Q2 2026), Instagram (Q3 2026)
+
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 pip install tweakio-sdk
 ```
 
-**Requirements**: Python 3.10+, Playwright browsers
+**Requirements:** Python 3.10+
 
 ```bash
-# Install Playwright browsers (one-time)
+# Install Playwright browsers (one-time setup)
 playwright install chromium
 ```
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
-### Basic: Fetch Chats
+### Fetch Chats
 
 ```python
 import asyncio
@@ -80,26 +75,26 @@ from src.WhatsApp.web_ui_config import WebSelectorConfig
 from Custom_logger import logger
 
 async def main():
-    # 1. Launch anti-detect browser
+    # Launch anti-detect browser
     browser = BrowserManager(headless=False)
     page = await browser.getPage()
-    
-    # 2. Initialize UI config and Login
+
+    # Initialize UI config and login
     ui_config = WebSelectorConfig(page=page, log=logger)
     login = Login(page=page, UIConfig=ui_config, log=logger)
-    
-    # 3. Login (scan QR code on first run)
+
+    # Scan QR code on first run — session saved automatically
     await login.login(save_path="./session.json")
-    
-    # 4. Fetch chats
+
+    # Fetch up to 5 chats
     chat_processor = ChatProcessor(page=page, UIConfig=ui_config, log=logger)
     async for chat, name in chat_processor.Fetcher(MaxChat=5):
-        print(f"📂 Chat: {name}")
+        print(f"📂 {name}")
 
 asyncio.run(main())
 ```
 
-### Advanced: Message Processing with Storage
+### Message Processing with Persistent Storage
 
 ```python
 import asyncio
@@ -112,18 +107,15 @@ from src.StorageDB.sqlite_db import SQLITE_DB
 from Custom_logger import logger
 
 async def main():
-    # Browser + Login setup (same as above)
     browser = BrowserManager(headless=False)
     page = await browser.getPage()
     ui_config = WebSelectorConfig(page=page, log=logger)
     login = Login(page=page, UIConfig=ui_config, log=logger)
     await login.login(save_path="./session.json")
-    
-    # Initialize async storage
+
     queue = asyncio.Queue()
     async with SQLITE_DB(queue=queue, log=logger, db_path="messages.db") as storage:
-        
-        # Initialize processors
+
         chat_processor = ChatProcessor(page=page, UIConfig=ui_config, log=logger)
         msg_processor = MessageProcessor(
             page=page,
@@ -132,99 +124,96 @@ async def main():
             log=logger,
             storage=storage  # Messages auto-saved to SQLite
         )
-        
-        # Fetch and process messages
+
         async for chat, name in chat_processor.Fetcher(MaxChat=3):
             print(f"📂 Processing: {name}")
-            
-            # Fetcher returns wrapped Message objects with deduplication
+
             messages = await msg_processor.Fetcher(chat=chat, retry=3)
-            
             for msg in messages:
-                print(f"   💬 {msg.data_type}: {msg.raw_data[:50]}...")
-                print(f"      ID: {msg.message_id}")
-                print(f"      Direction: {msg.direction}")
+                print(f"  💬 [{msg.direction}] {msg.data_type}: {msg.raw_data[:60]}...")
+                print(f"     ID: {msg.message_id}")
 
 asyncio.run(main())
 ```
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 tweakio-sdk/
 ├── src/
-│   ├── BrowserManager/     # Anti-detect Playwright + Camoufox
-│   ├── WhatsApp/           # Platform-specific implementation
-│   │   ├── login.py        # QR + Phone authentication
-│   │   ├── chat_processor.py
+│   ├── BrowserManager/         # Anti-detect Playwright + Camoufox
+│   ├── WhatsApp/               # Platform-specific implementation
+│   │   ├── login.py            # QR + phone number authentication
+│   │   ├── chat_processor.py   # Chat fetching and navigation
 │   │   ├── message_processor.py
-│   │   ├── web_ui_config.py  # Selector definitions
-│   │   └── DerivedTypes/   # Chat, Message dataclasses
-│   ├── Interfaces/         # Abstract contracts (for future platforms)
-│   ├── StorageDB/          # Async SQLite with queue workers
-│   └── Exceptions/         # Custom exception hierarchy
-└── tests/                  # >90% coverage on core modules
+│   │   ├── web_ui_config.py    # DOM selector definitions
+│   │   └── DerivedTypes/       # Chat, Message dataclasses
+│   ├── Interfaces/             # Abstract contracts (multi-platform ready)
+│   ├── StorageDB/              # Async SQLite with queue workers
+│   └── Exceptions/             # Custom exception hierarchy
+└── tests/                      # >90% coverage on core modules
 ```
 
-### Key Design Decisions
+### Design Principles
 
-- **Interface-Driven**: Every platform implements `ChatProcessorInterface`, `MessageProcessorInterface`, etc.
-- **Dependency Injection**: All classes accept `log` parameter for testability
-- **Async-First**: Non-blocking SQLite writes, background queue workers
-- **Anti-Detection**: Camoufox fingerprints + human-like typing delays
+**Interface-driven** — Every platform implements `ChatProcessorInterface` and `MessageProcessorInterface`. Swapping platforms is one file, not a rewrite.
+
+**Dependency injection** — All classes accept a `log` parameter, making unit testing trivial.
+
+**Async-first** — SQLite writes are non-blocking. A background queue worker handles batching so your main loop never stalls.
+
+**Anti-detection** — Camoufox fingerprints paired with human-like typing delays make automated traffic look organic.
 
 ---
 
-## 📊 Modules
+## Module Reference
 
-| Module | Description |
-|--------|-------------|
-| **BrowserManager** | Anti-detect browser with fingerprint rotation |
-| **Login** | QR code + phone number authentication |
-| **ChatProcessor** | Fetch chats, handle unread status, click navigation |
-| **MessageProcessor** | Extract messages, deduplicate, filter, store |
-| **SQLITE_DB** | Async queue-powered storage with batch inserts |
-| **WebSelectorConfig** | Platform-specific DOM selectors |
-
----
-
-## 🛠️ How It Works
-
-### Message Processing Flow
-
-```
-1. ChatProcessor.Fetcher() → yields Chat objects
-2. MessageProcessor.Fetcher(chat) → clicks chat, extracts messages
-3. Messages wrapped as whatsapp_message dataclass
-4. New messages enqueued to SQLITE_DB async queue
-5. Background writer batches inserts every N seconds
-```
-
-### Anti-Detection Stack
-
-```
-Playwright (base) → Camoufox (fingerprint) → BrowserForge (realistic profiles)
-```
+| Module | What it does |
+|---|---|
+| `BrowserManager` | Anti-detect browser with fingerprint rotation |
+| `Login` | QR code + phone number authentication, session persistence |
+| `ChatProcessor` | Fetch chats, handle unread status, click navigation |
+| `MessageProcessor` | Extract messages, deduplicate, filter, and store |
+| `SQLITE_DB` | Async queue-powered storage with batch inserts |
+| `WebSelectorConfig` | Platform-specific DOM selectors |
 
 ---
 
-## 🤝 Contributing
+## How It Works
 
-We welcome contributions! **Vibe coding accepted** — if it works and is clean, we'll merge it.
+**Message Processing Flow**
 
-### Contribution Rules
+```
+ChatProcessor.Fetcher()
+  → yields Chat objects
 
-1. **Fork → Branch → PR** workflow required
-2. **AI-Assisted code is welcome** — just mention it in your PR description for transparency
-3. **Tests required** for new features (we maintain >90% coverage on core modules)
-4. **Type hints required** — we use `mypy` for static analysis
+MessageProcessor.Fetcher(chat)
+  → clicks chat, extracts raw DOM nodes
+  → wraps each as whatsapp_message dataclass
+  → deduplicates against previous runs
 
-### Quick Start for Contributors
+SQLITE_DB async queue
+  → background writer batches inserts every N seconds
+```
+
+**Anti-Detection Stack**
+
+```
+Playwright  →  Camoufox (fingerprint patching)  →  BrowserForge (realistic device profiles)
+```
+
+---
+
+## Contributing
+
+Contributions are welcome. **Vibe coding accepted** — if it works and it's clean, we'll merge it.
+
+### Workflow
 
 ```bash
-# Clone and setup
+# Setup
 git clone https://github.com/BITS-Rohit/tweakio-sdk.git
 cd tweakio-sdk
 python -m venv .venv && source .venv/bin/activate
@@ -233,9 +222,16 @@ pip install -e ".[dev]"
 # Run tests
 pytest --cov=src
 
-# Your feature branch
-git checkout -b feature/your-feature
+# Create your feature branch
+git checkout -b feature/your-feature-name
 ```
+
+### Rules
+
+1. **Fork → Branch → PR** — no direct pushes to `main`
+2. **AI-assisted code is welcome** — just disclose it in your PR description
+3. **Tests required** for new features — maintain >90% coverage on core modules
+4. **Type hints required** — we run `mypy` in CI
 
 ### PR Template
 
@@ -244,69 +240,64 @@ git checkout -b feature/your-feature
 [Description]
 
 ## AI Disclosure
-- [ ] This PR includes AI-generated code (Claude/GPT/Copilot)
+- [ ] This PR includes AI-generated code (Claude / GPT / Copilot)
 - [ ] This PR is fully human-written
 
 ## Testing
-- [ ] Added/updated tests
+- [ ] Added / updated tests
 - [ ] All tests pass locally
 ```
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 ### v0.1.6 — Core Infrastructure
 - [ ] Custom Logger improvements
-- [ ] Multi-Account Handling
+- [ ] Multi-account handling
 - [ ] BrowserManager enhancements
-- [ ] Dependency Injection & Interface renewal
+- [ ] Dependency injection & interface renewal
 - [ ] Directory structure improvements
-- [ ] Separate Browser Logging
+- [ ] Separate browser logging
 
 ### v0.1.7 — Security & Stability
-- [ ] Encryption & Decryption module
+- [ ] Encryption & decryption module
 - [ ] KeyBox integration
-- [ ] Stability & Decryptor additions
-- [ ] Stability increase → 60-70% reliability
+- [ ] Stability target: 60–70% reliability
 
 ### v0.1.8 — Quality Assurance
 - [ ] Test coverage increase & logic improvements
-- [ ] Web-UI tinkering & refinements
+- [ ] Web-UI refinements
 
-### v0.2.0 — Multi-Platform (Coming Soon)
-- [ ] Another Platform integration (Telegram/Instagram)
+### v0.2.0 — Multi-Platform
+- [ ] Telegram or Instagram integration
 - [ ] Platform-agnostic architecture
 
 ---
 
-## ❓ FAQ
+## FAQ
 
-**Q: Will I get banned?**  
-A: Tweakio uses Camoufox anti-detection. With reasonable rate limiting, bans are rare. Always test on disposable accounts first.
+**Will I get banned?**
+Tweakio uses Camoufox anti-detection. With reasonable rate limiting, bans are rare. Always test on a disposable account first.
 
-**Q: Can I use this for spam?**  
-A: No. This SDK is for legitimate automation (customer support, archiving, notifications). Spam violates WhatsApp ToS and is not supported.
+**Can I use this for spam?**
+No. This SDK is for legitimate automation — customer support, archiving, notifications. Spam violates WhatsApp ToS and is not supported.
 
-**Q: Why not just use the WhatsApp Business API?**  
-A: Business API has message template restrictions and approval processes. Tweakio is for developers who need full control.
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE)
+**Why not just use the WhatsApp Business API?**
+The Business API restricts message templates and requires approval workflows. Tweakio is for developers who need full control over their automation.
 
 ---
 
-## 🔗 Links
+## License
 
-- **PyPI**: [pypi.org/project/tweakio-sdk](https://pypi.org/project/tweakio-sdk/)
-- **GitHub**: [github.com/BITS-Rohit/tweakio-sdk](https://github.com/BITS-Rohit/tweakio-sdk)
-- **Issues**: [Report bugs](https://github.com/BITS-Rohit/tweakio-sdk/issues)
+MIT — see [LICENSE](LICENSE)
 
 ---
 
-**Keywords**: tweakio, tweakio-sdk, whatsapp automation, whatsapp bot python, whatsapp api, web automation, playwright, browser automation, chatbot, messaging, anti-detection, camoufox
+<div align="center">
 
-_Built with ❤️ by BITS-Rohit and the Tweakio community_
+**[PyPI](https://pypi.org/project/tweakio-sdk/)** · **[GitHub](https://github.com/BITS-Rohit/tweakio-sdk)** · **[Report a Bug](https://github.com/BITS-Rohit/tweakio-sdk/issues)**
+
+*Built with ❤️ by BITS-Rohit and the Tweakio community*
+
+</div>
