@@ -13,7 +13,7 @@ case-converter==1.2.0
 certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.3
-click==8.3.0
+click==8.3.1
 colorlog==6.10.1
 comicbox==2.1.1
 comicbox-pdffile==0.4.0
