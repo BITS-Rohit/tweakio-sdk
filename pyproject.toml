@@ -21,7 +21,8 @@ dependencies = [
     "colorlog>=6.10.1",
     "sqlalchemy>=2.0.48",
     "browserforge>=1.2.4",
-    "platformdirs>=4.0.0"
+    "platformdirs>=4.0.0",
+    "concurrent-log-handler>=0.11.1"
 ]
 
 [project.optional-dependencies]

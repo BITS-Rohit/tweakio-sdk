@@ -73,3 +73,7 @@ ua-parser-builtins==202603
     # via ua-parser
 urllib3==2.6.3
     # via requests
+concurrent-log-handler==0.9.29
+    # via tweakio-sdk (pyproject.toml)
+portalocker==3.2.0
+    # via concurrent-log-handler

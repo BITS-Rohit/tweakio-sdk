@@ -44,6 +44,10 @@ class DirectoryManager:
         """Returns the path to the global ErrorTrace log file."""
         return self.cache_dir / "ErrorTrace.log"
 
+    def get_browser_log_file(self) -> Path:
+        """Returns the path to the dedicated browser log file."""
+        return self.cache_dir / "browser.log"
+
     # ----------------------------
     # Profile Subdirectories
     # ----------------------------
@@ -104,4 +108,3 @@ class DirectoryManager:
 
 
 # should be removed with the custom_logger itself driven paths .
-ErrorTrace_file = DirectoryManager().get_error_trace_file()

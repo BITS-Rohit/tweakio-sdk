@@ -10,6 +10,7 @@ from browserforge.fingerprints import Fingerprint
 from camoufox.async_api import AsyncCamoufox, launch_options
 from playwright.async_api import Page, BrowserContext
 
+from src.custom_logger import TweakioLogger
 from src.BrowserManager.profile_info import ProfileInfo
 from src.Exceptions.base import BrowserException
 from src.Interfaces.browser_interface import BrowserInterface
@@ -32,31 +33,24 @@ class CamoufoxBrowser(BrowserInterface):
             self,
             config : BrowserConfig,
             profileInfo : ProfileInfo,
-            log: logging.Logger
+            log: Optional[logging.Logger] = None
 
     ) -> None:
         """
-        :param cache_dir_path: saves the browser cache dir
-        :param BrowserForge: Obj of BrowserForge
-        :param log: obj of logging
-        :param addons: a List of str of addons downloaded path.
-        they will be reflected to the browser as browser will load those addons file.
-        also path given should be correct not bad. better to leave as empty but given for more safety check.
-        Default to Empty List []
-        :param headless: determines of browser being visible or not. Defaults to False
-        :param locale: headers for site.
-        :param enable_cache: good for when debugging, makes the browser to remember last/forward visited pages.
-        Default is True .
+        :param config: BrowserConfig object
+        :param profileInfo: ProfileInfo object
+        :param log: obj of logging (Optional: if None, TweakioLogger is used)
         """
         self.config = config
         self.profileInfo = profileInfo
         self.BrowserForge = config.fingerprint_obj # streamline the same flow
         self.browser: Optional[BrowserContext] = None
-        self.log = log
-
-        # Path compulsory. If user want to specific , they can. Else can use from directory.py
-        if self.log is None:
-            raise BrowserException("Logger is missing from the browser instance.")
+        
+        # Use provided logger or get specialized browser logger
+        if log is None:
+            self.log = TweakioLogger.get_logger("tweakio.browser", log_type="browser")
+        else:
+            self.log = log
 
         if self.BrowserForge is None:
             raise BrowserException("BrowserForge is missing from the browser instance.")
