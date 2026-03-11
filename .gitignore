@@ -17,7 +17,9 @@ __pycache__/
 *.py[cod]
 .coverage
 *.coverage
-tweakio.db
+*.db
+*.sqlite
+*.sqlite3
 
 __pycache__
 .jbeval
