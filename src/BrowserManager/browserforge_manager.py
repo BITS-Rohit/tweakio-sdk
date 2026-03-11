@@ -4,6 +4,7 @@ Fingerprint generation and management for BrowserForge.
 Handles creating, loading, and persisting browser fingerprints
 that match the system's actual screen dimensions.
 """
+
 import json
 import logging
 import os
@@ -20,7 +21,7 @@ from src.Interfaces.browserforge_capable_interface import BrowserForgeCapable
 class BrowserForgeCompatible(BrowserForgeCapable):
     """
     BrowserForge fingerprint manager.
-    
+
     Generates fingerprints that match system screen size to avoid detection.
     Reuses existing fingerprints from disk when available.
     """
@@ -45,19 +46,19 @@ class BrowserForgeCompatible(BrowserForgeCapable):
             if os.stat(profile_path).st_size > 0:
                 # Pick the old fg , changing fg for an account enables security issues for platform
                 # Potential in Account Ban
-                with open(profile_path, 'rb') as fh:
+                with open(profile_path, "rb") as fh:
                     fg = pickle.load(fh)
             else:
                 # Create new fg there compatible to the current device.
-                fg: Fingerprint = self.__gen_fg__()
+                fg = self._gen_fg()
                 if fg is not None:
-                    with open(profile_path, 'wb') as fh:
+                    with open(profile_path, "wb") as fh:
                         pickle.dump(fg, fh)  # Save to same file
             return fg
         else:
             raise BrowserException("path given does not exist")
 
-    def __gen_fg__(self) -> Fingerprint:
+    def _gen_fg(self) -> Fingerprint:
         gen = FingerprintGenerator()
         real_w, real_h = BrowserForgeCompatible.get_screen_size()
         tolerance = 0.1
@@ -97,6 +98,7 @@ class BrowserForgeCompatible(BrowserForgeCapable):
         if system == "Windows":
             try:
                 import ctypes
+
                 user32 = ctypes.windll.user32
                 try:
                     user32.SetProcessDPIAware()
@@ -113,9 +115,7 @@ class BrowserForgeCompatible(BrowserForgeCapable):
             try:
                 import subprocess
 
-                out = subprocess.check_output(
-                    ["xdpyinfo"], stderr=subprocess.DEVNULL
-                ).decode()
+                out = subprocess.check_output(["xdpyinfo"], stderr=subprocess.DEVNULL).decode()
 
                 for line in out.splitlines():
                     if "dimensions:" in line:
@@ -140,7 +140,6 @@ class BrowserForgeCompatible(BrowserForgeCapable):
                 Quartz.CGDisplayPixelsHigh(display),
             )
 
-
         # ---------------- Unsupported OS ----------------
         else:
             raise BrowserException(f"Unsupported OS for screen size detection: {system}")
@@ -157,7 +156,9 @@ class BrowserForgeCompatible(BrowserForgeCapable):
             raise BrowserException("saved_fingerprint_path is empty")
 
         try:
-            with open(saved_fingerprint_path, encoding="utf-8") as f:  # default opens in reading mode.
+            with open(
+                saved_fingerprint_path, encoding="utf-8"
+            ) as f:  # default opens in reading mode.
                 data = json.load(f)
 
             if not isinstance(data, dict):

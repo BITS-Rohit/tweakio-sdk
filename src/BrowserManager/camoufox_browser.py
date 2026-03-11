@@ -1,4 +1,5 @@
-"""Camoufox Browser integration """
+"""Camoufox Browser integration"""
+
 from __future__ import annotations
 
 import logging
@@ -16,7 +17,6 @@ from src.Interfaces.browser_interface import BrowserInterface
 from src.BrowserManager.browser_config import BrowserConfig
 
 
-
 class CamoufoxBrowser(BrowserInterface):
     """
     Camoufox browser implementation with fingerprint support.
@@ -24,16 +24,12 @@ class CamoufoxBrowser(BrowserInterface):
     Handles browser lifecycle, fingerprint loading, and retry logic for IP issues.
     Uses dependency injection for logging and fingerprint generation.
     """
+
     # handles Multiple Profiles to multi browser context handling
-    Map : Dict[int , BrowserContext] = {}
+    Map: Dict[int, BrowserContext] = {}
 
     def __init__(
-
-            self,
-            config : BrowserConfig,
-            profileInfo : ProfileInfo,
-            log: logging.Logger
-
+        self, config: BrowserConfig, profileInfo: ProfileInfo, log: logging.Logger
     ) -> None:
         """
         :param cache_dir_path: saves the browser cache dir
@@ -48,15 +44,18 @@ class CamoufoxBrowser(BrowserInterface):
         :param enable_cache: good for when debugging, makes the browser to remember last/forward visited pages.
         Default is True .
         """
+        if config is None:
+            raise BrowserException("BrowserConfig is missing from the browser instance.")
+        if profileInfo is None:
+            raise BrowserException("ProfileInfo is missing from the browser instance.")
+        if log is None:
+            raise BrowserException("Logger is missing from the browser instance.")
+
         self.config = config
         self.profileInfo = profileInfo
-        self.BrowserForge = config.fingerprint_obj # streamline the same flow
+        self.BrowserForge = config.fingerprint_obj
         self.browser: Optional[BrowserContext] = None
         self.log = log
-
-        # Path compulsory. If user want to specific , they can. Else can use from directory.py
-        if self.log is None:
-            raise BrowserException("Logger is missing from the browser instance.")
 
         if self.BrowserForge is None:
             raise BrowserException("BrowserForge is missing from the browser instance.")
@@ -68,29 +67,31 @@ class CamoufoxBrowser(BrowserInterface):
             raise BrowserException("Fingerprint path is missing from the browser instance.")
 
         if not self.config.headless:
-            self.log.info("Opening Browser into visible Mode. Change headless to True for Invisible Browser.")
+            self.log.info(
+                "Opening Browser into visible Mode. Change headless to True for Invisible Browser."
+            )
 
     async def get_instance(self) -> BrowserContext:
         if self.browser is None:
-            self.browser = await self.__GetBrowser__()
+            from typing import cast
+            self.browser = cast(BrowserContext, await self._get_browser())
             pid = os.getpid()
             self.Map[pid] = self.browser
             self.profileInfo.last_active_pid = pid  # keep in-memory snapshot in sync
         return self.browser
 
-    async def __GetBrowser__(self, tries: int = 1) -> BrowserContext:
+    async def _get_browser(self, tries: int = 1) -> BrowserContext:
         if self.browser is not None:
             return self.browser
 
         if tries > 5:
             raise BrowserException("Max Camoufox IP retry attempts exceeded")
 
-        fg: Fingerprint = self.BrowserForge.get_fg(
-            profile_path=self.profileInfo.fingerprint_path
-        )
+        fg: Fingerprint = self.BrowserForge.get_fg(profile_path=self.profileInfo.fingerprint_path)
 
         try:
-            self.browser = await AsyncCamoufox(
+            from typing import cast
+            self.browser = cast(BrowserContext, await AsyncCamoufox(
                 **launch_options(
                     locale=self.config.locale,
                     headless=self.config.headless,
@@ -104,15 +105,12 @@ class CamoufoxBrowser(BrowserInterface):
                 ),
                 persistent_context=True,
                 user_data_dir=self.profileInfo.cache_dir,
-            ).__aenter__()
-
+            ).__aenter__())
             return self.browser
 
         except camoufox.exceptions.InvalidIP:
-            self.log.warning(
-                f"Camoufox IP failed (attempt {tries}/5). Retrying..."
-            )
-            return await self.__GetBrowser__(tries=tries + 1)
+            self.log.warning(f"Camoufox IP failed (attempt {tries}/5). Retrying...")
+            return await self._get_browser(tries=tries + 1)
 
         except Exception as e:
             raise BrowserException("Failed to launch Camoufox browser") from e
@@ -141,6 +139,22 @@ class CamoufoxBrowser(BrowserInterface):
         except Exception as e:
             self.log.error("Failed to create new page", exc_info=True)
             raise BrowserException("Could not create a new page") from e
+
+    async def close_browser(self) -> bool:
+        """
+        Close the browser context associated with this instance.
+        Returns True if successful.
+        """
+        if self.browser is None:
+            return True
+
+        pid = self.profileInfo.last_active_pid or os.getpid()
+        closed = await self.close_browser_by_pid(pid)
+
+        if closed:
+            self.browser = None
+
+        return closed
 
     @classmethod
     async def close_browser_by_pid(cls, pid: int) -> bool:
