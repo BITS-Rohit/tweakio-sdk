@@ -10,7 +10,7 @@ import logging
 import os
 import pickle
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
 from browserforge.fingerprints import Fingerprint, FingerprintGenerator
 
@@ -26,7 +26,7 @@ class BrowserForgeCompatible(BrowserForgeCapable):
     Reuses existing fingerprints from disk when available.
     """
 
-    def __init__(self, log: logging.Logger = None) -> None:
+    def __init__(self, log: Optional[logging.Logger] = None) -> None:
         self.log = log
 
         if log is None:
@@ -73,15 +73,18 @@ class BrowserForgeCompatible(BrowserForgeCapable):
             attempt += 1
 
             if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
-                self.log.info(f"✅ Fingerprint screen OK: {w}x{h}")
+                if self.log:
+                    self.log.info(f"✅ Fingerprint screen OK: {w}x{h}")
                 return fg
 
-            self.log.warning(
-                f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
-            )
+            if self.log:
+                self.log.warning(
+                    f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
+                )
 
             if attempt >= 10:
-                self.log.warning("⚠️ Using last generated fingerprint after 10 attempts")
+                if self.log:
+                    self.log.warning("⚠️ Using last generated fingerprint after 10 attempts")
                 return fg
 
     @staticmethod
@@ -99,7 +102,7 @@ class BrowserForgeCompatible(BrowserForgeCapable):
             try:
                 import ctypes
 
-                user32 = ctypes.windll.user32
+                user32 = ctypes.windll.user32  # type: ignore[attr-defined]
                 try:
                     user32.SetProcessDPIAware()
                 except Exception:

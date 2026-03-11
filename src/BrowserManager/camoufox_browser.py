@@ -53,7 +53,7 @@ class CamoufoxBrowser(BrowserInterface):
 
         self.config = config
         self.profileInfo = profileInfo
-        self.BrowserForge = config.fingerprint_obj
+        self.BrowserForge = config.fingerprint_obj  # streamline the same flow
         self.browser: Optional[BrowserContext] = None
         self.log = log
 
