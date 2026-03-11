@@ -36,7 +36,7 @@ language-tags==1.2.0
     # via camoufox
 lxml==6.0.2
     # via camoufox
-numpy==2.4.2
+numpy==2.4.3
     # via camoufox
 orjson==3.11.7
     # via camoufox
