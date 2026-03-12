@@ -2,9 +2,8 @@ import json
 import os
 import shutil
 import signal
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import List, Optional, Dict
+from datetime import datetime
+from typing import List, Optional, Dict, Any
 
 from src.directory import DirectoryManager
 from src.BrowserManager.camoufox_browser import CamoufoxBrowser
@@ -25,13 +24,12 @@ class ProfileManager:
 
     p_count: int = 0
 
-    def __init__(self, app_name: str = "CamouChat"):
+    def __init__(self, app_name: str = "tweakio") -> None:
         self.app_name = app_name
         self.directory = DirectoryManager(app_name)
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+    def _generate_metadata(self, platform: Platform, profile_id: str) -> Dict[str, Any]:
+        now = datetime.now().isoformat()
 
     def _generate_metadata(self, platform: Platform, profile_id: str) -> dict:
         now = datetime.now(timezone.utc).isoformat()
@@ -81,16 +79,16 @@ class ProfileManager:
             json.dump(data, f, indent=4)
 
     @classmethod
-    def __inc__(cls):
+    def __inc__(cls) -> None:
         cls.p_count += 1
 
     @classmethod
-    def __dec__(cls):
+    def __dec__(cls) -> None:
         if cls.p_count > 0:
             cls.p_count -= 1
 
     @classmethod
-    def __p_count__(cls):
+    def __p_count__(cls) -> int:
         return cls.p_count
 
     # ------------------------------------------------------------------

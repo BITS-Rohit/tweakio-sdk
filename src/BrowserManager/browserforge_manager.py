@@ -14,6 +14,7 @@ from typing import Tuple, Optional
 
 from browserforge.fingerprints import Fingerprint, FingerprintGenerator
 
+from src.custom_logger import TweakioLogger
 from src.Exceptions.base import BrowserException
 from src.Interfaces.browserforge_capable_interface import BrowserForgeCapable
 
@@ -27,10 +28,10 @@ class BrowserForgeCompatible(BrowserForgeCapable):
     """
 
     def __init__(self, log: Optional[logging.Logger] = None) -> None:
-        self.log = log
-
         if log is None:
-            raise BrowserException("log not given in BrowserForgeCompatible")
+            self.log = TweakioLogger.get_logger("tweakio.browser", log_type="browser")
+        else:
+            self.log = log
 
     def get_fg(self, profile_path: Path) -> Fingerprint:
         """
