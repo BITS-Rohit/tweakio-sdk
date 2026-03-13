@@ -55,27 +55,69 @@ capabilities with solving all the other issues that those browser automation lib
 
 ## 📦 Installation
 
+**Using `uv` (Recommended)**:
+```bash
+uv pip install camouchat
+```
 
+**Using `pip`**:
+```bash
+pip install camouchat
+```
+
+**Requirements**: Python 3.11+, Playwright and Camoufox browsers.
+
+```bash
+# Install Playwright dependencies (one-time)
+playwright install chromium
+python -m camoufox fetch
+```
+
+---
+
+## ⚡ Quick Start
+
+For a clean and comprehensive guide on how to use the SDK, please check our documentation folder. It contains fully up-to-date and type-safe `ProfileManager` integrations:
+
+👉 **[Go to Quick Start Documentation](docs/quickstart.md)**
+
+Whether you need basic chat fetching, multi-profile anti-detect sessions, or advanced async encrypted storage, you will find clean examples there.
+
+---
 
 ## 🏗️ Architecture
 
-```
-# --- Down below is old Must be Updated.
-tweakio-sdk/
+```text
+camouchat/ 
 ├── src/
-│   ├── BrowserManager/     # Anti-detect Playwright + Camoufox
+│   ├── BrowserManager/     # Anti-detect Camoufox, ProfileManager, Sandboxing
 │   ├── WhatsApp/           # Platform-specific implementation
-│   │   ├── login.py        # QR + Phone authentication
-│   │   ├── chat_processor.py
-│   │   ├── message_processor.py
-│   │   ├── web_ui_config.py  # Selector definitions
-│   │   └── DerivedTypes/   # Chat, Message dataclasses
-│   ├── Interfaces/         # Abstract contracts (for future platforms)
-│   ├── StorageDB/          # Async SQLite with queue workers
-│   └── Exceptions/         # Custom exception hierarchy
-└── tests/                  # >90% coverage on core modules
+│   │   ├── login.py                  # QR + Phone authentication
+│   │   ├── chat_processor.py         # Handles chat fetching and navigation
+│   │   ├── message_processor.py      # Extracts and processes messages
+│   │   ├── humanized_operations.py   # Human-like typing and scrolling
+│   │   ├── media_capable.py          # Media processing and downloading
+│   │   ├── reply_capable.py          # Handling replies in chats
+│   │   ├── web_ui_config.py          # Selector definitions
+│   │   └── DerivedTypes/             # Chat, Message dataclasses
+│   ├── Interfaces/         # Abstract contracts (for future platform extensions)
+│   ├── StorageDB/          # Async SQLite/PostgreSQL, SQLAlchemy Integrations
+│   ├── Encryption/         # Out-of-the-box AES-256 encrypted storage
+│   ├── FIlter/             # Message and chat filtering module
+│   ├── Decorators/         # Common utility decorators
+│   ├── Exceptions/         # Custom customized Error hierarchies 
+│   └── directory.py        # Centralized OS-independent directory resolver
+└── tests/                  # Playwright Async Tests, Security suites, CI pipelines.
 ```
 
+### Key Design Decisions
+
+- **Interface-Driven**: Every platform implements abstract contracts like `ChatProcessorInterface`, `MessageProcessorInterface`.
+- **Dependency Injection**: Classes cleanly accept highly flexible parameters (e.g. `log`) for rigorous testability.
+- **Sandboxed Profiles**: End-to-end multithreaded Profile & Session isolation to aggressively circumvent anti-bots.
+- **Encrypted Storage**: Secure AES-256 automated pipeline connecting flawlessly to SQLAlchemy queues out-of-the box.
+- **Async-First**: Completely asynchronous non-blocking DB writes, Background task flushing, and Playwright interactions.
+- **Anti-Detection**: Built natively on Camoufox, dynamically spoofed rendering dimensions by BrowserForge, augmented by realistically human cursor trajectories and typing algorithms.
 
 ---
 
