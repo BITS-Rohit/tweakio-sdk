@@ -98,7 +98,7 @@ Whether you need basic chat fetching, multi-profile anti-detect sessions, or adv
 - [✅] Encryption & Decryption of messages & Chats.
 - [✅] Tests Coverage >=76% and MYPY , Black , Ruff, deptry Reports Fixed
 
------ Shipped  V0.6 on [PYPI]()
+----- soon shipping V0.6 on [PYPI]()
 ### v0.7 — WebSelector Stability Techniques 
 - [ ] Cherry Picked stable Selector Techniques 
 - [ ] WhatsApp Stability Increase
