@@ -6,8 +6,6 @@ import asyncio
 import logging
 import random
 import re
-import shutil
-from pathlib import Path
 
 import weakref
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
@@ -165,24 +163,3 @@ class Login(LoginInterface):
 
         return True
 
-    async def logout(self, state_dir: str, **kwargs) -> bool:  # type: ignore[override]
-        """Clear session data from the specified directory."""
-        try:
-            path = Path(state_dir)
-
-            if not path.exists() or not path.is_dir():
-                self.log.warning(f"Logout skipped: invalid path {state_dir}")
-                return False
-
-            for item in path.iterdir():
-                if item.is_file() or item.is_symlink():
-                    item.unlink()
-                elif item.is_dir():
-                    shutil.rmtree(item)
-
-            self.log.info(f"Logout cleanup successful for {state_dir}")
-            return True
-
-        except Exception as e:
-            self.log.error(f"Logout cleanup failed: {e}", exc_info=True)
-            return False

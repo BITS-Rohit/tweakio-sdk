@@ -206,28 +206,6 @@ async def test_code_login_success(login_instance, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_logout_success(login_instance, tmp_path):
-    """Test logout cleans up directory."""
-    # Create a dummy file in a dir
-    session_dir = tmp_path / "session"
-    session_dir.mkdir()
-    (session_dir / "file.txt").write_text("data")
-
-    result = await login_instance.logout(str(session_dir))
-
-    assert result is True
-    # Verify file deleted
-    assert not (session_dir / "file.txt").exists()
-
-
-@pytest.mark.asyncio
-async def test_logout_invalid_path(login_instance):
-    """Test logout returns False for invalid path."""
-    result = await login_instance.logout("/invalid/path/that/does/not/exist")
-    assert result is False
-
-
-@pytest.mark.asyncio
 async def test_login_unexpected_error(login_instance, tmp_path):
     """Test unexpected exception raises LoginError."""
     login_instance.page.goto.side_effect = Exception("Crash")
