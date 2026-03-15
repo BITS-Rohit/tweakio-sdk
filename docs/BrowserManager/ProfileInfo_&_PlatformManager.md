@@ -25,17 +25,17 @@ print(Platform.list_platforms())  # Returns: ['WhatsApp', 'Arattai']
 
 Here’s a breakdown of what’s inside your `ProfileInfo` object:
 
-| Attribute | Type | Description |
-| :--- | :--- | :--- |
-| `profile_id` | `str` | **Required.** The unique name you gave to your profile (e.g., "Work" or "Personal"). |
-| `platform` | `Platform` | **Required.** The platform this profile belongs to (e.g., `Platform.WHATSAPP`). |
-| `is_active` | `bool` | Tells you if this profile is currently running in a browser. |
-| `profile_dir` | `Path` | The root directory on your disk where all profile data is stored. |
-| `database_path` | `Path` | The exact path to the `messages.db` (SQLite) file for this profile. |
-| `fingerprint_path` | `Path` | Path to the browser fingerprint file (`fingerprint.pkl`) that keeps your browser unique. |
-| `encryption` | `dict` | Details about whether encryption is enabled and which algorithm is being used. |
-| `created_at` | `str` | The timestamp of when you first birthed this profile! |
-| `last_used` | `str` | When the profile was last "touched" by the SDK. |
+| Attribute          | Type       | Description                                                                              |
+|:-------------------|:-----------|:-----------------------------------------------------------------------------------------|
+| `profile_id`       | `str`      | **Required.** The unique name you gave to your profile (e.g., "Work" or "Personal").     |
+| `platform`         | `Platform` | **Required.** The platform this profile belongs to (e.g., `Platform.WHATSAPP`).          |
+| `is_active`        | `bool`     | Tells you if this profile is currently running in a browser.                             |
+| `profile_dir`      | `Path`     | The root directory on your disk where all profile data is stored.                        |
+| `database_path`    | `Path`     | The exact path to the `messages.db` (SQLite) file for this profile.                      |
+| `fingerprint_path` | `Path`     | Path to the browser fingerprint file (`fingerprint.pkl`) that keeps your browser unique. |
+| `encryption`       | `dict`     | Details about whether encryption is enabled and which algorithm is being used.           |
+| `created_at`       | `str`      | The timestamp of when you first birthed this profile!                                    |
+| `last_used`        | `str`      | When the profile was last "touched" by the SDK.                                          |
 
 ---
 

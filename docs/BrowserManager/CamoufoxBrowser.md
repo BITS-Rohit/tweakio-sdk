@@ -13,7 +13,7 @@ To start the browser, you need three things: a `BrowserConfig`, a `ProfileInfo`,
 ```python
 from camouchat.BrowserManager import CamoufoxBrowser, BrowserConfig, Platform
 
-# 1. Setup the Config
+# 1. Set up the Config
 config = BrowserConfig(
     platform=Platform.WHATSAPP,
     # ------------- This is a Required Parameter -------------
@@ -46,7 +46,7 @@ browser = CamoufoxBrowser(config=config, profile=profile, log=my_logger)
 
 #### 1. `get_instance()`
 This method launches the browser (if it's not already running) and returns the Playwright `BrowserContext`.
-- **Note**: It automatically handles fingerprints and IP retries for you!
+
 ```python
 context = await browser.get_instance()
 ```
@@ -67,14 +67,14 @@ await page.goto("https://web.whatsapp.com")
 
 The `BrowserConfig` class lets you customize how your browser behaves:
 
-| Attribute | Type | Description |
-| :--- | :--- | :--- |
-| `platform` | `Platform` | **Required.** Platform class for to give platform attribute anywhere. |
-| `locale` | `str` | System locale (e.g., `"en-Us"`). Use this if your locale is different. |
-| `headless` | `bool` | **True** for visible UI. If multiple profiles are active, this is automatically set to False for others. |
-| `enable_cache` | `bool` | **False** recommended to save RAM & resource usage. |
-| `prefs` | `dict` | Experimental. Recommened passed as empty dict `{}` for stealth. |
-| `addons` | `list` | List of real zip download paths for Extensions/Addons. |
+| Attribute      | Type       | Description                                                                                              |
+|:---------------|:-----------|:---------------------------------------------------------------------------------------------------------|
+| `platform`     | `Platform` | **Required.** Platform class for to give platform attribute anywhere.                                    |
+| `locale`       | `str`      | System locale (e.g., `"en-Us"`). Use this if your locale is different.                                   |
+| `headless`     | `bool`     | **True** for visible UI. If multiple profiles are active, this is automatically set to False for others. |
+| `enable_cache` | `bool`     | **False** recommended to save RAM & resource usage.                                                      |
+| `prefs`        | `dict`     | Experimental. Recommened passed as empty dict `{}` for stealth.                                          |
+| `addons`       | `list`     | List of real zip download paths for Extensions/Addons.                                                   |
 
 ---
 

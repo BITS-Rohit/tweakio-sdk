@@ -162,7 +162,7 @@ async def main():
     )
 
     # After you select your method & proceed , it will save your session inside the profile on your disk.
-    # You can see all the Profiles & it's saved at the precised locations, You can check the fixed paths via ProfileInfo in ProfileInfo.md
+    # You can see all the Profiles & it's saved at the precised locations, You can check the fixed paths via ProfileInfo in ProfileInfo_&_PlatformManager.md
 
     # If you u want to log out , Just delete the profile via ProfileManager. Read more about ProfileManager in ProfileManager.md
     # OR you can log out via from your device too : WhatsApp -> Linked Devices -> Remove your Device.
