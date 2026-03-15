@@ -7,7 +7,7 @@ Provides secure encryption and decryption for platform messages using:
 - Per-user encryption keys
 
 Usage:
-    from src.Encryption import MessageEncryptor, MessageDecryptor, KeyManager
+    from camouchat.Encryption import MessageEncryptor, MessageDecryptor, KeyManager
 
     # Generate key from password
     key_manager = KeyManager()

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Sequence
 
 from sqlalchemy import select, exists
 from sqlalchemy.exc import IntegrityError
@@ -221,7 +221,7 @@ class SQLAlchemyStorage(StorageInterface):
         if batch:
             await self._insert_batch_internally(batch)
 
-    async def enqueue_insert(self, msgs: List[MessageInterface], **kwargs) -> None:
+    async def enqueue_insert(self, msgs: Sequence[MessageInterface], **kwargs) -> None:
         """Add messages to queue for batch insertion."""
         if not msgs:
             return
@@ -231,7 +231,7 @@ class SQLAlchemyStorage(StorageInterface):
 
         self.log.debug(f"Enqueued {len(msgs)} messages for insertion.")
 
-    async def _insert_batch_internally(self, msgs: List[MessageInterface], **kwargs) -> None:
+    async def _insert_batch_internally(self, msgs: Sequence[MessageInterface], **kwargs) -> None:
         """Insert batch of messages into database."""
         if not self._session_factory:
             raise StorageError("Database not initialized.")
@@ -448,7 +448,7 @@ class SQLAlchemyStorage(StorageInterface):
             rows = await storage.get_decrypted_messages_async(key)
         """
         import base64 as _b64
-        from src.Encryption import MessageDecryptor
+        from camouchat.Encryption import MessageDecryptor
 
         rows = await self.get_all_messages_async(limit=limit, offset=offset)
 

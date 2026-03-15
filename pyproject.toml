@@ -83,10 +83,7 @@ Repository = "https://github.com/BITS-Rohit/camouchat"
 Changelog = "https://github.com/BITS-Rohit/camouchat/releases"
 
 [tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
+packages = ["camouchat"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"

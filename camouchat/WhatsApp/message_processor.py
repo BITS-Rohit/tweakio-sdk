@@ -67,7 +67,7 @@ class MessageProcessor(MessageProcessorInterface):
 
         if encryption_key:
             try:
-                from src.Encryption import MessageEncryptor
+                from camouchat.Encryption import MessageEncryptor
 
                 self.encryptor = MessageEncryptor(encryption_key)
                 self._hmac_key = hashlib.sha256(encryption_key + b"chat-name-index").digest()[:16]

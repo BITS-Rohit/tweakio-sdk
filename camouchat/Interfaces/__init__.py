@@ -5,8 +5,8 @@ These interfaces define contracts that platform-specific implementations
 must follow, enabling clean separation between core logic and platform integrations.
 
 NOTE: To avoid circular dependencies, import interfaces directly from their module files:
-    from src.Interfaces.browser_interface import BrowserInterface
-    from src.Interfaces.chat_interface import ChatInterface
+    from camouchat.Interfaces.browser_interface import BrowserInterface
+    from camouchat.Interfaces.chat_interface import ChatInterface
 
 Do NOT import from this __init__.py file.
 """

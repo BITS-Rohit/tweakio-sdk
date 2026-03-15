@@ -175,7 +175,7 @@ class ProfileManager:
             key = manager.enable_encryption(Platform.WHATSAPP, "my_profile")
             processor = MessageProcessor(..., encryption_key=key)
         """
-        from src.Encryption import KeyManager
+        from camouchat.Encryption import KeyManager
 
         metadata = self._read_metadata(platform, profile_id)
 
@@ -221,7 +221,7 @@ class ProfileManager:
             decryptor = MessageDecryptor(key)
             plaintext = decryptor.decrypt_message(nonce_bytes, cipher_bytes)
         """
-        from src.Encryption import KeyManager
+        from camouchat.Encryption import KeyManager
 
         metadata = self._read_metadata(platform, profile_id)
 

@@ -5,12 +5,14 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from queue import Queue
-from typing import List, Optional
+from typing import List, Optional, TypeVar, Sequence
 
 from camouchat.Interfaces.chat_interface import ChatInterface
 from camouchat.Interfaces.message_interface import MessageInterface
 
 from camouchat.Exceptions.base import MessageFilterError
+
+T = TypeVar("T", bound=MessageInterface)
 
 
 @dataclass
@@ -35,7 +37,7 @@ class BindData:
     """Bind Data for the Queue Filtering"""
 
     chat: ChatInterface
-    Messages: List[MessageInterface]
+    Messages: Sequence[MessageInterface]
     seen: float
 
 
@@ -65,8 +67,8 @@ class MessageFilter:
 
     def apply(
         self,
-        messages: List[MessageInterface],
-    ) -> List[MessageInterface]:
+        messages: List[T],
+    ) -> List[T]:
         """
         Applies the filter on any set of Messages.
         Filter is agnostic to message direction or type.
@@ -86,11 +88,14 @@ class MessageFilter:
         if not messages:
             return []
 
+        m0: MessageInterface = messages[0]
         # Check Single-same chat or not in List[messages]
-        if not all(m.parent_chat == messages[0].parent_chat for m in messages):
-            raise MessageFilterError("MessageFilter.apply expects messages from a single chat")
+        for m in messages:
+            mi: MessageInterface = m
+            if mi.parent_chat != m0.parent_chat:
+                raise MessageFilterError("MessageFilter.apply expects messages from a single chat")
 
-        chat: ChatInterface = messages[0].parent_chat
+        chat: ChatInterface = m0.parent_chat
         chat_key = chat._chat_key()
         now = time.time()
 
@@ -105,7 +110,8 @@ class MessageFilter:
         batch_size = len(messages)
 
         # Hard drop: chat delayed > self.LimitTime
-        if state.defer_since and (now - state.defer_since) > self.LimitTime:
+        defer_since = state.defer_since
+        if defer_since is not None and (now - defer_since) > self.LimitTime:
             state.reset()
             return messages
 

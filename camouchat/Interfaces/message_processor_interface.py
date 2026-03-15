@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, TypeVar, Sequence
 
 from playwright.async_api import Page
 
@@ -13,6 +13,8 @@ from camouchat.Interfaces.message_interface import MessageInterface
 from camouchat.Filter.message_filter import MessageFilter
 from camouchat.Interfaces.chat_interface import ChatInterface
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
+
+T = TypeVar("T", bound=MessageInterface)
 
 
 class MessageProcessorInterface(ABC):
@@ -33,13 +35,13 @@ class MessageProcessorInterface(ABC):
         self.UIConfig = UIConfig
 
     @abstractmethod
-    async def _get_wrapped_Messages(self, retry: int, *args, **kwargs) -> List[MessageInterface]:
+    async def _get_wrapped_Messages(self, retry: int, *args, **kwargs) -> List[T]:
         """Extract and wrap messages from UI elements."""
         ...
 
     @abstractmethod
     async def Fetcher(
         self, chat: ChatInterface, retry: int, *args, **kwargs
-    ) -> List[MessageInterface]:
+    ) -> List[T]:
         """Fetch messages from a chat with storage and filtering."""
         ...

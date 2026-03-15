@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Sequence
 
 from camouchat.Interfaces.message_interface import MessageInterface
 
@@ -46,7 +46,7 @@ class StorageInterface(ABC):
         ...
 
     @abstractmethod
-    async def enqueue_insert(self, msgs: List[MessageInterface], **kwargs) -> None:
+    async def enqueue_insert(self, msgs: Sequence[MessageInterface], **kwargs) -> None:
         """
         Add messages to queue for batch insertion.
 
@@ -56,7 +56,7 @@ class StorageInterface(ABC):
         ...
 
     @abstractmethod
-    async def _insert_batch_internally(self, msgs: List[MessageInterface], **kwargs) -> None:
+    async def _insert_batch_internally(self, msgs: Sequence[MessageInterface], **kwargs) -> None:
         """
         Internal method to insert a batch of messages.
 
