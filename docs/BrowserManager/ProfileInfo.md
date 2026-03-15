@@ -6,6 +6,21 @@ When you create or fetch a profile using the `ProfileManager`, you get one of th
 
 ---
 
+### 🌐 The Platform Enum
+
+Before creating a profile, you need to decide which platform it’s for. The `Platform` enum acts like a "category" for your profile:
+
+*   **`Platform.WHATSAPP`**: For all your WhatsApp automation and bots.
+*   **`Platform.ARATTAI`**: For the Arattai messenger (experimental).
+
+You can easily see all supported platforms in your code:
+```python
+from camouchat.BrowserManager import Platform
+print(Platform.list_platforms())  # Returns: ['WhatsApp', 'Arattai']
+```
+
+---
+
 ### 🛠️ Attributes inside ProfileInfo
 
 Here’s a breakdown of what’s inside your `ProfileInfo` object:
