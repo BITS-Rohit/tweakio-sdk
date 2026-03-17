@@ -248,6 +248,8 @@ Also limited behavior.We automate the web itself. **-- Free and Open Source**
 
 MIT License — see [[LICENSE]](LICENSE)
 
+---
+
 ## ⚠️ Security & Usage Guidelines
 
 CamouChat is intended for **educational, research, and controlled automation use cases**.  

@@ -2,17 +2,10 @@
 
 __version__ = "0.6"
 
-
-from .BrowserManager import ProfileManager, ProfileInfo, Platform, CamoufoxBrowser, BrowserConfig
-from .Encryption import MessageEncryptor, MessageDecryptor, KeyManager
+from camouchat_logger import CamouChatLogger
+from directory import DirectoryManager
 
 __all__ = [
-    "ProfileManager",
-    "ProfileInfo",
-    "Platform",
-    "CamoufoxBrowser",
-    "BrowserConfig",
-    "MessageEncryptor",
-    "MessageDecryptor",
-    "KeyManager",
+    'CamouChatLogger',
+    'DirectoryManager'
 ]
