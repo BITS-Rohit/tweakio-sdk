@@ -11,7 +11,6 @@ from camouchat.BrowserManager.camoufox_browser import CamoufoxBrowser
 from camouchat.BrowserManager.platform_manager import Platform
 from camouchat.BrowserManager.profile_info import ProfileInfo
 
-# Todo Add Logger functionality
 class ProfileManager:
     """Manager / entry point for profile creation, activation, and key management.
 
@@ -57,7 +56,7 @@ class ProfileManager:
             "encryption": {
                 "enabled": False,
                 "algorithm": "AES-256-GCM",
-                "key_file": "encryption.key",  # relative path inside profile_dir
+                "key_file": "encryption.key",
                 "created_at": None,  # set when enable_encryption() is called
             },
             "status": {

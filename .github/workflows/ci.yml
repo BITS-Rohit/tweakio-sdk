@@ -41,7 +41,7 @@ jobs:
       - name: Run Mypy (Type Checker)
         run: uv run mypy camouchat tests
 
-      - name: Run Deptry (Dependency Checker)
+      - name: Run deptry (Dependency Checker)
         run: uv run deptry camouchat
 
   test:
