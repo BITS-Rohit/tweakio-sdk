@@ -25,9 +25,8 @@ class ProfileManager:
 
     p_count: int = 0
 
-    def __init__(self, app_name: str = "CamouChat"):
-        self.app_name = app_name
-        self.directory = DirectoryManager(app_name)
+    def __init__(self):
+        self.directory = DirectoryManager()
 
     # ------------------------------------------------------------------
     # Internal helpers
