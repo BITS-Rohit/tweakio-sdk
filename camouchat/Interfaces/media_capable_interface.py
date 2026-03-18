@@ -5,11 +5,13 @@ from camouchat.camouchat_logger import camouchatLogger
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Union
+from typing import Generic, Optional, TypeVar, Union
 
 from playwright.async_api import Page
 
 from camouchat.Interfaces.web_ui_selector import WebUISelectorCapable
+
+T = TypeVar("T", bound=WebUISelectorCapable)
 
 
 class MediaType(str, Enum):
@@ -32,15 +34,17 @@ class FileTyped:
     size_bytes: Optional[int] = None
 
 
-class MediaCapableInterface(ABC):
+class MediaCapableInterface(ABC, Generic[T]):
     """Base interface for media upload operations."""
+
+    UIConfig: T
 
     @abstractmethod
     def __init__(
         self,
         page: Page,
         log: Optional[Union[Logger, LoggerAdapter]],
-        UIConfig: WebUISelectorCapable,
+        UIConfig: T,
         **kwargs,
     ):
         self.page = page

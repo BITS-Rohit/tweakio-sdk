@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from logging import Logger, LoggerAdapter
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from playwright.async_api import Page
 
@@ -30,7 +30,7 @@ class ChatProcessorInterface(ABC):
         self.UIConfig = ui_config
 
     @abstractmethod
-    async def fetch_chats(self, **kwargs) -> List[ChatInterface]:
+    async def fetch_chats(self, **kwargs) -> Sequence[ChatInterface]:
         """Fetch available chats from the UI."""
         ...
 
@@ -40,6 +40,8 @@ class ChatProcessorInterface(ABC):
         ...
 
     @abstractmethod
-    async def _get_Wrapped_Chat(self, **kwargs) -> List[ChatInterface]:
+    async def _get_Wrapped_Chat(
+        self, limit: int = 5, retry: int = 5, **kwargs
+    ) -> Sequence[ChatInterface]:
         """Extract and wrap chat elements."""
         ...

@@ -16,7 +16,7 @@ from camouchat.Interfaces.media_capable_interface import MediaCapableInterface, 
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
 
 
-class MediaCapable(MediaCapableInterface):
+class MediaCapable(MediaCapableInterface[WebSelectorConfig]):
     """Handles media file uploads to WhatsApp chats."""
 
     _instances: weakref.WeakKeyDictionary[Page, MediaCapable] = weakref.WeakKeyDictionary()

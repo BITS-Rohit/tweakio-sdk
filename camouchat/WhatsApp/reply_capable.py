@@ -18,7 +18,7 @@ from camouchat.WhatsApp.models.message import Message
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
 
 
-class ReplyCapable(ReplyCapableInterface):
+class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, WebSelectorConfig]):
     """Enables replying to specific WhatsApp messages."""
 
     _instances: weakref.WeakKeyDictionary[Page, ReplyCapable] = weakref.WeakKeyDictionary()
@@ -48,8 +48,8 @@ class ReplyCapable(ReplyCapableInterface):
 
     async def reply(
         self,
-        message: Message,  # type: ignore[override]
-        humanize: HumanInteractionController,  # type: ignore[override]
+        message: Message,
+        humanize: HumanInteractionController,
         text: Optional[str],
         **kwargs,
     ) -> bool:

@@ -3,7 +3,7 @@
 from logging import Logger, LoggerAdapter
 from camouchat.camouchat_logger import camouchatLogger
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Generic, Optional, TypeVar, Union
 
 from playwright.async_api import Page
 
@@ -13,14 +13,20 @@ from camouchat.Interfaces.human_interaction_controller_interface import (
 from camouchat.Interfaces.message_interface import MessageInterface
 from camouchat.Interfaces.web_ui_selector import WebUISelectorCapable
 
+M = TypeVar("M", bound=MessageInterface)
+H = TypeVar("H", bound=HumanInteractionControllerInterface)
+U = TypeVar("U", bound=WebUISelectorCapable)
 
-class ReplyCapableInterface(ABC):
+
+class ReplyCapableInterface(ABC, Generic[M, H, U]):
     """Base interface for message reply operations."""
+
+    UIConfig: U
 
     def __init__(
         self,
         page: Page,
-        ui_config: WebUISelectorCapable,
+        ui_config: U,
         log: Optional[Union[Logger, LoggerAdapter]],
         **kwargs,
     ) -> None:
@@ -31,8 +37,8 @@ class ReplyCapableInterface(ABC):
     @abstractmethod
     async def reply(
         self,
-        Message: MessageInterface,
-        humanize: HumanInteractionControllerInterface,
+        message: M,
+        humanize: H,
         text: Optional[str],
         **kwargs,
     ) -> bool:

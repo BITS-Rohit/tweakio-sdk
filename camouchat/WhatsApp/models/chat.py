@@ -23,7 +23,7 @@ class Chat(ChatInterface):
     def __post_init__(self):
         self.chat_id = self._chat_key()
 
-    def _chat_key(self) -> str:
+    def _chat_key(self, **kwargs) -> str:
         return f"wa::{self.chat_name.lower().strip()}"
 
     def __str__(self) -> str:

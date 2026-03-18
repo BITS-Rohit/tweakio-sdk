@@ -27,6 +27,8 @@ class BrowserForgeCompatible(BrowserForgeCapable):
     Reuses existing fingerprints from disk when available.
     """
 
+    log: Union[Logger, LoggerAdapter]
+
     def __init__(self, log: Optional[Union[Logger, LoggerAdapter]] = None) -> None:
         if log is None:
             from camouchat.camouchat_logger import camouchatLogger

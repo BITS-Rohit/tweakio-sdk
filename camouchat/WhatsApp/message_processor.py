@@ -29,7 +29,7 @@ from camouchat.WhatsApp.models.message import Message
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
 
 
-class MessageProcessor(MessageProcessorInterface):
+class MessageProcessor(MessageProcessorInterface[Message, WebSelectorConfig]):
     """Extracts, encrypts (optionally), and stores messages from WhatsApp Web UI.
 
     Encryption behavior

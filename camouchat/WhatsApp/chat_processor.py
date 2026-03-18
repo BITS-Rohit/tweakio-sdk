@@ -6,7 +6,7 @@ import asyncio
 import random
 import weakref
 from logging import Logger, LoggerAdapter
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from playwright.async_api import Page, ElementHandle, Locator
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -18,6 +18,7 @@ from camouchat.Exceptions.whatsapp import (
     ChatMenuError,
     ChatError,
 )
+from camouchat.Interfaces.chat_interface import ChatInterface
 from camouchat.Interfaces.chat_processor_interface import ChatProcessorInterface
 from camouchat.WhatsApp.models.chat import Chat
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
@@ -52,14 +53,18 @@ class ChatProcessor(ChatProcessorInterface):
             raise ValueError("page must not be None")
         self._initialized = True
 
-    async def fetch_chats(self, limit: int = 5, retry: Optional[int] = 5) -> list[Chat]:  # type: ignore[override]
+    async def fetch_chats(
+        self, limit: int = 5, retry: Optional[int] = 5, **kwargs
+    ) -> Sequence[Chat]:
         """
         Fetch visible chats from the sidebar.
 
         :param limit: maximum number of chats to fetch
         :param retry: number of times to retry the request
         """
-        ChatList: List[Chat] = await self._get_Wrapped_Chat(limit=limit, retry=retry)
+        ChatList: Sequence[Chat] = await self._get_Wrapped_Chat(
+            limit=limit, retry=retry or 5
+        )
 
         if not ChatList:
             raise ChatNotFoundError("Chats Not Found on the Page.")
@@ -67,8 +72,8 @@ class ChatProcessor(ChatProcessorInterface):
         return ChatList
 
     async def _get_Wrapped_Chat(
-        self, limit: int, retry: int
-    ) -> list[Chat]:  # type: ignore[override]
+        self, limit: int = 5, retry: int = 5, **kwargs
+    ) -> Sequence[Chat]:
         """Extract chat elements and wrap them."""
 
         sc = self.UIConfig
