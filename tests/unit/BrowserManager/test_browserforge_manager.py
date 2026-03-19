@@ -59,6 +59,7 @@ def test_init_no_logger():
     """Test BrowserForgeCompatible uses default logger when not provided."""
     bf = BrowserForgeCompatible(log=None)
     from camouchat.camouchat_logger import camouchatLogger
+
     assert bf.log == camouchatLogger
 
 

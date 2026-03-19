@@ -27,7 +27,7 @@ class BrowserConfig:
     def from_dict(cls, data: Dict) -> BrowserConfig:
         """
         Creates a BrowserConfig instance from a dictionary.
-        
+
         Args:
             data: Dictionary containing configuration parameters.
                  - platform: Target platform (e.g., Platform.WHATSAPP)
@@ -51,4 +51,3 @@ class BrowserConfig:
             geoip=data.get("geoip", True),
             proxy=data.get("proxy"),
         )
-

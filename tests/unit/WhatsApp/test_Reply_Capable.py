@@ -7,7 +7,7 @@ import logging
 from unittest.mock import Mock, AsyncMock, patch
 
 import pytest
-from playwright.async_api import Page, Locator, TimeoutError as PlaywrightTimeoutError, Position
+from playwright.async_api import Page, Locator, TimeoutError as PlaywrightTimeoutError
 
 from camouchat.Exceptions.whatsapp import ReplyCapableError
 from camouchat.WhatsApp.models.message import Message
@@ -123,10 +123,9 @@ async def test_side_edge_click_no_bbox(reply_capable_instance, mock_page):
     """Test _side_edge_click raises error if bbox is None."""
     mock_msg = Mock(spec=Message)
     mock_msg.data_id = "test-id"
-    
+
     mock_page.evaluate.return_value = None
 
     with patch("asyncio.sleep", new_callable=AsyncMock):
         with pytest.raises(ReplyCapableError, match="side_edge_click failed after"):
             await reply_capable_instance._side_edge_click(mock_msg)
-

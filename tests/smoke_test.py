@@ -50,19 +50,21 @@ async def main():
     # 2. Browser Config
     browser_forge = BrowserForgeCompatible()
 
-    config = BrowserConfig.from_dict({
-        "platform": Platform.WHATSAPP,
-        "locale": "en-US",
-        "enable_cache": False,
-        "headless": False,
-        "fingerprint_obj": browser_forge,
-        "geoip": True,  # Enable GeoIP spoofing
-        # "proxy": {
-        #     "server": "http://your-proxy.com:8080",
-        #     "username": "user",
-        #     "password": "pass"
-        # }
-    })
+    config = BrowserConfig.from_dict(
+        {
+            "platform": Platform.WHATSAPP,
+            "locale": "en-US",
+            "enable_cache": False,
+            "headless": False,
+            "fingerprint_obj": browser_forge,
+            "geoip": True,  # Enable GeoIP spoofing
+            # "proxy": {
+            #     "server": "http://your-proxy.com:8080",
+            #     "username": "user",
+            #     "password": "pass"
+            # }
+        }
+    )
 
     # 3. Browser
     browser = CamoufoxBrowser(
