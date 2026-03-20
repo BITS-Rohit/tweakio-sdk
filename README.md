@@ -3,29 +3,30 @@
 </div>
 
 <p style="text-align: center;">
-  <a href="https://github.com/BITS-Rohit/CamouChat/releases/tag/v0.6">
-    <img src="https://img.shields.io/github/v/tag/BITS-Rohit/CamouChat?label=version&color=blue" alt="GitHub tag" />
-  </a>
-  <a href="https://pepy.tech/projects/tweakio-sdk">
-    <img src="https://static.pepy.tech/personalized-badge/tweakio-sdk?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads" />
-  </a>
-
-[//]: # (  <a href="https://pypi.org/project/tweakio-sdk/">)
-
-[//]: # (    <img src="https://img.shields.io/pypi/v/tweakio-sdk?label=tweakio-sdk" />)
-
+[//]: # (  <a href="https://github.com/BITS-Rohit/CamouChat/releases/tag/v0.6">)
+[//]: # (    <img src="https://img.shields.io/github/v/tag/BITS-Rohit/CamouChat?label=version&color=blue" alt="GitHub tag" />)
 [//]: # (  </a>)
-  <a href="https://pypi.org/project/tweakio-sdk/">
-    <img src="https://img.shields.io/pypi/pyversions/tweakio-sdk" />
+  <a href="https://pypi.org/project/camouchat/">
+    <img src="https://img.shields.io/pypi/v/camouchat?label=camouchat&color=green" />
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
-  <a href="https://github.com/BITS-Rohit/tweakio-sdk">
-    <img src="https://img.shields.io/badge/coverage-%3E75%25-brightgreen" />
-  </a>
 </p>
 
+[//]: # (  <a href="https://pepy.tech/projects/tweakio-sdk">)
+[//]: # (    <img src="https://static.pepy.tech/personalized-badge/tweakio-sdk?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads" />)
+[//]: # (  </a>)
+
+[//]: # (  <a href="https://pypi.org/project/tweakio-sdk/">)
+[//]: # (    <img src="https://img.shields.io/pypi/pyversions/tweakio-sdk" />)
+[//]: # (  </a>)
+
+[//]: # (  <a href="https://github.com/BITS-Rohit/tweakio-sdk">)
+[//]: # (    <img src="https://img.shields.io/badge/coverage-%3E75%25-brightgreen" />)
+[//]: # (  </a>)
+
+<!--
 <p style="text-align: center;">
   <a href="https://github.com/BITS-Rohit/CamouChat/actions/workflows/ci.yml">
     <img src="https://github.com/BITS-Rohit/CamouChat/actions/workflows/ci.yml/badge.svg" />
@@ -34,6 +35,7 @@
     <img src="https://github.com/BITS-Rohit/CamouChat/actions/workflows/github-code-scanning/codeql/badge.svg" />
   </a>
 </p>
+-->
 
 ---
 
@@ -114,7 +116,7 @@ CamouChat is a **developer-focused SDK**, not just another wrapper.
 
 ## Installation
 
-> ⚠ CamouChat is in active development and not yet published on PyPI (v0.6)
+> 🚀 CamouChat v0.6 is officialy out on PyPI
 
 ### Using `uv` (Recommended)
 
@@ -140,7 +142,7 @@ python -m camoufox fetch
 
 ## Quick Start
 
-👉 [Docs](https://github.com/BITS-Rohit/tweakio-sdk/tree/main/docs)
+👉 [Docs](https://github.com/BITS-Rohit/CamouChat/tree/main/docs)
 
 ---
 
@@ -149,8 +151,8 @@ python -m camoufox fetch
 ### 1. Fork & Clone
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/tweakio-sdk.git
-cd tweakio-sdk
+git clone https://github.com/YOUR_USERNAME/CamouChat.git
+cd CamouChat
 ```
 
 ### 2. Setup (uv)
