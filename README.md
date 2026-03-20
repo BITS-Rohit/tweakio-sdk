@@ -3,9 +3,6 @@
 </div>
 
 <p style="text-align: center;">
-[//]: # (  <a href="https://github.com/BITS-Rohit/CamouChat/releases/tag/v0.6">)
-[//]: # (    <img src="https://img.shields.io/github/v/tag/BITS-Rohit/CamouChat?label=version&color=blue" alt="GitHub tag" />)
-[//]: # (  </a>)
   <a href="https://pypi.org/project/camouchat/">
     <img src="https://img.shields.io/pypi/v/camouchat?label=camouchat&color=green" />
   </a>
