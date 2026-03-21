@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **README.md**: Addressed minor content and layout inconsistencies.
 
-## [0.6.0] - 2026-03-13
+## [0.6.0] - 2026-03-20
 
 ### Added
 
