@@ -3,6 +3,7 @@ Unit tests for WebSelectorConfig class.
 Tests cover locator construction and static helper methods.
 """
 
+import re
 from unittest.mock import Mock, AsyncMock
 
 import pytest
@@ -114,3 +115,38 @@ async def test_is_message_out_locator(config_instance):
 
     result = await WebSelectorConfig.is_message_out(mock_msg)
     assert result is True
+
+
+@pytest.mark.asyncio
+async def test_link_phone_number_button(config_instance):
+    config_instance.link_phone_number_button()
+    config_instance.page.get_by_role.assert_called_with(
+        "button", name=re.compile(r"log.*in.*phone number", re.I)
+    )
+
+
+@pytest.mark.asyncio
+async def test_country_selector_button(config_instance):
+    config_instance.country_selector_button()
+    config_instance.page.locator.assert_called_with("button:has(span[data-icon='chevron'])")
+
+
+@pytest.mark.asyncio
+async def test_country_list_items(config_instance):
+    mock_listitem = AsyncMock(spec=Locator)
+    config_instance.page.get_by_role.return_value = mock_listitem
+    config_instance.country_list_items()
+    config_instance.page.get_by_role.assert_called_with("listitem")
+    mock_listitem.locator.assert_called_with("button")
+
+
+@pytest.mark.asyncio
+async def test_phone_number_input(config_instance):
+    config_instance.phone_number_input()
+    config_instance.page.locator.assert_called_with("form >> input")
+
+
+@pytest.mark.asyncio
+async def test_link_code_container(config_instance):
+    config_instance.link_code_container()
+    config_instance.page.locator.assert_called_with("div[data-link-code]")

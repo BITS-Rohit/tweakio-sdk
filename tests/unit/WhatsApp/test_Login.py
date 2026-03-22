@@ -145,15 +145,15 @@ async def test_code_login_missing_args(login_instance, tmp_path):
 async def test_code_login_success(login_instance, tmp_path):
     """Test code-based login full flow."""
     # Setup Mocks for UI interaction sequence
-    mock_page = login_instance.page
 
     # 1. Phone login button
     mock_role_btn = AsyncMock(spec=Locator)
-    mock_page.get_by_role.return_value = mock_role_btn
     mock_role_btn.count.return_value = 1
+    login_instance.UIConfig.link_phone_number_button.return_value = mock_role_btn
 
     # 2. Country selector
     mock_chevron = AsyncMock(spec=Locator)
+    login_instance.UIConfig.country_selector_button.return_value = mock_chevron
 
     # 3. Country list items
     mock_countries = AsyncMock(spec=Locator)
@@ -161,37 +161,18 @@ async def test_code_login_success(login_instance, tmp_path):
     mock_country_item = AsyncMock(spec=Locator)
     mock_country_item.inner_text.return_value = "India"
     mock_countries.nth.return_value = mock_country_item
+    login_instance.UIConfig.country_list_items.return_value = mock_countries
 
-    mock_listitem = AsyncMock(spec=Locator)
-    mock_listitem.locator.return_value = mock_countries
-
-    def get_by_role_side_effect(role, name=None):
-        if role == "button" and name:
-            return mock_role_btn
-        if role == "listitem":
-            return mock_listitem
-        return AsyncMock()
-
-    mock_page.get_by_role.side_effect = get_by_role_side_effect
-
-    # 4. Phone Input (using locator "form >> input")
+    # 4. Phone Input
     mock_input = AsyncMock(spec=Locator)
     mock_input.count.return_value = 1
+    login_instance.UIConfig.phone_number_input.return_value = mock_input
 
     # 5. Code element
     mock_code_el = AsyncMock(spec=Locator)
+    mock_code_el.wait_for = AsyncMock()
     mock_code_el.get_attribute.return_value = "ABC-123"
-
-    def locator_side_effect(sel):
-        if "chevron" in sel:
-            return mock_chevron
-        if "form >> input" in sel:
-            return mock_input
-        if "data-link-code" in sel:
-            return mock_code_el
-        return AsyncMock()
-
-    mock_page.locator.side_effect = locator_side_effect
+    login_instance.UIConfig.link_code_container.return_value = mock_code_el
 
     # Execution
     result = await login_instance.login(
@@ -235,7 +216,7 @@ async def test_code_login_btn_missing(login_instance, tmp_path):
     """Test failure when phone login button is missing."""
     mock_role_btn = AsyncMock(spec=Locator)
     mock_role_btn.count.return_value = 0  # Button not found
-    login_instance.page.get_by_role.return_value = mock_role_btn
+    login_instance.UIConfig.link_phone_number_button.return_value = mock_role_btn
 
     with pytest.raises(LoginError, match="Login-with-phone-number button not found"):
         await login_instance.login(
@@ -248,11 +229,11 @@ async def test_code_login_country_missing(login_instance, tmp_path):
     """Test failure when country selector not found."""
     mock_role_btn = AsyncMock(spec=Locator)
     mock_role_btn.count.return_value = 1
-    login_instance.page.get_by_role.return_value = mock_role_btn
+    login_instance.UIConfig.link_phone_number_button.return_value = mock_role_btn
 
     mock_chevron = AsyncMock(spec=Locator)
     mock_chevron.count.return_value = 0  # Selector missing
-    login_instance.page.locator.return_value = mock_chevron
+    login_instance.UIConfig.country_selector_button.return_value = mock_chevron
 
     with pytest.raises(LoginError, match="Country selector not found"):
         await login_instance.login(
@@ -273,7 +254,7 @@ async def test_code_login_timeout(login_instance, tmp_path):
     mock_role_btn = AsyncMock(spec=Locator)
     mock_role_btn.count.return_value = 1
     mock_role_btn.click.side_effect = PlaywrightTimeoutError("Bust")
-    login_instance.page.get_by_role.return_value = mock_role_btn
+    login_instance.UIConfig.link_phone_number_button.return_value = mock_role_btn
 
     with pytest.raises(LoginError, match="Failed to open phone login screen"):
         await login_instance.login(

@@ -145,6 +145,26 @@ class WebSelectorConfig(WebUISelectorCapable):
         """Returns the QR canvas image for login."""
         return self.page.get_by_role("img", name=re.compile(r"scan.*qr", re.I))
 
+    def link_phone_number_button(self) -> Locator:
+        """Returns the locator for 'Link with phone number' button."""
+        return self.page.get_by_role("button", name=re.compile(r"log.*in.*phone number", re.I))
+
+    def country_selector_button(self) -> Locator:
+        """Returns the locator for country selection dropdown (chevron icon)."""
+        return self.page.locator("button:has(span[data-icon='chevron'])")
+
+    def country_list_items(self) -> Locator:
+        """Returns the locator for country items in the list."""
+        return self.page.get_by_role("listitem").locator("button")
+
+    def phone_number_input(self) -> Locator:
+        """Returns the locator for phone number input field."""
+        return self.page.locator("form >> input")
+
+    def link_code_container(self) -> Locator:
+        """Returns the locator for the link code display."""
+        return self.page.locator("div[data-link-code]")
+
     # -------------------- Sidebar Navigation -------------------- #
 
     def _side_Bar_chats(self) -> Locator:

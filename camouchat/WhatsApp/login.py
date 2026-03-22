@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from logging import Logger, LoggerAdapter
 import random
-import re
 
 import weakref
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
@@ -110,7 +109,7 @@ class Login(LoginInterface):
 
         self.log.info("Starting code-based login...")
 
-        btn = self.page.get_by_role("button", name=re.compile("log.*in.*phone number", re.I))
+        btn = self.UIConfig.link_phone_number_button()
         if await btn.count() == 0:
             raise LoginError("Login-with-phone-number button not found.")
 
@@ -120,7 +119,7 @@ class Login(LoginInterface):
         except PlaywrightTimeoutError as e:
             raise LoginError("Failed to open phone login screen.") from e
 
-        ctl = self.page.locator("button:has(span[data-icon='chevron'])")
+        ctl = self.UIConfig.country_selector_button()
         if await ctl.count() == 0:
             raise LoginError("Country selector not found.")
 
@@ -128,7 +127,7 @@ class Login(LoginInterface):
         await self.page.keyboard.type(country, delay=random.randint(80, 120))
         await asyncio.sleep(1)
 
-        countries: Locator = self.page.get_by_role("listitem").locator("button")
+        countries: Locator = self.UIConfig.country_list_items()
         if await countries.count() == 0:
             raise LoginError(f"No countries found for input: {country}")
 
@@ -150,14 +149,14 @@ class Login(LoginInterface):
         if not selected:
             raise LoginError(f"Country '{country}' not selectable.")
 
-        inp = self.page.locator("form >> input")
+        inp = self.UIConfig.phone_number_input()
         if await inp.count() == 0:
             raise LoginError("Phone number input not found.")
 
         await inp.type(str(number), delay=random.randint(80, 120))
         await self.page.keyboard.press("Enter")
 
-        code_el = self.page.locator("div[data-link-code]")
+        code_el = self.UIConfig.link_code_container()
         try:
             await code_el.wait_for(timeout=10_000)
             code = await code_el.get_attribute("data-link-code")
