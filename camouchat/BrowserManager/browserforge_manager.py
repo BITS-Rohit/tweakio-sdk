@@ -51,7 +51,8 @@ class BrowserForgeCompatible(BrowserForgeCapable):
                 with open(fingerprint_path, "rb") as fh:
                     fg = pickle.load(fh)
             else:
-                fg = self.__gen_fg__()
+                existing_fgs = self._get_all_existing_fingerprints()
+                fg = self.__gen_fg__(avoid=existing_fgs)
                 if fg is not None:
                     with open(fingerprint_path, "wb") as fh:
                         pickle.dump(fg, fh)
@@ -59,11 +60,46 @@ class BrowserForgeCompatible(BrowserForgeCapable):
         else:
             raise BrowserException("path given does not exist")
 
-    def __gen_fg__(self) -> Fingerprint:
+    def _get_all_existing_fingerprints(self) -> list:
+        """
+        Scans all platforms and profiles to collect existing fingerprints.
+        :return: list of Fingerprint objects
+        """
+        from camouchat.directory import DirectoryManager
+
+        dm = DirectoryManager()
+        fingerprints = []
+
+        if not dm.platforms_dir.exists():
+            return fingerprints
+
+        for platform_dir in dm.platforms_dir.iterdir():
+            if not platform_dir.is_dir():
+                continue
+            for profile_dir in platform_dir.iterdir():
+                if not profile_dir.is_dir():
+                    continue
+                fg_path = profile_dir / "fingerprint.pkl"
+                if fg_path.exists() and fg_path.stat().st_size > 0:
+                    try:
+                        with open(fg_path, "rb") as fh:
+                            fg = pickle.load(fh)
+                            fingerprints.append(fg)
+                    except Exception as e:
+                        self.log.warning(f"Could not load fingerprint from {fg_path}: {e}")
+        return fingerprints
+
+    def __gen_fg__(self, avoid: Optional[list] = None) -> Fingerprint:
+        """
+        Generates a new fingerprint.
+        :param avoid: Optional list of fingerprints to avoid
+        :return: Fingerprint
+        """
         gen = FingerprintGenerator()
         real_w, real_h = BrowserForgeCompatible.get_screen_size()
         tolerance = 0.1
         attempt = 0
+        avoid = avoid or []
 
         if real_w <= 0 or real_h <= 0:
             raise BrowserException("Invalid real screen dimensions")
@@ -74,6 +110,14 @@ class BrowserForgeCompatible(BrowserForgeCapable):
             attempt += 1
 
             if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
+                if fg in avoid:
+                    if self.log:
+                        self.log.warning(
+                            f"🔁 Generated fingerprint already exists in another profile. Regenerating... (attempt {attempt})"
+                        )
+                    if attempt < 10:
+                        continue
+
                 if self.log:
                     self.log.info(f"✅ Fingerprint screen OK: {w}x{h}")
                 return fg
