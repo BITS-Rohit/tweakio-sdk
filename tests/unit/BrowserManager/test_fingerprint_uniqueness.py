@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from camouchat.BrowserManager import browserforge_manager
 from camouchat.BrowserManager.profile_info import ProfileInfo
 
+
 BrowserForgeCompatible = browserforge_manager.BrowserForgeCompatible
 
 
@@ -43,10 +44,10 @@ def test_get_all_existing_fingerprints(browserforge, tmp_path):
         f.write(b"dummy")
     with open(profile2_dir / "fingerprint.pkl", "wb") as f:
         f.write(b"dummy")
-    
+
     fg1 = Mock(spec=Fingerprint)
     fg2 = Mock(spec=Fingerprint)
-        
+
     with patch("camouchat.directory.DirectoryManager") as MockDM:
         mock_dm = MockDM.return_value
         mock_dm.platforms_dir = platforms_dir
@@ -88,7 +89,7 @@ def test_gen_fg_avoids_duplicates(browserforge):
 def test_get_fg_integration(browserforge, tmp_path):
     """Test get_fg integration with uniqueness check."""
     fg_path = tmp_path / "fingerprint.pkl"
-    fg_path.touch() # empty file
+    fg_path.touch()  # empty file
     
     mock_profile = Mock(spec=ProfileInfo)
     mock_profile.fingerprint_path = fg_path
