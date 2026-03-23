@@ -127,6 +127,7 @@ async def main():
                 messages: List[Message] = await message_processor.fetch_messages(
                     chat=chat, only_new=True
                 )
+                print(f"Number of messages fetched: {len(messages)}")
                 for msg in messages:
                     print(msg)
                     print("---------")
