@@ -148,7 +148,6 @@ class CamoufoxBrowser(BrowserInterface):
         for p in browser.pages:
             try:
                 if p.url == "about:blank" and not p.is_closed():
-                    await p.add_init_script(path=js_path)
                     return p
             except Exception as e:
                 self.log.warning(f"Error checking page state: {e}")
@@ -156,7 +155,6 @@ class CamoufoxBrowser(BrowserInterface):
         # Otherwise create a new page
         try:
             page: Page = await browser.new_page()
-            await page.add_init_script(path=js_path)
             return page
         except Exception as e:
             self.log.error("Failed to create new page", exc_info=True)
