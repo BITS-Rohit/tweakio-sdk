@@ -13,23 +13,24 @@ class WAJS_Scripts:
         """
         Wraps raw WPP JavaScript code in a try/catch.
         Returns a standardized JSON format back to the Python bridge.
+        Formatted as an IIFE for Camoufox Main World execution.
         """
         return f"""
-        async () => {{
+        (async () => {{
             try {{
                 const res = await {js_code};
                 return {{ status: 'success', data: res }};
             }} catch (err) {{
                 return {{ status: 'error', message: err.toString() }};
             }}
-        }}
+        }})()
         """
 
     # --- 1. CORE & CONNECTION ---
     @classmethod
     def is_ready(cls) -> str:
         """Check if wa-js has finished hijacking Webpack"""
-        return "() => window.WPP?.isReady === true"
+        return "window.WPP?.isReady === true"
 
     @classmethod
     def is_authenticated(cls) -> str:
@@ -63,17 +64,16 @@ class WAJS_Scripts:
     def setup_new_message_listener(cls, python_alias: str) -> str:
         """
         Injects the bridge that pushes new WS messages directly to the Python handler.
-        Note: We don't use wrap_stealth_execution here because setting up a listener
-        doesn't return a one-off value; it sets up a persistent callback.
+        Formatted as IIFE for Main World execution.
         """
         return f"""
-        () => {{
+        (() => {{
             if (window._camou_has_listener) return;
-            WPP.on('chat.new_message', (msg) => {{
+            window.WPP.on('chat.new_message', (msg) => {{
                 // Fire the Playwright-exposed python function
                 window.{python_alias}(msg);
             }});
             window._camou_has_listener = true;
             return true;
-        }}
+        }})()
         """

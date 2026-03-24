@@ -26,6 +26,10 @@ class WapiWrapper:
         Executes a Stealth JS script in the browser.
         Handles the extraction of our standard `{status: '...', data|message: '...'}` format.
         """
+        # Prefix mw: to execute inside the website's context (bypassing Camoufox isolation)
+        if not js_string.startswith("mw:"):
+            js_string = "mw:" + js_string
+            
         response = await self.page.evaluate(js_string)
 
         if not response or not isinstance(response, dict):
@@ -42,14 +46,24 @@ class WapiWrapper:
     # --- 1. SETUP & CORE ---
     async def wait_for_ready(self, timeout_ms: float = 30000) -> bool:
         """Wait until `wa-js` completes Webpack hijack and exposes WPP"""
-        logger.info("Awaiting WPP.isReady flag...")
-        try:
-            await self.page.wait_for_function(WAJS_Scripts.is_ready(), timeout=timeout_ms)
-            logger.info("WPP successfully integrated and ready.")
-            return True
-        except Exception as e:
-            logger.error("wa-js failed to initialize before timeout.")
-            raise WAJSError("WPP Initialization Timeout") from e
+        import asyncio
+        import time
+        logger.info("Awaiting WPP.isReady flag via Main World polling...")
+        
+        start = time.time()
+        while (time.time() - start) * 1000 < timeout_ms:
+            try:
+                # We use direct evaluation because wait_for_function fails in isolated contexts
+                is_ready = await self.page.evaluate("mw:" + WAJS_Scripts.is_ready())
+                if is_ready:
+                    logger.info("WPP successfully integrated and ready.")
+                    return True
+            except Exception:
+                pass
+            await asyncio.sleep(0.5)
+            
+        logger.error("wa-js failed to initialize before timeout.")
+        raise WAJSError("WPP Initialization Timeout")
 
     async def is_authenticated(self) -> bool:
         return await self._evaluate_stealth(WAJS_Scripts.is_authenticated())
@@ -67,7 +81,7 @@ class WapiWrapper:
         
         # 2. Tell WPP to start routing real-time WS payloads into our exposed function
         setup_script = WAJS_Scripts.setup_new_message_listener(alias)
-        await self.page.evaluate(setup_script)
+        await self.page.evaluate("mw:" + setup_script)
         logger.info(f"Stealth Message Push Listener activated via {alias}")
 
     # --- 3. DATA & ACTIONS ---
