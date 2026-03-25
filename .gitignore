@@ -29,7 +29,7 @@ tweakio_browser_playwright
 .vscode
 tests/learn
 
-docs/test.py
+docs/test*.py
 camouchat/BrowserManager/profile_context.py
 docs/Logger
 

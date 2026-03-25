@@ -182,12 +182,26 @@ class WAJS_Scripts:
                     // Get the raw attributes object (MsgModel stores data in .attributes)
                     const attrs = m.attributes || m;
 
-                    // Dynamically dump ALL primitive properties — nothing hidden
+                    // Helper: convert a Uint8Array/ArrayBuffer to base64
+                    const toB64 = (buf) => {{
+                        const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+                        let b64 = '';
+                        const chunk = 8192;
+                        for (let i = 0; i < bytes.length; i += chunk) {{
+                            b64 += String.fromCharCode(...bytes.subarray(i, i + chunk));
+                        }}
+                        return btoa(b64);
+                    }};
+
+                    // Dynamically dump ALL primitive + binary properties
                     const dump = {{}};
                     for (let key in attrs) {{
                         const val = attrs[key];
                         if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {{
                             dump[key] = val;
+                        }} else if (val instanceof Uint8Array || val instanceof ArrayBuffer) {{
+                            // Binary fields (e.g. mediaKey for view-once) → base64
+                            dump[key] = toB64(val);
                         }}
                     }}
 
@@ -215,11 +229,22 @@ class WAJS_Scripts:
         return f"""
             wpp.chat.getMessageById('{msg_id}').then(m => {{
                 const attrs = m.attributes || m;
+                const toB64 = (buf) => {{
+                    const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+                    let b64 = '';
+                    const chunk = 8192;
+                    for (let i = 0; i < bytes.length; i += chunk) {{
+                        b64 += String.fromCharCode(...bytes.subarray(i, i + chunk));
+                    }}
+                    return btoa(b64);
+                }};
                 const dump = {{}};
                 for (let key in attrs) {{
                     const val = attrs[key];
                     if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {{
                         dump[key] = val;
+                    }} else if (val instanceof Uint8Array || val instanceof ArrayBuffer) {{
+                        dump[key] = toB64(val);
                     }}
                 }}
                 if (attrs.id)     dump['id_serialized'] = attrs.id._serialized;
@@ -1038,4 +1063,134 @@ class WAJS_Scripts:
         """Remove groups from a Community."""
         safe_ids = json.dumps(group_ids)
         return f"wpp.community.removeSubgroups('{community_id}', {safe_ids})"
+
+    # ─────────────────────────────────────────────
+    # MEDIA DECRYPTION
+    # ─────────────────────────────────────────────
+
+    @classmethod
+    def decrypt_media(cls, direct_path: str, media_key_b64: str, media_type: str) -> str:
+        """
+        Decrypt a WhatsApp media blob from the browser Cache API using the embedded mediaKey.
+        Type: RAM (Cache API) — Zero network cost if WA has already pre-downloaded the blob.
+
+        How it works:
+            1. Looks up the encrypted blob in WA's internal Cache API by CDN URL.
+            2. Derives IV + cipherKey via HKDF-SHA256 (WhatsApp media key spec).
+            3. Decrypts via AES-256-CBC, strips the trailing 10-byte MAC.
+            4. Returns the raw decrypted bytes as base64 for Python transfer.
+
+        Args:
+            direct_path:   msg['directPath']  — e.g. "/v/t62.7117-24/..."
+            media_key_b64: msg['mediaKey']    — base64-encoded 32-byte AES root key
+            media_type:    msg['type']        — 'image'|'video'|'audio'|'ptt'|'document'|'sticker'
+
+        Returns:
+            base64 string of decrypted media bytes, or null if not yet cached.
+
+        Raw MsgModel fields needed:
+            directPath, mediaKey, type, mimetype, encFilehash, filehash
+        """
+        safe_path = json.dumps(direct_path)
+        safe_key  = json.dumps(media_key_b64)
+        safe_type = json.dumps(media_type)
+        return f"""
+            (async () => {{
+                try {{
+                    // 1. Locate the encrypted blob in WA's Cache API
+                    const cdnUrl = 'https://mmg.whatsapp.net' + {safe_path};
+                    const cacheNames = await caches.keys();
+                    let encBytes = null;
+                    for (const name of cacheNames) {{
+                        const c = await caches.open(name);
+                        const resp = await c.match(cdnUrl);
+                        if (resp) {{
+                            encBytes = new Uint8Array(await resp.arrayBuffer());
+                            break;
+                        }}
+                    }}
+                    if (!encBytes) return null; // Not yet cached — trigger fallback in Python
+
+                    // 2. HKDF-SHA256 key derivation (WhatsApp media encryption spec)
+                    const infoMap = {{
+                        'image':    'WhatsApp Image Keys',
+                        'video':    'WhatsApp Video Keys',
+                        'audio':    'WhatsApp Audio Keys',
+                        'ptt':      'WhatsApp Audio Keys',
+                        'document': 'WhatsApp Document Keys',
+                        'sticker':  'WhatsApp Image Keys'
+                    }};
+                    const rawKey = Uint8Array.from(atob({safe_key}), c => c.charCodeAt(0));
+                    const keyMaterial = await crypto.subtle.importKey(
+                        'raw', rawKey, 'HKDF', false, ['deriveBits']
+                    );
+                    const infoStr = infoMap[{safe_type}] || 'WhatsApp Image Keys';
+                    const info    = new TextEncoder().encode(infoStr);
+                    const derived = new Uint8Array(await crypto.subtle.deriveBits(
+                        {{ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info }},
+                        keyMaterial,
+                        112 * 8  // 112 bytes total
+                    ));
+
+                    // 3. AES-256-CBC decrypt — strip last 10 bytes (truncated MAC)
+                    const iv        = derived.slice(0, 16);
+                    const cipherKey = derived.slice(16, 48);
+                    const aesKey = await crypto.subtle.importKey(
+                        'raw', cipherKey, {{ name: 'AES-CBC' }}, false, ['decrypt']
+                    );
+                    const decrypted = await crypto.subtle.decrypt(
+                        {{ name: 'AES-CBC', iv }},
+                        aesKey,
+                        encBytes.slice(0, -10)
+                    );
+
+                    // 4. Encode as base64 for zero-copy Python transfer
+                    const bytes  = new Uint8Array(decrypted);
+                    const chunk  = 8192;
+                    let b64 = '';
+                    for (let i = 0; i < bytes.length; i += chunk) {{
+                        b64 += String.fromCharCode(...bytes.subarray(i, i + chunk));
+                    }}
+                    return btoa(b64);
+                }} catch(e) {{
+                    return {{ error: e.toString() }};
+                }}
+            }})()
+        """
+
+    @classmethod
+    def download_media(cls, msg_id: str) -> str:
+        """
+        Fallback: Download + decrypt media via wa-js's internal downloader.
+        Type: NETWORK — Makes one HTTPS request to Meta's CDN. Use only when
+        decrypt_media() returns null (blob not yet cached).
+
+        Args:
+            msg_id: Full serialized message ID — msg['id_serialized']
+
+        Returns:
+            base64 string of decrypted media bytes.
+
+        Raw MsgModel fields needed:
+            id_serialized
+        """
+        safe_id = json.dumps(msg_id)
+        return f"""
+            (async () => {{
+                try {{
+                    const blob = await wpp.chat.downloadMedia({safe_id});
+                    if (!blob) return null;
+                    const buf   = await blob.arrayBuffer();
+                    const bytes = new Uint8Array(buf);
+                    const chunk = 8192;
+                    let b64 = '';
+                    for (let i = 0; i < bytes.length; i += chunk) {{
+                        b64 += String.fromCharCode(...bytes.subarray(i, i + chunk));
+                    }}
+                    return btoa(b64);
+                }} catch(e) {{
+                    return {{ error: e.toString() }};
+                }}
+            }})()
+        """
 

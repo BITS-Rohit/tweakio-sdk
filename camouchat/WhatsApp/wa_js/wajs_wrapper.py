@@ -1,9 +1,11 @@
 import asyncio
+import base64
 import time
 import uuid
 import codecs
 import os
 from logging import Logger, LoggerAdapter
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from playwright.async_api import Page
@@ -334,6 +336,241 @@ class WapiWrapper:
                 limit=limit
             )
         )
+
+    # ─────────────────────────────────────────────
+    # 5b. MEDIA DECRYPTION
+    # ─────────────────────────────────────────────
+
+    async def decrypt_media(
+        self,
+        direct_path: str,
+        media_key_b64: str,
+        media_type: str,
+        msg_id: Optional[str] = None,
+        save_path: Optional[str] = None,
+    ) -> Optional[bytes]:
+        """
+        Extract and decrypt WhatsApp media using the fields embedded in the raw MsgModel dump.
+        Primary path reads directly from the browser Cache API — zero network cost.
+        Falls back to wa-js's CDN downloader if the blob is not yet cached.
+
+        Type: RAM (Cache API primary) / NETWORK (CDN fallback — logs INFO when triggered)
+
+        Args:
+            direct_path:   msg['directPath']    — CDN path e.g. "/v/t62.7117-24/..."
+            media_key_b64: msg['mediaKey']      — base64 AES root key (32 bytes)
+            media_type:    msg['type']          — 'image'|'video'|'audio'|'ptt'|'document'|'sticker'
+            msg_id:        msg['id_serialized'] — Required for CDN fallback only.
+            save_path:     Optional filesystem path to write decrypted bytes to.
+
+        Returns:
+            Raw decrypted bytes, or None if both paths fail.
+
+        Raw MsgModel fields needed:
+            directPath, mediaKey, type  (+id_serialized for fallback)
+        """
+        # ── Primary: Cache API (zero network) ───────────────────────────────
+        b64 = await self._evaluate_stealth(
+            WAJS_Scripts.decrypt_media(
+                direct_path=direct_path,
+                media_key_b64=media_key_b64,
+                media_type=media_type,
+            )
+        )
+
+        if b64 is None:
+            # ── Fallback: wa-js CDN download (NETWORK) ───────────────────────
+            if not msg_id:
+                self.log.warning(
+                    "decrypt_media: Cache miss and no msg_id provided — cannot use CDN fallback."
+                )
+                return None
+
+            self.log.info(
+                f"decrypt_media: Cache miss for {direct_path!r} — "
+                f"falling back to CDN download via wpp.chat.downloadMedia() [NETWORK]"
+            )
+            b64 = await self._evaluate_stealth(
+                WAJS_Scripts.download_media(msg_id=msg_id)
+            )
+
+        if not b64:
+            return None
+
+        raw_bytes = base64.b64decode(b64)
+
+        if save_path:
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(save_path).write_bytes(raw_bytes)
+            self.log.info(f"decrypt_media: Saved {len(raw_bytes):,} bytes → {save_path}")
+
+        return raw_bytes
+
+    # MIME type → file extension map for auto-naming saved media
+    _MIME_TO_EXT: Dict[str, str] = {
+        "image/jpeg":       ".jpg",
+        "image/png":        ".png",
+        "image/webp":       ".webp",
+        "image/gif":        ".gif",
+        "image/avif":       ".avif",
+        "video/mp4":        ".mp4",
+        "video/3gpp":       ".3gp",
+        "video/quicktime":  ".mov",
+        "audio/ogg":        ".ogg",
+        "audio/mp4":        ".m4a",
+        "audio/mpeg":       ".mp3",
+        "audio/aac":        ".aac",
+        "audio/amr":        ".amr",
+        "application/pdf":  ".pdf",
+        "application/zip":  ".zip",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":       ".xlsx",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+    }
+    _TYPE_EXT_FALLBACK: Dict[str, str] = {
+        "image":    ".jpg",
+        "video":    ".mp4",
+        "audio":    ".ogg",
+        "ptt":      ".ogg",
+        "sticker":  ".webp",
+        "document": ".bin",
+    }
+
+    @staticmethod
+    def _ext_from_mime(mimetype: Optional[str], media_type: str = "image") -> str:
+        """Derive file extension from mimetype, falling back to media_type."""
+        if mimetype:
+            base = mimetype.split(";")[0].strip().lower()
+            if base in WapiWrapper._MIME_TO_EXT:
+                return WapiWrapper._MIME_TO_EXT[base]
+        return WapiWrapper._TYPE_EXT_FALLBACK.get(media_type, ".bin")
+
+    @staticmethod
+    def media_save_path(message: Dict[str, Any], save_dir: str) -> str:
+        """
+        Auto-generate a filesystem path for a media message.
+
+        Args:
+            message:  Raw MsgModel dict from get_messages() / get_message_by_id()
+            save_dir: Directory where the file should be saved (created if absent)
+
+        Returns:
+            Full absolute path string, e.g. /path/to/dir/image_false_91XX_ABCD.jpg
+        """
+        msg_id     = message.get("id_serialized", "unknown")
+        media_type = message.get("type", "media")
+        mimetype   = message.get("mimetype") or message.get("mime_type")
+        ext        = WapiWrapper._ext_from_mime(mimetype, media_type)
+        safe_id    = msg_id.replace("/", "_").replace("@", "_").replace(":", "_")
+        return str(Path(save_dir) / f"{media_type}_{safe_id}{ext}")
+
+    async def extract_media(
+        self,
+        message: Dict[str, Any],
+        save_path: str,
+    ) -> Dict[str, Any]:
+        """
+        High-level media extraction from a raw MsgModel dump.
+
+        Reads directPath + mediaKey + type directly from the message dict,
+        tries the Cache API first (zero network), falls back to CDN if needed,
+        writes the file to save_path, and returns a structured result dict.
+
+        Type: RAM (Cache API primary) / NETWORK (CDN fallback — logged as INFO)
+
+        Args:
+            message:   Raw MsgModel dict from get_messages() or get_message_by_id().
+                       Required fields: directPath, type
+                       Optional fields: mediaKey (needed for Cache API decrypt),
+                                        id_serialized (needed for CDN fallback)
+            save_path: Full path where the decrypted file will be written.
+                       Use media_save_path(message, save_dir) to auto-generate.
+
+        Returns:
+            {
+                "success":       bool,        # True if bytes were saved
+                "type":          str,          # "image"|"video"|"audio"|"ptt"|"document"|"sticker"
+                "mimetype":      str | None,   # e.g. "image/jpeg"
+                "size_bytes":    int | None,   # file size on success
+                "path":          str | None,   # absolute path to saved file
+                "msg_id":        str | None,   # id_serialized from the message
+                "view_once":     bool,         # True if this was a view-once message
+                "used_fallback": bool,         # True if CDN download [NETWORK] was used
+                "error":         str | None,   # human-readable error on failure
+            }
+
+        Raw MsgModel fields consumed:
+            directPath, mediaKey, type, id_serialized, mimetype, viewOnce / isViewOnce
+        """
+        direct_path   = message.get("directPath")
+        media_key_b64 = message.get("mediaKey")
+        media_type    = message.get("type", "image")
+        msg_id        = message.get("id_serialized")
+        mimetype      = message.get("mimetype") or message.get("mime_type")
+        view_once     = bool(message.get("viewOnce") or message.get("isViewOnce"))
+
+        result: Dict[str, Any] = {
+            "success":       False,
+            "type":          media_type,
+            "mimetype":      mimetype,
+            "size_bytes":    None,
+            "path":          None,
+            "msg_id":        msg_id,
+            "view_once":     view_once,
+            "used_fallback": False,
+            "error":         None,
+        }
+
+        if not direct_path:
+            result["error"] = "Message has no directPath — not a downloadable media message."
+            return result
+
+        # ── Primary: Cache API (zero network) ──────────────────────────────────
+        b64 = await self._evaluate_stealth(
+            WAJS_Scripts.decrypt_media(
+                direct_path=direct_path,
+                media_key_b64=media_key_b64,
+                media_type=media_type,
+            )
+        )
+
+        if b64 is None:
+            # ── Fallback: CDN download (NETWORK) ───────────────────────────────
+            if not msg_id:
+                result["error"] = (
+                    "Cache miss and no id_serialized in message — cannot use CDN fallback."
+                )
+                return result
+
+            self.log.info(
+                f"extract_media: Cache miss for {direct_path!r} — "
+                f"falling back to CDN download via wpp.chat.downloadMedia() [NETWORK]"
+            )
+            result["used_fallback"] = True
+            b64 = await self._evaluate_stealth(
+                WAJS_Scripts.download_media(msg_id=msg_id)
+            )
+
+        if not b64:
+            result["error"] = "Both Cache API and CDN fallback returned None — media unavailable."
+            return result
+
+        raw_bytes = base64.b64decode(b64)
+
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(save_path).write_bytes(raw_bytes)
+        self.log.info(
+            f"extract_media: [{media_type}] {len(raw_bytes):,} bytes → {save_path}"
+            + (" [CDN fallback]" if result["used_fallback"] else " [Cache API]")
+        )
+
+        result.update({
+            "success":    True,
+            "size_bytes": len(raw_bytes),
+            "path":       save_path,
+        })
+        return result
+
     # ─────────────────────────────────────────────
     # 6. NEWSLETTER (CHANNELS)
     # ─────────────────────────────────────────────
