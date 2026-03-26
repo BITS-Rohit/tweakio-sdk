@@ -55,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_message_by_id()` received the same binary → base64 serialization fix.
 
 
+### Fixed 
+-  BrowserForge Profiles existing fingerprint validation with same platform level to prevent duplication .
+
+
 ## [0.6.1] - 2026-03-20
 
 ### Added
