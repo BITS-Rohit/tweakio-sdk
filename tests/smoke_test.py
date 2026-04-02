@@ -4,9 +4,9 @@ CamouChat WA-JS Smoke Test Suite — Modular Edition
 Run specific tests by name, or run all of them.
 
 Usage:
-    uv run docs/smoke_test.py                        # runs ALL registered tests
-    uv run docs/smoke_test.py test_conn_session       # runs a single test
-    uv run docs/smoke_test.py test_conn test_privacy  # runs multiple (prefix match)
+    uv run tests/smoke_test.py                        # runs ALL registered tests
+    uv run tests/smoke_test.py test_conn_session       # runs a single test
+    uv run tests/smoke_test.py test_conn test_privacy  # runs multiple (prefix match)
 
 Or set TESTS_TO_RUN at the bottom of this file to hardcode a subset.
 Pass --list to print all available tests without running them.
@@ -150,6 +150,17 @@ async def test_chat_list_unread(wapi: WapiWrapper, cfg: Dict[str, Any]) -> None:
     if unread_chats:
         print("  Raw dump of first unread chat:")
         print(json.dumps(unread_chats[0], indent=4, default=str))
+
+
+async def test_get_chat(wapi: WapiWrapper, cfg: Dict[str, Any]) -> None:
+    """
+    Fetch the full raw ChatModel dict for a single chat (my_number).
+    Purpose: inspect every field so you can build ChatModelAPI.from_dict().
+    Uses get_chat() — RAM lookup, zero network cost.
+    """
+    chat = await wapi.get_chat(cfg["my_number"])
+    print(f"  get_chat({cfg['my_number']!r}) — {len(chat)} raw fields:")
+    print(json.dumps(chat, indent=4, default=str))
 
 
 async def test_indexdb(wapi: WapiWrapper, cfg: Dict[str, Any]) -> None:
@@ -462,6 +473,7 @@ REGISTRY: Dict[str, tuple] = {
     "test_message_by_id": (test_message_by_id, "Single message by ID", False),
     "test_chat_list": (test_chat_list, "Top 5 chats from sidebar", False),
     "test_chat_list_unread": (test_chat_list_unread, "Chats with unread messages", False),
+    "test_get_chat": (test_get_chat, "Single chat full raw dump (model inspection)", False),
     "test_indexdb": (test_indexdb, "IndexedDB disk history read", False),
     "test_newsletter_list": (test_newsletter_list, "Followed WhatsApp Channels", False),
     "test_newsletter_search": (test_newsletter_search, "Channel directory search", False),
@@ -582,10 +594,10 @@ async def main() -> None:
             print(f"    {name:<30}  {desc}")
         print()
         print("  Usage:")
-        print("    uv run docs/smoke_test.py                        # run all")
-        print("    uv run docs/smoke_test.py test_conn_session       # one test")
-        print("    uv run docs/smoke_test.py test_conn test_privacy  # multiple / prefix")
-        print("    uv run docs/smoke_test.py --list                  # this screen")
+        print("    uv run tests/smoke_test.py                        # run all")
+        print("    uv run tests/smoke_test.py test_conn_session       # one test")
+        print("    uv run tests/smoke_test.py test_conn test_privacy  # multiple / prefix")
+        print("    uv run tests/smoke_test.py --list                  # this screen")
         print()
         return
 
@@ -611,6 +623,7 @@ async def main() -> None:
             "locale": "en-US",
             "enable_cache": False,
             "headless": False,
+            "geoip": False,  # skip MaxMind MMDB download (avoids GitHub rate-limit)
             "fingerprint_obj": BrowserForgeCompatible(),
         }
     )
