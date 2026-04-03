@@ -2,6 +2,7 @@
 CamouBrowser Config.
 Pass this config to the CamouBrowser
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -57,8 +58,7 @@ class BrowserConfig:
         )
 
     def __str__(self):
-        return \
-            f"""
+        return f"""
             Platform: {self.platform}
             Locale: {self.locale}
             EnableCache: {self.enable_cache}

@@ -66,6 +66,7 @@ class ChatModelAPI:
         :param data:
         :return: ChatModelAPI
         """
+
         def get_val(key: str, default: Any = None):
             return data.get(key, data.get(f"__x_{key}", default))
 

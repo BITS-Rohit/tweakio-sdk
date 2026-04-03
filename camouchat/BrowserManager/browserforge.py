@@ -229,8 +229,4 @@ class BrowserForge:
             raise BrowserException(f"Failed to load fingerprint JSON: {e}")
 
     def __repr__(self):
-        return (
-            f"BrowserForge("
-            f"log={type(self.log).__name__}"
-            f")"
-        )
+        return f"BrowserForge(" f"log={type(self.log).__name__}" f")"

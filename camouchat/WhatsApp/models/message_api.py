@@ -96,6 +96,7 @@ class MessageModelAPI:
         :param data:
         :return: MessageModelAPI
         """
+
         def get_val(key: str, default: Any = None):
             return data.get(key, data.get(f"__x_{key}", default))
 
