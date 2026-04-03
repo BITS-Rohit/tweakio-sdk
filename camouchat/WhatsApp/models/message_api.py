@@ -92,57 +92,91 @@ class MessageModelAPI:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "MessageModelAPI":
         """
-        Safely maps the raw WhatsApp WA-JS dictionary to this Python dataclass.
-        Automatically handles '__x_' prefixes and nested ID fields.
+        Wa_js based MessageModelAPI , creates cls Object from dict of type : MessageModelAPI.
+        :param data:
+        :return: MessageModelAPI
         """
-
-        def get_val(key: str, default: Any = None) -> Any:
+        def get_val(key: str, default: Any = None):
             return data.get(key, data.get(f"__x_{key}", default))
 
+        def safe(v):
+            return v if v is not None else None
+
         id_obj = get_val("id") or {}
+
         id_serialized = get_val("id_serialized") or id_obj.get("_serialized")
+
         from_me = get_val("fromMe")
         if from_me is None:
             from_me = id_obj.get("fromMe", False)
 
+        msg_ctx = get_val("msgContextInfo") or {}
+        poll_opts = get_val("pollOptions") or []
+
+        t_val = get_val("t")
+        timestamp = t_val if t_val is not None else get_val("timestamp")
+
+        size_val = get_val("size")
+        size = size_val if size_val is not None else get_val("fileLength")
+
         return cls(
             id_serialized=id_serialized,
-            rowId=get_val("rowId"),
+            rowId=safe(get_val("rowId")),
             fromMe=from_me,
-            jid_From=get_val("from"),
-            jid_To=get_val("to"),
-            author=get_val("author"),
+            jid_From=safe(get_val("from")),
+            jid_To=safe(get_val("to")),
+            author=safe(get_val("author")),
             pushname=get_val("notifyName") or get_val("pushname"),
-            broadcast=get_val("broadcast"),
-            MsgType=get_val("type"),
-            body=get_val("body"),
-            caption=get_val("caption"),
-            timestamp=get_val("t") or get_val("timestamp"),
+            broadcast=safe(get_val("broadcast")),
+            MsgType=safe(get_val("type")),
+            body=safe(get_val("body")),
+            caption=safe(get_val("caption")),
+            timestamp=safe(timestamp),
             ack=get_val("ack", 0),
-            isNew=get_val("isNew"),
-            isStarMsg=get_val("star"),
-            isForwarded=get_val("isForwarded"),
-            forwardsCount=get_val("forwardingScore", 0) or get_val("forwardsCount", 0),
-            hasReaction=get_val("hasReaction"),
+            isNew=safe(get_val("isNew")),
+            isStarMsg=safe(get_val("star")),
+            isForwarded=safe(get_val("isForwarded")),
+            forwardsCount=(
+                get_val("forwardingScore")
+                if get_val("forwardingScore") is not None
+                else get_val("forwardsCount", 0)
+            ),
+            hasReaction=safe(get_val("hasReaction")),
             ephemeralDuration=get_val("ephemeralDuration", 0),
-            isAvatar=get_val("isAvatar"),
-            isVideoCallMessage=get_val("isVideoCall"),
+            isAvatar=safe(get_val("isAvatar")),
+            isVideoCallMessage=safe(get_val("isVideoCall")),
             fromQuotedMsg=bool(get_val("quotedMsg")),
-            isQuotedMsgAvailable=not get_val("quotedStanzaID") and bool(get_val("quotedMsg")),
-            quotedMsgId=get_val("quotedStanzaID")
-            or (get_val("msgContextInfo") or {}).get("stanzaId"),
-            quotedParticipant=get_val("quotedParticipant")
-            or (get_val("msgContextInfo") or {}).get("participant"),
-            mimetype=get_val("mimetype"),
-            directPath=get_val("directPath"),
-            mediaKey=get_val("mediaKey"),
-            size=get_val("size") or get_val("fileLength"),
-            duration=get_val("duration"),
-            isViewOnce=get_val("isViewOnce"),
-            isQuestion=get_val("isAnyQuestion") or (get_val("type") == "poll_creation"),
-            questionResponsesCount=get_val("pollOptions", []) and len(get_val("pollOptions", [])),
-            readQuestionResponsesCount=None,  # Extracted dynamically if needed via poll API
-            stickerSentTs=get_val("stickerSentTs"),
-            isViewed=get_val("viewed"),
-            vcardList=get_val("vcardList"),
+            isQuotedMsgAvailable=bool(get_val("quotedMsg")) and not get_val("quotedStanzaID"),
+            quotedMsgId=get_val("quotedStanzaID") or msg_ctx.get("stanzaId"),
+            quotedParticipant=get_val("quotedParticipant") or msg_ctx.get("participant"),
+            mimetype=safe(get_val("mimetype")),
+            directPath=safe(get_val("directPath")),
+            mediaKey=safe(get_val("mediaKey")),
+            size=safe(size),
+            duration=safe(get_val("duration")),
+            isViewOnce=safe(get_val("isViewOnce")),
+            isQuestion=safe(get_val("isAnyQuestion")) or (get_val("type") == "poll_creation"),
+            questionResponsesCount=len(poll_opts) if poll_opts else 0,
+            readQuestionResponsesCount=None,
+            stickerSentTs=safe(get_val("stickerSentTs")),
+            isViewed=safe(get_val("viewed")),
+            vcardList=get_val("vcardList") or None,
+        )
+
+    def __str__(self):
+        return (
+            f"[{self.timestamp}] "
+            f"{'Me' if self.fromMe else self.jid_From} → {self.jid_To} | "
+            f"{self.MsgType}: "
+            f"{self.body or self.caption or '<media>'}"
+        )
+
+    def __repr__(self):
+        return (
+            f"MessageModelAPI("
+            f"id='{self.id_serialized}', "
+            f"type='{self.MsgType}', "
+            f"fromMe={self.fromMe}, "
+            f"timestamp={self.timestamp}"
+            f")"
         )
