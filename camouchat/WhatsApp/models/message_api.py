@@ -128,11 +128,15 @@ class MessageModelAPI:
             isAvatar=get_val("isAvatar") or None,
             isVideoCallMessage=get_val("isVideoCall") or None,
             fromQuotedMsg=bool(get_val("quotedMsg")) or None,
-            isQuotedMsgAvailable=not get_val("quotedStanzaID") and bool(get_val("quotedMsg")) or None,
+            isQuotedMsgAvailable=not get_val("quotedStanzaID")
+            and bool(get_val("quotedMsg"))
+            or None,
             quotedMsgId=get_val("quotedStanzaID")
-            or (get_val("msgContextInfo") or {}).get("stanzaId") or None,
+            or (get_val("msgContextInfo") or {}).get("stanzaId")
+            or None,
             quotedParticipant=get_val("quotedParticipant")
-            or (get_val("msgContextInfo") or {}).get("participant") or None,
+            or (get_val("msgContextInfo") or {}).get("participant")
+            or None,
             mimetype=get_val("mimetype") or None,
             directPath=get_val("directPath") or None,
             mediaKey=get_val("mediaKey") or None,
@@ -140,13 +144,15 @@ class MessageModelAPI:
             duration=get_val("duration") or None,
             isViewOnce=get_val("isViewOnce") or None,
             isQuestion=get_val("isAnyQuestion") or (get_val("type") == "poll_creation") or None,
-            questionResponsesCount=get_val("pollOptions", []) and len(get_val("pollOptions", [])) or None,
+            questionResponsesCount=get_val("pollOptions", [])
+            and len(get_val("pollOptions", []))
+            or None,
             readQuestionResponsesCount=None,  # Extracted dynamically if needed via poll API
             stickerSentTs=get_val("stickerSentTs") or None,
             isViewed=get_val("viewed") or None,
             vcardList=get_val("vcardList") or None,
         )
-    
+
     def __str__(self):
         return (
             f"MessageModelAPI(\n"
@@ -192,4 +198,3 @@ class MessageModelAPI:
 
     def __repr__(self):
         return self.__str__()
-

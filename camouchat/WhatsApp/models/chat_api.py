@@ -94,7 +94,7 @@ class ChatModelAPI:
             proxyName=get_val("proxyName") or None,
             isCommunity=is_comm,
         )
-    
+
     def __str__(self):
         return (
             f"ChatModelAPI(\n"
