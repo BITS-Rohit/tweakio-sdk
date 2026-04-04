@@ -17,8 +17,8 @@ from logging import Logger, LoggerAdapter
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from camouchat.camouchat_logger import camouchatLogger
-from .wa_js.wajs_wrapper import WapiWrapper , WAJS_Scripts
 from .models.message_api import MessageModelAPI
+from .wa_js import WapiWrapper, WAJS_Scripts
 
 
 class MessageApiManager:
@@ -55,8 +55,7 @@ class MessageApiManager:
     def register_handler(self, callback: Callable[[MessageModelAPI], Any]) -> None:
         """
         Register a user callback to receive new messages.
-        Called by @msg_event_hook — does NOT re-wire the DOM bridge.
-        The bridge is set up once at WapiSession.start() via _setup_bridge().
+        Called by @msg_event_hook .
 
         Args:
             callback: Async or sync function that receives a MessageModelAPI.
@@ -134,7 +133,6 @@ class MessageApiManager:
         self._bridge_active = False
         self._handlers.clear()
         self.log.info("MessageApiManager: DOM bridge torn down, all handlers cleared.")
-
 
     # ──────────────────────────────────────────────
     # ON-DEMAND RAM PULL METHODS

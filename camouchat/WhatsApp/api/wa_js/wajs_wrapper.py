@@ -149,7 +149,7 @@ class WapiWrapper:
                     if is_ready:
                         # Hide WPP under a non-enumerable, non-configurable,
                         # non-writable property so:
-                        #   - Object.keys(window)   → WPP invisible 
+                        #   - Object.keys(window)   → WPP invisible
                         #   - Object.defineProperty  → cannot redefine
                         #   - window.__react_devtools_hook = null → rejected
                         await self.page.evaluate("""mw:(() => {
@@ -185,7 +185,6 @@ class WapiWrapper:
                         )
                         return True
 
-
             except Exception as e:
                 if "Execution context was destroyed" in str(e):
                     injected = False
@@ -219,6 +218,7 @@ class WapiWrapper:
         """
         if not self._bridge_key:
             import secrets
+
             self._bridge_key = f"_c{secrets.token_hex(6)}"
         return self._bridge_key
 
@@ -482,7 +482,7 @@ class WapiWrapper:
         return await self._evaluate_stealth(WAJS_Scripts.mark_is_read(chat_id))
 
     # ─────────────────────────────────────────────
-    # 5. INDEXDB — DISK HISTORY
+    # 5. INDEX DB — DISK HISTORY
     # ─────────────────────────────────────────────
 
     async def indexdb_get_messages(
