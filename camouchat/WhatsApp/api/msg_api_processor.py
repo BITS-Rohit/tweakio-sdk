@@ -108,7 +108,6 @@ class MessageApiManager:
                 self.log.error(f"MessageApiManager: poll error: {exc}")
             await asyncio.sleep(0.1)
 
-
     async def _drain_loop(self) -> None:
         """
         Background task: drains the id queue and processes each message.
@@ -120,7 +119,9 @@ class MessageApiManager:
                 try:
                     await self.__get_new_message__(id_serialized)
                 except Exception as exc:
-                    self.log.error(f"MessageApiManager: drain loop error for id={id_serialized!r}: {exc}")
+                    self.log.error(
+                        f"MessageApiManager: drain loop error for id={id_serialized!r}: {exc}"
+                    )
                 finally:
                     self._id_queue.task_done()
             except asyncio.CancelledError:
@@ -137,10 +138,19 @@ class MessageApiManager:
                 WAJS_Scripts.get_message_by_id(id_serialized)
             )
             if not raw:
-                self.log.warning(
-                    f"MessageApiManager: RAM lookup empty for id={id_serialized!r}"
-                )
+                self.log.warning(f"MessageApiManager: RAM lookup empty for id={id_serialized!r}")
                 return
+
+            # ciphertext = The message arrived on the wire before WA finished E2E decryption.
+            # WA will re-fire the same id_serialized once decrypted with the real type.
+            # We pass it through as-is (type='ciphertext') so the caller can decide to
+            # skip or queue it.  DO NOT mutate type→'viewonce' here — that was incorrect;
+            # view-once is a separate concept controlled by the isViewOnce flag.
+            if raw.get("type") == "ciphertext":
+                self.log.debug(
+                    f"MessageApiManager: ciphertext message {id_serialized!r} — "
+                    "WA will re-fire once decrypted."
+                )
 
             msg = MessageModelAPI.from_dict(raw)
 
@@ -155,9 +165,7 @@ class MessageApiManager:
                         f"raised on id={id_serialized!r}: {exc}"
                     )
         except Exception as exc:
-            self.log.error(
-                f"MessageApiManager: error processing id={id_serialized!r}: {exc}"
-            )
+            self.log.error(f"MessageApiManager: error processing id={id_serialized!r}: {exc}")
 
     async def stop_bridge(self) -> None:
         """

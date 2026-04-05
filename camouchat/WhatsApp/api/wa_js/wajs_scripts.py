@@ -213,6 +213,17 @@ class WAJS_Scripts:
                     if (attrs.author) dump['author_serialized'] = attrs.author._serialized ?? null;
                     if (attrs.quotedMsg?.id) dump['quotedMsgId'] = attrs.quotedMsg.id._serialized;
 
+                    // Disappearing mode — may be nested object in some WA builds
+                    if (attrs.disappearingMode) {{
+                        dump['disappearingModeInitiator'] = attrs.disappearingMode.initiator ?? attrs.disappearingModeInitiator ?? null;
+                        dump['disappearingModeTrigger']   = attrs.disappearingMode.trigger   ?? attrs.disappearingModeTrigger   ?? null;
+                    }}
+
+                    // vCard list
+                    if (Array.isArray(attrs.vcardList)) {{
+                        dump['vcardList'] = attrs.vcardList.map(v => typeof v === 'string' ? v : (v?.vcard ?? null));
+                    }}
+
                     return dump;
                 }})
             )
@@ -252,8 +263,32 @@ class WAJS_Scripts:
                 if (attrs.from)   dump['from_serialized'] = attrs.from._serialized ?? attrs.from;
                 if (attrs.to)     dump['to_serialized']   = attrs.to._serialized   ?? attrs.to;
                 if (attrs.author) dump['author_serialized'] = attrs.author._serialized ?? null;
-                if (attrs.quotedMsg?.id) dump['quotedMsgId'] = attrs.quotedMsg.id._serialized;
+                // Quoted message — extract all lookup fields
+                if (attrs.quotedMsg?.id) {{
+                    dump['quotedMsgId']        = attrs.quotedMsg.id._serialized;
+                    dump['quotedMsgType']      = attrs.quotedMsg.type ?? null;
+                    dump['quotedMsgBody']      = typeof attrs.quotedMsg.body === 'string'
+                                                    ? attrs.quotedMsg.body.slice(0, 120)
+                                                    : null;
+                }}
+                // quotedStanzaID is the raw stanza key (present even without quotedMsg in RAM)
+                if (attrs.quotedStanzaID)      dump['quotedStanzaID']      = attrs.quotedStanzaID;
+                if (attrs.quotedParticipant)   dump['quotedParticipant']   = attrs.quotedParticipant?._serialized ?? attrs.quotedParticipant;
+                if (attrs.quotedRemoteJid)     dump['quotedRemoteJid']     = attrs.quotedRemoteJid?._serialized  ?? attrs.quotedRemoteJid;
+
+                // Disappearing mode — initiator/trigger may be nested objects in some WA builds
+                if (attrs.disappearingMode) {{
+                    dump['disappearingModeInitiator'] = attrs.disappearingMode.initiator ?? attrs.disappearingModeInitiator ?? null;
+                    dump['disappearingModeTrigger']   = attrs.disappearingMode.trigger   ?? attrs.disappearingModeTrigger   ?? null;
+                }}
+
+                // vCard list — array of raw vCard strings (multi_vcard / vcard types)
+                if (Array.isArray(attrs.vcardList)) {{
+                    dump['vcardList'] = attrs.vcardList.map(v => typeof v === 'string' ? v : (v?.vcard ?? null));
+                }}
+
                 return dump;
+
             }})
         """
 
