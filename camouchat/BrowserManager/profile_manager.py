@@ -154,7 +154,7 @@ class ProfileManager:
             database_url=database_url,
         )
         self._write_metadata(platform, profile_id, metadata)
-        
+
         # Use profile-specific browser logger
         p_log = get_browser_profile_logger(profile_id)
         p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")

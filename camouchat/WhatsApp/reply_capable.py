@@ -20,14 +20,10 @@ from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
 from camouchat.WhatsApp.api import WapiSession
 
 
-class ReplyCapable(
-    ReplyCapableInterface[Message, HumanInteractionController, WebSelectorConfig]
-):
+class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, WebSelectorConfig]):
     """Enables replying to specific WhatsApp messages."""
 
-    _instances: weakref.WeakKeyDictionary[Page, ReplyCapable] = (
-        weakref.WeakKeyDictionary()
-    )
+    _instances: weakref.WeakKeyDictionary[Page, ReplyCapable] = weakref.WeakKeyDictionary()
     _initialized: bool = False
 
     def __new__(cls, *args, **kwargs) -> ReplyCapable:
@@ -94,7 +90,9 @@ class ReplyCapable(
            scrollToMessage to force-render and mount the node.
         """
         if self._wapi is None:
-            raise ValueError("wapi is None, give WapiSession instance first to use MessageModelAPI in reply.")
+            raise ValueError(
+                "wapi is None, give WapiSession instance first to use MessageModelAPI in reply."
+            )
 
         try:
             exists = await self.page.evaluate(
@@ -213,8 +211,6 @@ class ReplyCapable(
                 if attempt < retries:
                     await asyncio.sleep(delay)
                 else:
-                    raise ReplyCapableError(
-                        f"Unexpected error in side_edge_click: {e}"
-                    ) from e
+                    raise ReplyCapableError(f"Unexpected error in side_edge_click: {e}") from e
 
         raise ReplyCapableError("side_edge_click failed after max attempts.")

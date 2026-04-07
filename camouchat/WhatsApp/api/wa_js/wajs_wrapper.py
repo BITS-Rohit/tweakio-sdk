@@ -646,9 +646,9 @@ class WapiWrapper:
         Raw MsgModel fields consumed:
             ``directPath``, ``mediaKey``, ``type``, ``mimetype``, ``viewOnce``
         """
-        direct_path  = message.get("directPath")
+        direct_path = message.get("directPath")
         media_key_b64 = message.get("mediaKey")
-        media_type   = message.get("type", "image")
+        media_type = message.get("type", "image")
 
         if not direct_path:
             self.log.debug("extract_media: no directPath — not a downloadable media message.")
@@ -724,11 +724,13 @@ class WapiWrapper:
         Raw MsgModel fields consumed:
             ``id_serialized``, ``type``
         """
-        msg_id     = message.get("id_serialized")
+        msg_id = message.get("id_serialized")
         media_type = message.get("type", "media")
 
         if not msg_id:
-            self.log.warning("extract_media_cdn: id_serialized missing — cannot call downloadMedia.")
+            self.log.warning(
+                "extract_media_cdn: id_serialized missing — cannot call downloadMedia."
+            )
             return None
 
         self.log.info(
@@ -758,7 +760,6 @@ class WapiWrapper:
             f"extract_media_cdn: [{media_type}] {len(raw_bytes):,} bytes → {save_path} [CDN]"
         )
         return save_path
-
 
     # ─────────────────────────────────────────────
     # 6. NEWSLETTER (CHANNELS)

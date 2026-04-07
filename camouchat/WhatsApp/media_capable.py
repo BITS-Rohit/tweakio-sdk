@@ -18,31 +18,30 @@ from camouchat.WhatsApp.api import WapiSession
 from camouchat.WhatsApp.api.models import MessageModelAPI
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
 
-
 # ── Media-type → category bucket ──────────────────────────────────────────────
 # WhatsApp raw MsgModel `type` strings mapped to the 4 canonical categories
 # that align with ProfileInfo directory attributes.
 _WA_TYPE_TO_CATEGORY: Dict[str, str] = {
     # Images
-    "image":    "image",
-    "sticker":  "image",
+    "image": "image",
+    "sticker": "image",
     # Videos
-    "video":    "video",
-    "gif":      "video",
+    "video": "video",
+    "gif": "video",
     # Audio / Voice
-    "audio":    "audio",
-    "ptt":      "audio",   # push-to-talk voice note
+    "audio": "audio",
+    "ptt": "audio",  # push-to-talk voice note
     # Documents / everything else
     "document": "document",
-    "vcard":    "document",
-    "product":  "document",
+    "vcard": "document",
+    "product": "document",
 }
 
 # Category → ProfileInfo attribute name for the save directory
 _CATEGORY_TO_PROFILE_ATTR: Dict[str, str] = {
-    "image":    "media_images_dir",
-    "video":    "media_videos_dir",
-    "audio":    "media_voice_dir",
+    "image": "media_images_dir",
+    "video": "media_videos_dir",
+    "audio": "media_voice_dir",
     "document": "media_documents_dir",
 }
 
@@ -243,19 +242,19 @@ class MediaCapable(MediaCapableInterface[WebSelectorConfig]):
                 "Pass wapi=<WapiSession> (after .start()) when constructing MediaCapable."
             )
 
-        wa_type  = message.MsgType or ""
+        wa_type = message.MsgType or ""
         category = _WA_TYPE_TO_CATEGORY.get(wa_type, "document")
         save_dir = self._resolve_save_dir(wa_type)
         save_dir.mkdir(parents=True, exist_ok=True)
 
         # Build the raw dict that WapiWrapper.extract_media expects
         raw: Dict[str, Any] = {
-            "type":          wa_type,
-            "directPath":    message.directPath,
-            "mediaKey":      message.mediaKey,
+            "type": wa_type,
+            "directPath": message.directPath,
+            "mediaKey": message.mediaKey,
             "id_serialized": message.id_serialized,
-            "mimetype":      message.mimetype,
-            "viewOnce":      message.isViewOnce or False,
+            "mimetype": message.mimetype,
+            "viewOnce": message.isViewOnce or False,
         }
 
         # Auto-generate filename if not supplied
@@ -270,8 +269,5 @@ class MediaCapable(MediaCapableInterface[WebSelectorConfig]):
             save_path=save_path,
         )
 
-        self.log.debug(
-            f"[save_media] type={wa_type!r} category={category!r} path={path!r}"
-        )
+        self.log.debug(f"[save_media] type={wa_type!r} category={category!r} path={path!r}")
         return path
-
