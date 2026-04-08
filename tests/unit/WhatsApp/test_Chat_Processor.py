@@ -115,7 +115,7 @@ async def test_click_chat_success(chat_processor_instance, mock_page):
     mock_locator.bounding_box.return_value = {"x": 10, "y": 20, "width": 100, "height": 50}
     mock_locator.first = mock_locator
     mock_locator.locator.return_value = mock_locator  # Support chaining
-    
+
     # We need to mock page.locator(...).locator(...)
     mock_page.locator.return_value = mock_locator
 
@@ -137,7 +137,7 @@ async def test_click_chat_retry_fails(chat_processor_instance, mock_page):
     """Test _click_chat handles exhaustion of retries."""
     mock_chat = Mock(spec=Chat)
     mock_chat.chat_name = "TestChat"
-    
+
     # Mock locator chain that never finds the element
     mock_locator = AsyncMock(spec=Locator)
     mock_locator.count.return_value = 0
