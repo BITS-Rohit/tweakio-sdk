@@ -141,6 +141,17 @@ class MessageApiManager:
                 self.log.warning(f"MessageApiManager: RAM lookup empty for id={id_serialized!r}")
                 return
 
+            # Filter own messages: WPP fires chat.new_message for outgoing messages too.
+            # Distinguish bot's OWN SENT REPLIES from account-owner commands on their phone:
+            #   - Bot's sent reply:          true_ prefix  +  recvFresh = False/None
+            #     (message was pushed out, never "arrived fresh" from the wire)
+            #   - Account-owner's command:   true_ prefix  +  recvFresh = True
+            #     (WA Web received it from the server — it traveled the wire)
+            id_str = raw.get("id_serialized") or ""
+            if id_str.startswith("true_") and not raw.get("recvFresh"):
+                self.log.debug(f"MessageApiManager: skipping own sent message id={id_serialized!r}")
+                return
+
             # ciphertext = The message arrived on the wire before WA finished E2E decryption.
             # WA will re-fire the same id_serialized once decrypted with the real type.
             # We pass it through as-is (type='ciphertext') so the caller can decide to
@@ -238,6 +249,9 @@ class MessageApiManager:
         Returns:
             MessageModelAPI or None if not found in RAM.
         """
+        if msg_id is None:
+            raise ValueError("Message ID is None, cannot get message")
+
         raw: Optional[Dict[str, Any]] = await self._bridge._evaluate_stealth(
             WAJS_Scripts.get_message_by_id(msg_id)
         )

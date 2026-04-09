@@ -19,7 +19,6 @@ from camouchat.WhatsApp.api import WapiWrapper
 from camouchat.Exceptions.base import ElementNotFoundError, HumanizedOperationError
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
 from camouchat.camouchat_logger import camouchatLogger
-from camouchat.WhatsApp.api.wa_js.wajs_scripts import WAJS_Scripts
 
 _clipboard_async_lock = asyncio.Lock()
 
@@ -190,21 +189,34 @@ class HumanInteractionController:
         try:
             inputBox = self.ui_config.message_box()
             await inputBox.click(timeout=5000)  # Telementry
+            self.log.debug("Msg Box Clicked.")
 
             if not chat_id:
                 raise HumanizedOperationError("Could not determine active chat ID from bridge.")
 
-            await bridge._evaluate_stealth(f"wpp.chat.markIsComposing('{chat_id}', 3000)")
+            # typing state
+            if await bridge.mark_is_composing(chat_id=chat_id, duration_ms=3000):
+                self.log.debug("Sent MarkisComposing Successfully.")
+            else:
+                self.log.error("Failed to send MarkIsComposing.")
 
             if len(text) > 50:  # Telementry
                 await self.page.keyboard.press("Control+C")
-                await asyncio.sleep(random.uniform(0.05, 0.15))
+                await asyncio.sleep(random.uniform(0.1, 0.4))
                 await self.page.keyboard.press("Control+V")
+                self.log.debug("Adding Ctrl C & Ctrl V Telementry - DONE")
 
-            await asyncio.sleep(random.uniform(1.2, 2.5))
-            await bridge._evaluate_stealth(WAJS_Scripts.send_text_message(chat_id, text))
-            return True
+            sec = random.uniform(1.2, 2.5)
+            self.log.debug(f"Sleeping for {sec} before API send to {chat_id}...")
+            await asyncio.sleep(sec)
+
+            self.log.debug("Invoking bridge.send_text_message...")
+            success = await bridge.send_text_message(chat_id=chat_id, message=text)
+            if success:
+                self.log.debug("Text Sent via RAM Func.")
+            else:
+                self.log.error("Failed to send text via RAM Func.")
+            return success
 
         except Exception as e:
-            self.log.error(f"[HumanInteractionController] send_api_text failed: {e}")
-            raise HumanizedOperationError(f"Failed to execute send_api_text: {e}") from e
+            raise HumanizedOperationError(f"API Text typing failed: {e}") from e

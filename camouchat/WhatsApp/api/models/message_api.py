@@ -159,13 +159,19 @@ class MessageModelAPI:
     # ── Diagnostics/Debug ───────────────────────────────────────────────────────────
     optionalAttrList: Optional[Dict[str, str]]
 
-    # ── Media fields ──────────────────────────────────────────────────────────
+    # ── Media fields ──────────────────────────────────────────────────────
     mimetype: Optional[str]
     directPath: Optional[str]
     mediaKey: Optional[str]
     size: Optional[int]
     duration: Optional[int]
     isViewOnce: Optional[bool]
+    mediaData: Optional[Dict[str, Any]]
+    deprecatedMms3Url: Optional[str]
+    staticUrl: Optional[str]
+    thumbnailDirectPath: Optional[str]
+    thumbnailSha256: Optional[str]
+    thumbnailEncSha256: Optional[str]
 
     # ── Poll fields ───────────────────────────────────────────────────────────
     isQuestion: Optional[bool]
@@ -254,7 +260,7 @@ class MessageModelAPI:
             id_serialized=g("id_serialized"),
             rowId=g("rowId"),
             fromMe=g("fromMe"),
-            jid_From=g("from_serialized"),
+            jid_From=g("to_serialized") if g("fromMe") else g("from_serialized"),
             jid_To=g("to_serialized"),
             author=g("author_serialized"),
             pushname=g("notifyName") or g("pushname"),
@@ -313,6 +319,12 @@ class MessageModelAPI:
             size=size,
             duration=g("duration"),
             isViewOnce=g("isViewOnce", False),
+            mediaData=g("mediaData"),
+            deprecatedMms3Url=g("deprecatedMms3Url"),
+            staticUrl=g("staticUrl"),
+            thumbnailDirectPath=g("thumbnailDirectPath"),
+            thumbnailSha256=g("thumbnailSha256"),
+            thumbnailEncSha256=g("thumbnailEncSha256"),
             # ── Poll ───────────────────────────────────────────────────────────
             isQuestion=is_question,
             pollName=g("pollName"),
@@ -373,13 +385,13 @@ class MessageModelAPI:
             )
             lines.append(f"  senderProfile: {display_name}{badge_str}")
 
-            # Format the raw dictionary beautifully
-            import json
+            # Format the raw dictionary beautifully -- Debugging Only
+            # import json
 
-            pretty_so = json.dumps(so, indent=2)
-            lines.append("  senderRawData:")
-            for j_line in pretty_so.splitlines():
-                lines.append(f"    {j_line}")
+            # pretty_so = json.dumps(so, indent=2)
+            # lines.append("  senderRawData:")
+            # for j_line in pretty_so.splitlines():
+            #     lines.append(f"    {j_line}")
 
         if self.senderWithDevice:
             lines.append(f"  senderDevice: {self.senderWithDevice}")
@@ -496,6 +508,15 @@ class MessageModelAPI:
             lines.append(f"  size        : {size_str}")
         if self.duration:
             lines.append(f"  duration    : {self.duration}s")
+
+        # ── Extended Media Debug ──────────────────────────────────────────────
+        if self.deprecatedMms3Url:
+            lines.append(f"  mms3Url     : {self.deprecatedMms3Url[:60]}...")
+        if self.staticUrl:
+            lines.append(f"  staticUrl   : {self.staticUrl[:60]}...")
+        if self.mediaData:
+            md = self.mediaData
+            lines.append(f"  mediaData   : type={md.get('type')} swcached={md.get('sw-cached')} downloadStage={md.get('downloadStage')}")
 
         # ── Poll detail ───────────────────────────────────────────────────────
         if self.isQuestion:
@@ -615,6 +636,12 @@ class MessageModelAPI:
             "size": self.size,
             "duration": self.duration,
             "isViewOnce": self.isViewOnce,
+            "mediaData": self.mediaData,
+            "deprecatedMms3Url": self.deprecatedMms3Url,
+            "staticUrl": self.staticUrl,
+            "thumbnailDirectPath": self.thumbnailDirectPath,
+            "thumbnailSha256": self.thumbnailSha256,
+            "thumbnailEncSha256": self.thumbnailEncSha256,
             # ── Poll ──────────────────────────────────────────────────────────
             "isQuestion": self.isQuestion,
             "pollName": self.pollName,

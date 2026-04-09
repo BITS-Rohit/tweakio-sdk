@@ -65,7 +65,7 @@ class CamouChatLoggerAdapter(logging.LoggerAdapter):
 
 # ------ Logger Configs ---------
 logger = logging.getLogger("camouchat")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 logger.propagate = False  # Avoid duplication
 
 

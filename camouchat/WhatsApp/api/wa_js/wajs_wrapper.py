@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import json
 import time
 import uuid
 import os
@@ -57,12 +58,22 @@ class WapiWrapper:
 
         bridge_script = f"""() => {{
             return new Promise((resolve) => {{
+                let resolved = false;
+                
                 // 1. Isolated World: listen for result dispatched from the Main World
                 window.addEventListener('{req_id}', (e) => {{
+                    resolved = true;
                     resolve(e.detail);
                 }}, {{ once: true }});
 
-                // 2. Build and inject a <script> tag into the real DOM (executes in Main World)
+                // 2. Timeout guard in Isolated World (30s)
+                setTimeout(() => {{
+                    if (!resolved) {{
+                        resolve({{ status: 'error', message: 'Stealth Bridge Timeout (30s) - Main World did not respond.' }});
+                    }}
+                }}, 30000);
+
+                // 3. Build and inject a <script> tag into the real DOM (executes in Main World)
                 const script = document.createElement('script');
                 const nonceEl = document.querySelector('script[nonce]');
                 if (nonceEl) script.setAttribute('nonce', nonceEl.nonce);
@@ -459,16 +470,44 @@ class WapiWrapper:
     # 4. ACTIONS — TIER 3 FALLBACKS
     # ─────────────────────────────────────────────
 
-    async def send_text_message(self, chat_id: str, message: str) -> Any:
+    async def send_text_message(self, chat_id: str, message: str) -> bool:
         """
         Pure api text send (Tier 3 fallback).
         Use only when Playwright UI interaction fails.
         """
-        return await self._evaluate_stealth(WAJS_Scripts.send_text_message(chat_id, message))
+        try:
+            # Bypass _evaluate_stealth — wpp.chat.sendTextMessage triggers a WS/
+            # network event inside Playwright that CDP-deadlocks page.evaluate().
+            # Direct mw: evaluate returns instantly; WPP fires in the next macrotask.
+            safe_msg = json.dumps(message)
+            await self.page.evaluate(
+                f"mw:(() => {{"
+                f"  const wpp = window.__react_devtools_hook;"
+                f"  setTimeout(() => wpp.chat.sendTextMessage('{chat_id}', {safe_msg}, {{waitForAck: false}}).catch(() => null), 0);"
+                f"}})()"
+            )
+            return True
+        except Exception as e:
+            self.log.warning(f"send_text_message failed: {e}")
+            return False
 
-    async def mark_is_read(self, chat_id: str) -> Any:
+    async def mark_is_read(self, chat_id: str) -> bool:
         """Force-mark a chat as read. Only call when using Tier 3 pure api mode."""
-        return await self._evaluate_stealth(WAJS_Scripts.mark_is_read(chat_id))
+        try:
+            res = await self._evaluate_stealth(WAJS_Scripts.mark_is_read(chat_id))
+            return bool(res)
+        except Exception as e:
+            self.log.warning(f"mark_is_read failed: {e}")
+            return False
+
+    async def mark_is_composing(self, chat_id: str, duration_ms: int = 3000) -> bool:
+        """Sends typing state to the chat."""
+        try:
+            res = await self._evaluate_stealth(WAJS_Scripts.mark_is_composing(chat_id, duration_ms))
+            return bool(res)
+        except Exception as e:
+            self.log.warning(f"mark_is_composing failed: {e}")
+            return False
 
     # ─────────────────────────────────────────────
     # 5. INDEX DB — DISK HISTORY
@@ -619,65 +658,49 @@ class WapiWrapper:
         save_path: str,
     ) -> Optional[str]:
         """
-        Extract and save WhatsApp media using the browser Cache API only.
+        Extract and save WhatsApp media using WPP's internal download pipeline.
 
-        **RAM-only — zero network cost.**  Reads the already-cached encrypted
-        blob from the browser's Cache Storage, decrypts it with the AES key
-        embedded in the message, and writes the plaintext bytes to disk.
-
-        This is the **only** extraction method called in the production path.
-        CDN download (``extract_media_cdn``) exists as a separate function but
-        is intentionally **not** invoked here — hitting Meta's CDN creates a
-        server-side access log and is considered non-stealthy.
+        **Stealth (Local-First):** This method uses ``wpp.chat.downloadMedia()``, 
+        which automatically probes WA's internal LRU caches (Cache Storage & IndexedDB) 
+        before hitting the CDN. If auto-download is ON in the profile, this 
+        call is essentially a zero-network RAM snatch.
 
         Args:
-            message:   Raw MsgModel dict from ``get_messages()`` / ``get_message_by_id()``.
-                       Required fields: ``directPath``, ``mediaKey``, ``type``.
+            message:   Raw MsgModel dict. ``id_serialized`` is required.
             save_path: Full filesystem path where the decrypted file is written.
-                       Use ``media_save_path(message, save_dir)`` to auto-generate.
 
         Returns:
-            Absolute path string of the saved file on success, or ``None`` if:
-                - ``directPath`` is absent (message has no downloadable media).
-                - ``mediaKey`` is absent (cannot decrypt without the AES key).
-                - The Cache API returned nothing (blob not yet cached locally).
-                - Any unexpected JS / decode error occurred.
-
-        Raw MsgModel fields consumed:
-            ``directPath``, ``mediaKey``, ``type``, ``mimetype``, ``viewOnce``
+            Absolute path string on success, or ``None`` on any failure.
         """
-        direct_path = message.get("directPath")
-        media_key_b64 = message.get("mediaKey")
-        media_type = message.get("type", "image")
+        msg_id = message.get("id_serialized")
+        media_type = message.get("type", "media")
 
-        if not direct_path:
-            self.log.debug("extract_media: no directPath — not a downloadable media message.")
+        if not msg_id:
+            self.log.warning("extract_media: id_serialized missing — skipping.")
             return None
 
-        if not media_key_b64:
-            self.log.debug(
-                f"extract_media: no mediaKey for {direct_path!r} — "
-                "cannot decrypt from Cache API."
-            )
-            return None
+        self.log.info(
+            f"extract_media: downloading {msg_id!r} via wpp.chat.downloadMedia() "
+            "(reads from lru-media-array-buffer-cache if auto-downloaded, else CDN)."
+        )
 
         try:
-            b64 = await self._evaluate_stealth(
-                WAJS_Scripts.decrypt_media(
-                    direct_path=direct_path,
-                    media_key_b64=media_key_b64,
-                    media_type=media_type,
-                )
-            )
+            result = await self._evaluate_stealth(WAJS_Scripts.download_media(msg_id=msg_id))
         except Exception as e:
-            self.log.warning(f"extract_media: Cache API JS error — {e}")
+            self.log.warning(f"extract_media: JS error — {e}")
             return None
 
+        if not result:
+            self.log.warning(f"extract_media: downloadMedia returned nothing for {msg_id!r}.")
+            return None
+
+        # Unpack structured result {b64, isCached, latencyMs}
+        b64 = result.get("b64") if isinstance(result, dict) else result
+        is_cached = result.get("isCached", False) if isinstance(result, dict) else False
+        js_latency_ms = result.get("latencyMs", 0.0) if isinstance(result, dict) else 0.0
+
         if not b64:
-            self.log.debug(
-                f"extract_media: Cache API returned nothing for {direct_path!r} — "
-                "blob not yet cached locally."
-            )
+            self.log.warning(f"extract_media: null blob for {msg_id!r}.")
             return None
 
         try:
@@ -688,78 +711,15 @@ class WapiWrapper:
 
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         Path(save_path).write_bytes(raw_bytes)
+
+        # isCached is derived from JS-native performance.now() timing (<150ms = CACHE)
+        source = "CACHE" if is_cached else "NETWORK"
         self.log.info(
-            f"extract_media: [{media_type}] {len(raw_bytes):,} bytes → {save_path} [Cache API]"
+            f"extract_media: [{media_type}] {len(raw_bytes):,} bytes → {save_path} "
+            f"[{source} | JS:{js_latency_ms:.1f}ms]"
         )
         return save_path
 
-    async def extract_media_cdn(
-        self,
-        message: Dict[str, Any],
-        save_path: str,
-    ) -> Optional[str]:
-        """
-        Download and save WhatsApp media via Meta's CDN.
-
-        .. warning::
-            **DO NOT CALL IN PRODUCTION.**
-
-            This function makes a real outbound HTTPS request to Meta's CDN
-            servers (``wpp.chat.downloadMedia()``).  The CDN access is logged
-            server-side and may contribute to the bot-detection signal that
-            WhatsApp uses for rate-limiting and bans.
-
-            It exists as a documented escape hatch for debugging / recovery
-            scenarios where the browser cache is cold.  Use ``extract_media``
-            (Cache API path) for all production downloads.
-
-        Args:
-            message:   Raw MsgModel dict.  ``id_serialized`` is required
-                       (WPP uses it to locate and re-download the blob).
-            save_path: Full filesystem path where the decrypted file is written.
-
-        Returns:
-            Absolute path string on success, or ``None`` on any failure.
-
-        Raw MsgModel fields consumed:
-            ``id_serialized``, ``type``
-        """
-        msg_id = message.get("id_serialized")
-        media_type = message.get("type", "media")
-
-        if not msg_id:
-            self.log.warning(
-                "extract_media_cdn: id_serialized missing — cannot call downloadMedia."
-            )
-            return None
-
-        self.log.info(
-            f"extract_media_cdn: [NETWORK] downloading {msg_id!r} via "
-            "wpp.chat.downloadMedia() — CDN hit will be logged by Meta."
-        )
-
-        try:
-            b64 = await self._evaluate_stealth(WAJS_Scripts.download_media(msg_id=msg_id))
-        except Exception as e:
-            self.log.warning(f"extract_media_cdn: JS error — {e}")
-            return None
-
-        if not b64:
-            self.log.warning(f"extract_media_cdn: downloadMedia returned nothing for {msg_id!r}.")
-            return None
-
-        try:
-            raw_bytes = base64.b64decode(b64)
-        except Exception as e:
-            self.log.warning(f"extract_media_cdn: base64 decode failed — {e}")
-            return None
-
-        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-        Path(save_path).write_bytes(raw_bytes)
-        self.log.info(
-            f"extract_media_cdn: [{media_type}] {len(raw_bytes):,} bytes → {save_path} [CDN]"
-        )
-        return save_path
 
     # ─────────────────────────────────────────────
     # 6. NEWSLETTER (CHANNELS)

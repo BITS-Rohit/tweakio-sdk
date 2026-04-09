@@ -102,6 +102,8 @@ class ChatApiManager:
         Returns:
             ChatModelAPI containing the chat metadata.
         """
+        if chat_id is None:
+            raise ValueError("Chat ID is None, cannot get chat")
         raw_data = await self._bridge._evaluate_stealth(WAJS_Scripts.get_chat(chat_id))
         return ChatModelAPI.from_dict(raw_data)
 

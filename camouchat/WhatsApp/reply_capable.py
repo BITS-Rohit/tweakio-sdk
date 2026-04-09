@@ -13,11 +13,11 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from camouchat.Exceptions.whatsapp import ReplyCapableError
 from camouchat.Interfaces.reply_capable_interface import ReplyCapableInterface
+from camouchat.WhatsApp.api import WapiSession
 from camouchat.WhatsApp.api.models import MessageModelAPI
 from camouchat.WhatsApp.human_interaction_controller import HumanInteractionController
 from camouchat.WhatsApp.models.message import Message
 from camouchat.WhatsApp.web_ui_config import WebSelectorConfig
-from camouchat.WhatsApp.api import WapiSession
 
 
 class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, WebSelectorConfig]):
@@ -59,7 +59,7 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
     ) -> bool:
         """Reply to a message with optional text."""
         try:
-            await self._side_edge_click(message)
+            await self.quote_only(message)
 
             in_box = self.UIConfig.message_box()
             await in_box.click(timeout=3000)
@@ -99,6 +99,7 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
                 f"document.querySelector('div[data-id=\"{msg_id}\"]') !== null"
             )
             if exists:
+                self.log.debug("Msg already is on-Screen.")
                 return True
 
             result = await self._wapi.bridge._evaluate_stealth(
@@ -110,7 +111,7 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
             self.log.warning(f"[focus_message_in_dom] scrollToMessage failed: {e}")
             return False
 
-    async def _side_edge_click(self, message: Message | MessageModelAPI) -> bool:
+    async def quote_only(self, message: Message | MessageModelAPI) -> bool:
         """Double-click on message edge to trigger reply action.
 
         ─────────────────────────────────────────────────────────────────
