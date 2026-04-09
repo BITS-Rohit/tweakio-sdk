@@ -16,26 +16,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Event Hooks**: `msg_event_hook` decorator for high-performance, real-time message event interception.
 - **Data Models**: Extended `ChatModelAPI` and `MessageModelAPI` for full schema parity with internal WhatsApp structures.
 - **Precision Reply**: Integrated `WapiSession` into `ReplyCapable` to enable targeted quoting and message focus.
-- **Smoke Tests**: Modularized validation framework in `tests/smoke_test.py` with granular test selection and status tracking.
+- **Manual Scripts**: Decoupled interactive E2E and Smoke tests from Pytest into standalone scripts (`smoke_script.py`, `script_msgEvent.py`) for cleaner automated CI runs.
+- **WAJS Capability**: Added `mark_is_composing` and legacy `decrypt_media` stubs to `WAJS_Scripts` for full API coverage and Mypy compatibility.
 
-### Changed
+- **Unified Media API**: Standardized `extract_media` return schemas across `WapiWrapper`, `MessageApiManager`, and `MediaCapable` for consistent metadata handling.
+- **Stealth Extraction**: Optimized `extract_media` logic to natively handle structured results from `wpp.chat.downloadMedia()` with cache/CDN latency tracking.
 - **Architecture**: Relocated decorator modules to `WhatsApp/` for a more cohesive package structure.
 - **Serialization**: Improved `get_messages` to handle binary `Uint8Array` conversion to base64 for reliable `mediaKey` extraction.
 
 ### Fixed
+- **Type Safety**: Resolved all remaining Mypy errors across the codebase via proper protocol stubs and type casting.
+- **Logging Robustness**: Hardened `camouchat_logger` with conditional `concurrent-log-handler` imports and fallback logic.
+- **Unit Test Stability**: Fixed `ReplyCapable` unit tests to align with recent method renames and mock data requirements.
 - **Inconsistent Indentation**: Resolved `IndentationError` in `CamoufoxBrowser` initialization logic.
 - **Profile Validation**: Corrected platform-level checks in BrowserForge to prevent fingerprint duplication.
 - **Data Fidelity**: Eliminated "uncertainty" in message fetching by switching to direct RAM-based extraction.
 
-### Removed
-- Legacy `BrowserForge` interface and the original monolithic `ChatProcessor` scraping logic.
+- **Media Debug Logs**: Removed redundant extraction diagnostic output from `MessageModelAPI.__str__` for clean production logging.
+- **Legacy Components**: Removed deprecated `BrowserForge` interface and monolithic `ChatProcessor` scraping logic.
 
 
 ## [0.6.1] - 2026-03-20
 
 ### Added
 
-- **SEO Optimization**: Project visibility and meta-description enhancements.
 - **Documentation Updates**: Refined all files in the `docs/` directory for better structural clarity.
 
 ### Fixed
