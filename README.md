@@ -1,3 +1,6 @@
+<div style="text-align: center;">
+  <img src="./assets/text.png" alt="CamouChat Text" />
+</div>
 
 # CamouChat Core 🛠️
 
@@ -9,7 +12,7 @@
 
 <p align="center">
   <a href="https://pypi.org/project/camouchat-core/">
-      <img src="https://img.shields.io/pypi/v/camouchat-core?label=camouchat-core&color=green" />
+      <img src="https://img.shields.io/badge/PyPI-camouchat--core-green" alt="PyPI" />
   </a>
   <a href="https://pepy.tech/projects/camouchat-core">
       <img src="https://static.pepy.tech/personalized-badge/camouchat-core?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads" alt="PyPI Downloads" />
