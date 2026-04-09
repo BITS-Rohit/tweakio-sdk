@@ -287,17 +287,17 @@ MIT — see [LICENSE](https://github.com/BITS-Rohit/CamouChat/blob/main/LICENSE)
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/dharapandya85">
-                    <img src="https://avatars.githubusercontent.com/u/109461918?v=4" width="60;" alt="dharapandya85"/>
-                    <br />
-                    <sub><b>Dhara Pandya </b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/Vaishnav-Sabari-Girish">
                     <img src="https://avatars.githubusercontent.com/u/88036970?v=4" width="60;" alt="Vaishnav-Sabari-Girish"/>
                     <br />
                     <sub><b>Vaishnav-sabari-girish</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/dharapandya85">
+                    <img src="https://avatars.githubusercontent.com/u/109461918?v=4" width="60;" alt="dharapandya85"/>
+                    <br />
+                    <sub><b>Dhara Pandya </b></sub>
                 </a>
             </td>
             <td align="center">
