@@ -738,13 +738,15 @@ class WapiWrapper:
             f"[{source} | JS:{js_latency_ms:.1f}ms]"
         )
 
-        result_dict.update({
-            "success": True,
-            "path": save_path,
-            "size_bytes": len(raw_bytes),
-            "used_fallback": not is_cached,
-            "latency_ms": js_latency_ms,
-        })
+        result_dict.update(
+            {
+                "success": True,
+                "path": save_path,
+                "size_bytes": len(raw_bytes),
+                "used_fallback": not is_cached,
+                "latency_ms": js_latency_ms,
+            }
+        )
         return result_dict
 
     # ─────────────────────────────────────────────

@@ -419,7 +419,9 @@ class MessageApiManager:
                 return result
             self.log.info(f"extract_media: Cache miss for {direct_path!r} — CDN fallback [NETWORK]")
             result["used_fallback"] = True
-            js_result = await self._bridge._evaluate_stealth(WAJS_Scripts.download_media(msg_id=msg_id))
+            js_result = await self._bridge._evaluate_stealth(
+                WAJS_Scripts.download_media(msg_id=msg_id)
+            )
 
         if not js_result:
             result["error"] = "Both Cache api and CDN fallback returned None — media unavailable."
