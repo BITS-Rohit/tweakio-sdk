@@ -95,9 +95,7 @@ async def test_reply_timeout(reply_capable_instance, mock_humanize):
     """Test reply raises error on timeout."""
     mock_msg = Mock(spec=Message)
     mock_msg.data_id = "test-id"
-    reply_capable_instance.quote_only = AsyncMock(
-        side_effect=PlaywrightTimeoutError("Timeout")
-    )
+    reply_capable_instance.quote_only = AsyncMock(side_effect=PlaywrightTimeoutError("Timeout"))
 
     with pytest.raises(ReplyCapableError, match="reply timed out"):
         await reply_capable_instance.reply(message=mock_msg, humanize=mock_humanize, text="Hello")
