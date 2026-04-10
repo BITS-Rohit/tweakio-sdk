@@ -92,8 +92,8 @@ class ChatProcessor(ChatProcessorInterface):
 
                     wrapped.append(
                         Chat(
-                            chat_ui=chat_el,
-                            chat_name=name,
+                            ui=chat_el,
+                            name=name,
                         )
                     )
 

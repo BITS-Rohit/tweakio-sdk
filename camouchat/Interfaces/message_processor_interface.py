@@ -26,8 +26,8 @@ class MessageProcessorInterface(ABC, Generic[T, U]):
 
     def __init__(
         self,
-        page: Page,
-        UIConfig: U,
+        page: Optional[Page] = None,
+        UIConfig: Optional[U] = None,
         storage_obj: Optional[StorageInterface] = None,
         filter_obj: Optional[MessageFilter] = None,
         log: Optional[Union[LoggerAdapter, Logger]] = None,
@@ -39,11 +39,6 @@ class MessageProcessorInterface(ABC, Generic[T, U]):
         self.log = log or camouchatLogger
         self.page = page
         self.UIConfig = UIConfig
-
-    @abstractmethod
-    async def _get_wrapped_Messages(self, retry: int, **kwargs) -> List[T]:
-        """Extract and wrap messages from UI elements."""
-        ...
 
     @abstractmethod
     async def fetch_messages(self, chat: ChatInterface, retry: int, **kwargs) -> List[T]:

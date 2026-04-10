@@ -123,7 +123,7 @@ async def main():
                 text="📎 Send me any image, video, or audio to test media save+resend.",
             )
 
-        elif msg.MsgType in (
+        elif msg.msgtype in (
             "image",
             "video",
             "audio",
@@ -132,7 +132,7 @@ async def main():
             "sticker",
             "gif",
         ):
-            print(f"[*] Media message received — type={msg.MsgType}")
+            print(f"[*] Media message received — type={msg.msgtype}")
 
             # 1. Save to disk (WPP managed local-first download)
             saved_path = await media.save_media(message=msg)
@@ -142,14 +142,14 @@ async def main():
                 await hum.send_api_text(
                     chat_id=msg.jid_From,
                     bridge=wapi.bridge,
-                    text=f"⚠️ Could not retrieve media (type={msg.MsgType}).",
+                    text=f"⚠️ Could not retrieve media (type={msg.msgtype}).",
                 )
                 return
 
             print(f"[✔] Media saved → {saved_path}")
 
             # 2. Re-upload the saved file back to the same chat
-            wa_type = msg.MsgType or "document"
+            wa_type = msg.msgtype or "document"
             if wa_type in ("image", "sticker"):
                 mtype = MediaType.IMAGE
             elif wa_type in ("video", "gif"):

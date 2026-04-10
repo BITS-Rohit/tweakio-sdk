@@ -214,7 +214,7 @@ class MediaCapable(MediaCapableInterface[WebSelectorConfig]):
                 "Pass wapi=<WapiSession> (after .start()) when constructing MediaCapable."
             )
 
-        wa_type = message.MsgType or ""
+        wa_type = message.msgtype or ""
         category = _WA_TYPE_TO_CATEGORY.get(wa_type, "document")
         save_dir = self._resolve_save_dir(wa_type)
         save_dir.mkdir(parents=True, exist_ok=True)

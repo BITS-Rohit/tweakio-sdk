@@ -137,9 +137,9 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
         """
         # ── Resolve data_id and direction ─────────────────────────────────────
         if isinstance(message, Message):
-            if not message.data_id:
+            if not message.id_serialized:
                 raise ReplyCapableError("Message or data_id is missing.")
-            data_id = str(message.data_id)
+            data_id = str(message.id_serialized)
             is_incoming = getattr(message, "direction", "IN") == "IN"
 
         elif isinstance(message, MessageModelAPI):

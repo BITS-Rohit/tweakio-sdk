@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import asyncio
 from logging import Logger, LoggerAdapter
+
+from camouchat.WhatsApp.api.models import MessageModelAPI
 from camouchat.camouchat_logger import camouchatLogger
 from typing import List, Dict, Any, Optional, Sequence, Union
 
@@ -293,7 +295,7 @@ class SQLAlchemyStorage(StorageInterface):
                     except IntegrityError:
                         continue  # Skip duplicate
                     except Exception as e:
-                        self.log.warning(f"Failed to insert message {model.message_id}: {e}")
+                        self.log.warning(f"Failed to insert message {model.id_serialized}: {e}")
 
                 self.log.debug(
                     f"Inserted {success_count}/{len(message_models)} messages (some duplicates)."
@@ -307,38 +309,35 @@ class SQLAlchemyStorage(StorageInterface):
     def _message_to_model(msg: MessageInterface) -> Message:
         """Convert MessageInterface to Message model."""
         message_id = getattr(msg, "message_id", None) or getattr(msg, "data_id", "unknown")
-        raw_data = getattr(msg, "raw_data", "")
-        data_type = getattr(msg, "data_type", None)
+        raw_data = getattr(msg, "body", "")
+        data_type = getattr(msg, "msgtype", None)
         direction = getattr(msg, "direction", None)
-        system_hit_time = getattr(msg, "system_hit_time", 0.0)
+        system_hit_time = getattr(msg, "timestamp", 0.0)
 
-        encrypted_message = getattr(msg, "encrypted_message", None)
-        encryption_nonce = getattr(msg, "encryption_nonce", None)
-        encrypted_chat_name = getattr(msg, "encrypted_chat_name", None)
-        chat_name_nonce = getattr(msg, "chat_name_nonce", None)
+        encrypted_message = getattr(msg, "en_msg", None)
+        encryption_nonce = getattr(msg, "en_nonce", None)
+        encrypted_chat_name = getattr(msg, "en_ChatName", None)
+        chat_name_nonce = getattr(msg, "en_chatname_none", None)
 
         # When encryption is enabled, plaintext and ciphertext must not coexist.
         if encrypted_message and raw_data:
             raw_data = ""
 
-        parent_chat = getattr(msg, "parent_chat", None)
+        parent_chat = getattr(msg, "from_chat", None)
         parent_chat_name = ""
         parent_chat_id = ""
         if parent_chat:
-            parent_chat_name = getattr(parent_chat, "chatName", "") or getattr(
-                parent_chat, "chat_name", ""
-            )
-            parent_chat_id = getattr(parent_chat, "chatID", "") or getattr(
-                parent_chat, "chat_id", ""
-            )
+            parent_chat_name = getattr(parent_chat, "name", "")
+            parent_chat_id = getattr(parent_chat, "id_serialized", "")
 
         # When chat name is encrypted, the index column holds an HMAC digest
         # so queries remain functional without exposing the real name.
         index_name = getattr(msg, "parent_chat_name_index", None)
+        # Check needed as msg never had parent_chat_name_index params
         if encrypted_chat_name and index_name:
             parent_chat_name = index_name
 
-        return Message(
+        return Message(  # Need attr to be changed
             message_id=str(message_id),
             raw_data=str(raw_data) if raw_data else "",
             encrypted_message=encrypted_message,
@@ -351,6 +350,14 @@ class SQLAlchemyStorage(StorageInterface):
             parent_chat_id=str(parent_chat_id),
             system_hit_time=float(system_hit_time),
         )
+
+    def _msg_api_to_model(self, msg: MessageModelAPI):
+        """
+        Encrypt the MessageModelAPI.
+        :param msg: MessageModelAPI
+        :return:
+        """
+        pass
 
     def check_message_if_exists(self, msg_id: str, **kwargs) -> bool:
         """

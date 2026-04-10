@@ -19,14 +19,18 @@ from logging import Logger, LoggerAdapter
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from camouchat.camouchat_logger import camouchatLogger
+from camouchat.Interfaces.message_processor_interface import MessageProcessorInterface
+from camouchat.Interfaces.chat_interface import ChatInterface
+from camouchat.Interfaces.storage_interface import StorageInterface
+from camouchat.Filter.message_filter import MessageFilter
 from .models.message_api import MessageModelAPI
 from .wa_js import WapiWrapper, WAJS_Scripts
 
 
-class MessageApiManager:
+class MessageApiManager(MessageProcessorInterface[MessageModelAPI, Any]):
     """
     Domain manager for all WhatsApp message operations.
-
+    It does not need page/ui_config , skipped.
     Usage:
         bridge = WapiWrapper(page)
         await bridge.wait_for_ready()
@@ -44,7 +48,10 @@ class MessageApiManager:
         self,
         bridge: WapiWrapper,
         log: Optional[Union[Logger, LoggerAdapter]] = None,
+        storage_obj: Optional[StorageInterface] = None,
+        filter_obj: Optional[MessageFilter] = None,
     ) -> None:
+        super().__init__(storage_obj=storage_obj, filter_obj=filter_obj, log=log)
         self._bridge = bridge
         self.log = log or camouchatLogger
         self._bridge_active: bool = False
@@ -238,6 +245,39 @@ class MessageApiManager:
         )
         return [MessageModelAPI.from_dict(r) for r in (raw_list or [])]
 
+    async def _get_wrapped_Messages(self, **kwargs) -> List[MessageModelAPI]:
+        """[Type: RAM] Extract and wrap messages, fulfilling interface."""
+        chat: Optional[ChatInterface] = kwargs.get("chat")
+        if not chat:
+            return []
+        return await self.get_messages(chat.chat_id, count=kwargs.get("count", 50))
+
+    async def fetch_messages(
+        self, chat: ChatInterface, retry: int = 5, **kwargs
+    ) -> List[MessageModelAPI]:
+        """[Type: RAM] Fetch messages, fulfilling interface via generic storage pass."""
+        msgList = await self._get_wrapped_Messages(chat=chat, **kwargs)
+
+        new_msgs = msgList
+        if self.storage and hasattr(self.storage, "check_message_if_exists_async"):
+            new_msgs = [
+                m
+                for m in msgList
+                if not await self.storage.check_message_if_exists_async(msg_id=m.message_id)
+            ]
+
+        if new_msgs and self.storage and hasattr(self.storage, "enqueue_insert"):
+            await self.storage.enqueue_insert(msgs=new_msgs)
+
+        if new_msgs and self.filter and hasattr(self.filter, "apply"):
+            allowed_new = self.filter.apply(msgs=new_msgs)
+            msgList = [m for m in msgList if m not in new_msgs] + allowed_new
+
+        if kwargs.get("only_new", False):
+            return [m for m in msgList if m in allowed_new] if new_msgs else []
+
+        return msgList
+
     async def get_message_by_id(self, msg_id: str) -> Optional[MessageModelAPI]:
         """
         [Type: RAM]
@@ -359,14 +399,14 @@ class MessageApiManager:
     @staticmethod
     def media_save_path(message: MessageModelAPI, save_dir: str) -> str:
         """Auto-generate a filesystem path for a media message."""
-        ext = MessageApiManager._ext_from_mime(message.mimetype, message.MsgType or "media")
+        ext = MessageApiManager._ext_from_mime(message.mimetype, message.msgtype or "media")
         safe_id = (
             (message.id_serialized or "unknown")
             .replace("/", "_")
             .replace("@", "_")
             .replace(":", "_")
         )
-        return str(Path(save_dir) / f"{message.MsgType or 'media'}_{safe_id}{ext}")
+        return str(Path(save_dir) / f"{message.msgtype or 'media'}_{safe_id}{ext}")
 
     async def extract_media(
         self,
@@ -386,7 +426,7 @@ class MessageApiManager:
         """
         direct_path = message.directPath
         media_key_b64 = message.mediaKey
-        media_type = message.MsgType or "image"
+        media_type = message.msgtype or "image"
         msg_id = message.id_serialized
 
         result: Dict[str, Any] = {

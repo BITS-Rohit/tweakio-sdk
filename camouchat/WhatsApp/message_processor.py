@@ -147,7 +147,7 @@ class MessageProcessor(MessageProcessorInterface[Message, WebSelectorConfig]):
         return [msg for msg in msgList if msg.direction == "out"]
 
     @ensure_chat_clicked(lambda self, chat: self.chat_processor._click_chat(chat))
-    async def _get_wrapped_Messages(self, chat: Chat, retry: int, **kwargs) -> List[Message]:
+    async def _get_wrapped_Messages(self, chat: Chat, retry: int) -> List[Message]:
 
         sc = self.UIConfig
 
@@ -165,7 +165,7 @@ class MessageProcessor(MessageProcessorInterface[Message, WebSelectorConfig]):
                     msg = all_Msgs.nth(i)
 
                     text = await sc.get_message_text(msg)
-                    data_id = await sc.get_dataID(msg)
+                    data_id: str = await sc.get_dataID(msg)
 
                     for _ in range(3):
                         if data_id:
@@ -178,14 +178,14 @@ class MessageProcessor(MessageProcessorInterface[Message, WebSelectorConfig]):
 
                     wrapped_list.append(
                         Message(
-                            message_ui=msg,
+                            ui=msg,
                             direction=cast(
                                 Literal["in", "out"],
                                 "in" if await msg.locator(".message-in").count() > 0 else "out",
                             ),
-                            raw_data=text,
-                            parent_chat=chat,
-                            data_id=data_id,
+                            body=text,
+                            from_chat=chat,
+                            id_serialized=data_id,
                         )
                     )
 
@@ -217,7 +217,7 @@ class MessageProcessor(MessageProcessorInterface[Message, WebSelectorConfig]):
             only_new (bool): If True, returns only new messages.
         """
 
-        msgList = await self._get_wrapped_Messages(chat, retry, **kwargs)
+        msgList = await self._get_wrapped_Messages(chat, retry)
 
         # -----------------------------
         # Storage + Dedup

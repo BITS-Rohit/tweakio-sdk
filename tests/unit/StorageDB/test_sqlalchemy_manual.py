@@ -196,7 +196,7 @@ async def test_message_processor_compatibility():
 
         print(f"  - Candidates: {len(round2_candidates)},  New: {len(new_msgs)}")
         assert len(new_msgs) == 1, f"Expected 1 new msg in round 2, got {len(new_msgs)}"
-        assert new_msgs[0].message_id == "mp_msg_3"
+        assert new_msgs[0].id_serialized == "mp_msg_3"
 
         await storage.enqueue_insert(new_msgs)
         await asyncio.sleep(0.5)

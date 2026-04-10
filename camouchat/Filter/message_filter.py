@@ -92,10 +92,10 @@ class MessageFilter:
         # Check Single-same chat or not in List[messages]
         for m in msgs:
             mi: MessageInterface = m
-            if mi.parent_chat != m0.parent_chat:
+            if mi.from_chat != m0.from_chat:
                 raise MessageFilterError("MessageFilter.apply expects messages from a single chat")
 
-        chat: ChatInterface = m0.parent_chat
+        chat: ChatInterface = m0.from_chat
         chat_key = chat._chat_key()
         now = time.time()
 

@@ -17,15 +17,13 @@ class Message(MessageInterface):
     """Represents a WhatsApp message entity with safe logging and structured metadata."""
 
     direction: Literal["in", "out"]
-    data_id: str
 
-    raw_data: str
-    parent_chat: Chat
-    message_ui: Optional[Union[ElementHandle, Locator]]
-
-    data_type: Optional[str] = None
-    message_id: str = field(init=False)
-    system_hit_time: float = field(default_factory=time.time)
+    body: str
+    from_chat: Chat
+    ui: Optional[Union[ElementHandle, Locator]]
+    msgtype: Optional[str] = None
+    id_serialized: Optional[str] = (None,)
+    timestamp: float = field(default_factory=time.time)
 
     # Encryption fields
     encrypted_message: Optional[str] = None
@@ -39,7 +37,7 @@ class Message(MessageInterface):
         self.message_id = self._message_key()
 
     def _message_key(self) -> str:
-        return f"wa-msg::{self.data_id}"
+        return f"wa-msg::{self.id_serialized}"
 
     # -----------------------------
 

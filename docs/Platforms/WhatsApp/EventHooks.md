@@ -20,10 +20,11 @@ from camouchat.WhatsApp.api import WapiSession
 from camouchat.WhatsApp.decorator import msg_event_hook
 from camouchat.WhatsApp.api.models import MessageModelAPI
 
+
 async def main():
     # 1. Initialize Profile & Browser (Skipped for brevity)
     ...
-    
+
     # 2. Login
     ui = WebSelectorConfig(page=page)
     login = Login(page=page, UIConfig=ui)
@@ -38,8 +39,8 @@ async def main():
         print("────────────────────────────────────────")
         print(f"📩 New Message from: {msg.jid_From}")
         print(f"💬 Body: {msg.body}")
-        print(f"🏷️ Type: {msg.MsgType}")
-        
+        print(f"🏷️ Type: {msg.msgtype}")
+
         # You can use wapi to fetch extended chat info instantly
         chat_info = await wapi.chat_manager.get_chat_by_id(msg.jid_From)
         if chat_info:
@@ -47,9 +48,10 @@ async def main():
 
     # 5. Start listening
     await on_message_received()
-    
+
     # Keep the script running
     await asyncio.sleep(86400)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

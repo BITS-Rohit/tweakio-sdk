@@ -78,7 +78,7 @@ The primary entrypoint. Performs the full pipeline: click chat â†’ scrape DOM â†
 messages = await msg_proc.fetch_messages(chat=chats[0], retry=3)
 
 for msg in messages:
-    print(f"[{msg.direction}] {msg.raw_data}")
+    print(f"[{msg.direction}] {msg.body}")
 ```
 
 #### Pipeline Breakdown
@@ -124,7 +124,7 @@ inbound = await MessageProcessor.sort_messages(msgList=messages, incoming=True)
 outbound = await MessageProcessor.sort_messages(msgList=messages, incoming=False)
 
 for msg in inbound:
-    print(f"Received: {msg.raw_data}")
+    print(f"Received: {msg.body}")
 ```
 
 > [!NOTE]

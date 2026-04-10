@@ -7,9 +7,11 @@ Wraps the CHAT api's data into a dataclass
 from dataclasses import dataclass
 from typing import Any
 
+from camouchat.Interfaces.chat_interface import ChatInterface
+
 
 @dataclass
-class ChatModelAPI:
+class ChatModelAPI(ChatInterface):
     """
     Normalized Data Model for a WhatsApp Chat.
 

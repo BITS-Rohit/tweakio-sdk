@@ -15,15 +15,15 @@ from camouchat.Interfaces.chat_interface import ChatInterface
 
 @dataclass
 class Chat(ChatInterface):
-    chat_name: str
-    chat_ui: Optional[Union[ElementHandle, Locator]]
-    chat_id: str = field(init=False)
-    System_Hit_Time: float = field(default_factory=time.time)
+    name: str
+    ui: Optional[Union[ElementHandle, Locator]]
+    id_serialized: str = field(init=False)
+    timestamp: float = field(default_factory=time.time)
 
     def __post_init__(self):
         self.chat_id = self._chat_key()
 
-    def _chat_key(self, **kwargs) -> str:
+    def _chat_key(self) -> str:
         return f"wa::{self.chat_name.lower().strip()}"
 
     def __str__(self) -> str:

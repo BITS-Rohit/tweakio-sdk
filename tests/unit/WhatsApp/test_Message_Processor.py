@@ -159,8 +159,8 @@ async def test_get_wrapped_messages_success(message_processor_instance, mock_ui_
 
     # Verification
     assert len(msgs) == 1
-    assert msgs[0].raw_data == "Hello"
-    assert msgs[0].data_id == "msg-123"
+    assert msgs[0].body == "Hello"
+    assert msgs[0].id_serialized == "msg-123"
     assert msgs[0].direction == "in"
 
 
@@ -207,7 +207,7 @@ async def test_fetcher_with_storage_deduplication(
     mock_storage.enqueue_insert.assert_called_once()
     _, kwargs = mock_storage.enqueue_insert.call_args
     assert len(kwargs["msgs"]) == 1
-    assert kwargs["msgs"][0].message_id == "msg-2"
+    assert kwargs["msgs"][0].id_serialized == "msg-2"
 
 
 @pytest.mark.asyncio

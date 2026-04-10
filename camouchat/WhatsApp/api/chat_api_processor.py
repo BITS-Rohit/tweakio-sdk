@@ -1,26 +1,37 @@
-from playwright.async_api import Page
-from logging import Logger, LoggerAdapter
-from typing import Any
-import random
 import asyncio
-from camouchat.camouchat_logger import camouchatLogger
+import random
+from logging import Logger, LoggerAdapter
+from typing import Any, Sequence
+
+from playwright.async_api import Page
+
 from .models import ChatModelAPI
 from .wa_js import WapiWrapper, WAJS_Scripts
+from ...Interfaces.chat_interface import ChatInterface
+from ...Interfaces.chat_processor_interface import ChatProcessorInterface
 
 
-class ChatApiManager:
-    def __init__(self, bridge: WapiWrapper, logger: Logger | LoggerAdapter | None = None) -> None:
+class ChatApiManager(ChatProcessorInterface):
+    def __init__(
+        self, page: Page, bridge: WapiWrapper, logger: Logger | LoggerAdapter | None = None
+    ) -> None:
+        super().__init__(page=page, ui_config=None, log=logger)
         self._bridge = bridge
-        self.log = logger or camouchatLogger
         self._last_opened_chat_id: str | None = None
 
-    async def open_chat(self, chat: ChatModelAPI, page: Page) -> bool:
+    async def fetch_chats(self, **kwargs) -> Sequence[ChatInterface]:
+        pass
+
+    async def _click_chat(self, chat: ChatModelAPI, **kwargs) -> bool:
+        return await self.open_chat(chat=chat)
+
+    async def open_chat(self, chat: ChatModelAPI) -> bool:
         """
         Opens the chat using a Stealth Hybrid approach.
         1. Tries to find the chat physically on the screen and injects human CDP mouse clicks.
         2. If virtualized (hidden), falls back to the RAM bridge.
         """
-
+        page = self.page
         if chat is None:
             raise ValueError("Chat is None, cannot open chat")
 

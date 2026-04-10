@@ -85,8 +85,8 @@ async def test_fetch_chats_success(chat_processor_instance, mock_ui_config):
 
     # Verification
     assert len(chats) == 2
-    assert chats[0].chat_name == "Chat A"
-    assert chats[1].chat_name == "Chat B"
+    assert chats[0].name == "Chat A"
+    assert chats[1].name == "Chat B"
     assert isinstance(chats[0], Chat)
 
 

@@ -57,7 +57,7 @@ Scrapes the sidebar chat list and returns a sequence of `Chat` objects, each wra
 chats = await chat_proc.fetch_chats(limit=10, retry=5)
 
 for chat in chats:
-    print(f"💬 {chat.chat_name}")
+    print(f"💬 {chat.name}")
 ```
 
 `Chat` objects have two key attributes:
