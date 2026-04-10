@@ -81,7 +81,7 @@ async def test_basic_operations():
         all_msgs = await storage.get_all_messages_async(limit=10)
         print(f"  Found {len(all_msgs)} messages")
         for msg in all_msgs[:3]:
-            print(f"    - {msg['id_serialized']}: {msg['body'][:30]} (fromMe={msg['direction']})")
+            print(f"    - {msg['id_serialized']}: {msg['body'][:30]} (fromMe={msg['fromMe']})")
 
         # Query by chat
         print("\n💬 Querying messages by chat:")

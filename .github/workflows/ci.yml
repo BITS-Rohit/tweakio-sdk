@@ -39,7 +39,7 @@ jobs:
         run: uv run black --check camouchat tests
 
       - name: Run Mypy (Type Checker)
-        run: uv run mypy camouchat tests --exclude "tests/smoke_test.py"
+        run: uv run mypy camouchat tests
 
       - name: Run deptry (Dependency Checker)
         run: uv run deptry camouchat
@@ -73,7 +73,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run Tests with Coverage
-        run: uv run pytest tests/ --ignore=tests/smoke_test.py --cov=camouchat --cov-report=xml -v
+        run: uv run pytest tests/ --cov=camouchat --cov-report=xml -v
 
       - name: Upload Coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
