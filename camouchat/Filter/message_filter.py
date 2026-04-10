@@ -95,8 +95,9 @@ class MessageFilter:
             if mi.from_chat != m0.from_chat:
                 raise MessageFilterError("MessageFilter.apply expects messages from a single chat")
 
-        chat: ChatInterface = m0.from_chat
-        chat_key = chat._chat_key()
+        chat = m0.from_chat
+        chat_key = chat.id_serialized if not isinstance(chat, str) else chat
+        assert chat_key is not None
         now = time.time()
 
         # Fetch/initialize per-chat state
@@ -118,7 +119,7 @@ class MessageFilter:
         # Rate-limit hit → delay entire batch
         if state.count + batch_size > self.Max_Messages_Per_Window:
             state.defer_since = state.defer_since or now
-            self.Defer_queue.put(BindData(chat, msgs, now))
+            self.Defer_queue.put(BindData(chat if not isinstance(chat, str) else None, msgs, now))  # type: ignore
             return []
 
         # Deliver

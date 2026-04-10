@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import Optional, Union
 
 from playwright.async_api import ElementHandle, Locator
 
@@ -7,7 +6,7 @@ from playwright.async_api import ElementHandle, Locator
 class ChatInterface(ABC):
     """Chat Interface Base Class"""
 
-    name: str
-    id_serialized: str
-    ui: Optional[Union[Locator, ElementHandle]]
-    timestamp: float
+    name: str | None
+    id_serialized: str | None
+    ui: Locator | ElementHandle | None = None
+    timestamp: float | int | None

@@ -26,6 +26,7 @@ from camouchat.Exceptions.base import StorageError
 from camouchat.Interfaces.message_interface import MessageInterface
 from camouchat.Interfaces.storage_interface import StorageInterface
 from camouchat.StorageDB.models import Base, Message
+from camouchat.WhatsApp.models import Message as WhatsAppMessage
 
 
 class SQLAlchemyStorage(StorageInterface):
@@ -177,10 +178,7 @@ class SQLAlchemyStorage(StorageInterface):
         from sqlalchemy import text
 
         migration_sqls = [
-            "ALTER TABLE messages ADD COLUMN encrypted_message TEXT",
             "ALTER TABLE messages ADD COLUMN encryption_nonce VARCHAR(255)",
-            "ALTER TABLE messages ADD COLUMN encrypted_chat_name TEXT",
-            "ALTER TABLE messages ADD COLUMN chat_name_nonce VARCHAR(255)",
         ]
         if not self._engine:
             return
@@ -260,7 +258,13 @@ class SQLAlchemyStorage(StorageInterface):
         message_models = []
         for msg in msgs:
             try:
-                model = SQLAlchemyStorage._message_to_model(msg=msg)
+                if isinstance(msg, WhatsAppMessage):
+                    model = SQLAlchemyStorage._message_to_model(msg=msg)
+                elif isinstance(msg, MessageModelAPI):
+                    model = SQLAlchemyStorage._msg_api_to_model(msg=msg)
+                else:
+                    # Fallback duck-typing attempt
+                    model = SQLAlchemyStorage._message_to_model(msg=msg)  # type: ignore
                 message_models.append(model)
             except Exception as e:
                 self.log.warning(f"Failed to convert message: {e}")
@@ -281,9 +285,7 @@ class SQLAlchemyStorage(StorageInterface):
                 await session.commit()
                 self.log.debug(f"Inserted {len(message_models)} messages.")
             except IntegrityError:
-                # Some messages may already exist (duplicate message_id)
                 await session.rollback()
-                # Try inserting one by one to skip duplicates
                 success_count = 0
                 for model in message_models:
                     try:
@@ -306,58 +308,49 @@ class SQLAlchemyStorage(StorageInterface):
                 raise StorageError(f"Batch insert failed: {e}") from e
 
     @staticmethod
-    def _message_to_model(msg: MessageInterface) -> Message:
+    def _message_to_model(msg: WhatsAppMessage) -> Message:
         """Convert MessageInterface to Message model."""
-        message_id = getattr(msg, "message_id", None) or getattr(msg, "data_id", "unknown")
-        raw_data = getattr(msg, "body", "")
-        data_type = getattr(msg, "msgtype", None)
-        direction = getattr(msg, "direction", None)
-        system_hit_time = getattr(msg, "timestamp", 0.0)
+        msg_id = getattr(msg, "id_serialized", "unknown")
+        body = getattr(msg, "body", "")
+        msgtype = getattr(msg, "msgtype", None)
+        fromme = getattr(msg, "fromMe", None)
+        timestamp = getattr(msg, "timestamp", 0.0)
+        encryption_nonce = getattr(msg, "encryption_nonce", None)
+        from_chat = getattr(msg, "from_chat", None)
+        from_chat_id = ""
+        if from_chat:
+            from_chat_id = getattr(from_chat, "id_serialized", "")
 
-        encrypted_message = getattr(msg, "en_msg", None)
-        encryption_nonce = getattr(msg, "en_nonce", None)
-        encrypted_chat_name = getattr(msg, "en_ChatName", None)
-        chat_name_nonce = getattr(msg, "en_chatname_none", None)
-
-        # When encryption is enabled, plaintext and ciphertext must not coexist.
-        if encrypted_message and raw_data:
-            raw_data = ""
-
-        parent_chat = getattr(msg, "from_chat", None)
-        parent_chat_name = ""
-        parent_chat_id = ""
-        if parent_chat:
-            parent_chat_name = getattr(parent_chat, "name", "")
-            parent_chat_id = getattr(parent_chat, "id_serialized", "")
-
-        # When chat name is encrypted, the index column holds an HMAC digest
-        # so queries remain functional without exposing the real name.
-        index_name = getattr(msg, "parent_chat_name_index", None)
-        # Check needed as msg never had parent_chat_name_index params
-        if encrypted_chat_name and index_name:
-            parent_chat_name = index_name
-
-        return Message(  # Need attr to be changed
-            message_id=str(message_id),
-            raw_data=str(raw_data) if raw_data else "",
-            encrypted_message=encrypted_message,
+        return Message(
+            id_serialized=str(msg_id),
+            body=str(body) if body else "",
             encryption_nonce=encryption_nonce,
-            encrypted_chat_name=encrypted_chat_name,
-            chat_name_nonce=chat_name_nonce,
-            data_type=str(data_type) if data_type else None,
-            direction=str(direction) if direction else None,
-            parent_chat_name=str(parent_chat_name),
-            parent_chat_id=str(parent_chat_id),
-            system_hit_time=float(system_hit_time),
+            msgtype=str(msgtype) if msgtype else None,
+            fromMe=fromme,
+            chat_id=str(from_chat_id),
+            timestamp=float(timestamp),
         )
 
-    def _msg_api_to_model(self, msg: MessageModelAPI):
-        """
-        Encrypt the MessageModelAPI.
-        :param msg: MessageModelAPI
-        :return:
-        """
-        pass
+    @staticmethod
+    def _msg_api_to_model(msg: MessageModelAPI) -> Message:
+        """Convert MessageModelAPI to unified Message DB model."""
+        msg_id = getattr(msg, "id_serialized", "unknown")
+        body = getattr(msg, "body", "")
+        msgtype = getattr(msg, "msgtype", None)
+        fromme = getattr(msg, "fromMe", None)
+        timestamp = getattr(msg, "timestamp", 0.0)
+        encryption_nonce = getattr(msg, "encryption_nonce", None)
+        chat_id = getattr(msg, "jid_From", "")
+
+        return Message(
+            id_serialized=str(msg_id),
+            body=str(body) if body else "",
+            encryption_nonce=encryption_nonce,
+            msgtype=str(msgtype) if msgtype else None,
+            fromMe=fromme,
+            chat_id=str(chat_id),
+            timestamp=float(timestamp),
+        )
 
     def check_message_if_exists(self, msg_id: str, **kwargs) -> bool:
         """
@@ -379,7 +372,7 @@ class SQLAlchemyStorage(StorageInterface):
         session_factory = self._get_session_factory()
         async with session_factory() as session:
             try:
-                stmt = select(exists().where(Message.message_id == msg_id))
+                stmt = select(exists().where(Message.id_serialized == msg_id))
                 result = await session.execute(stmt)
                 return result.scalar() or False
             except Exception as e:
@@ -416,8 +409,8 @@ class SQLAlchemyStorage(StorageInterface):
                 self.log.error(f"Async get all messages failed: {e}")
                 return []
 
-    async def get_messages_by_chat(self, chat_name: str, **kwargs) -> List[Dict[str, Any]]:
-        """Get messages filtered by chat name (or HMAC digest if encryption is enabled)."""
+    async def get_messages_by_chat(self, chat_id: str, **kwargs) -> List[Dict[str, Any]]:
+        """Get messages filtered by chat id (or HMAC digest if encryption is enabled)."""
         if not self._session_factory:
             return []
 
@@ -428,7 +421,7 @@ class SQLAlchemyStorage(StorageInterface):
             try:
                 stmt = (
                     select(Message)
-                    .where(Message.parent_chat_name == chat_name)
+                    .where(Message.chat_id == chat_id)
                     .order_by(Message.id.desc())
                     .limit(limit)
                 )
@@ -457,12 +450,9 @@ class SQLAlchemyStorage(StorageInterface):
             limit:  Max rows to fetch.
             offset: Pagination offset.
 
-        Returns:
             List of dicts identical to ``to_dict()`` but with:
-            - ``raw_data`` populated with decrypted plaintext (or original value
+            - ``body`` populated with decrypted plaintext (or original value
               when the row was stored without encryption).
-            - ``parent_chat_name`` populated with decrypted chat name (or the
-              HMAC digest / original value when not encrypted).
 
         Example::
 
@@ -481,31 +471,18 @@ class SQLAlchemyStorage(StorageInterface):
             out = dict(row)
 
             # Decrypt message body
-            enc_msg = row.get("encrypted_message")
             enc_nonce = row.get("encryption_nonce")
-            if enc_msg and enc_nonce:
+            if enc_nonce and out.get("body"):
                 try:
                     nonce_bytes = _b64.b64decode(enc_nonce)
-                    cipher_bytes = _b64.b64decode(enc_msg)
-                    msg_id = row.get("message_id", "")
-                    out["raw_data"] = decryptor.decrypt_message(
+                    cipher_bytes = _b64.b64decode(out["body"])
+                    msg_id = row.get("id_serialized", "")
+                    out["body"] = decryptor.decrypt_message(
                         nonce_bytes, cipher_bytes, msg_id or None
                     )
                 except Exception as e:
-                    self.log.warning(f"Failed to decrypt message {row.get('message_id')}: {e}")
-                    out["raw_data"] = "<decryption failed>"
-
-            # Decrypt chat name
-            enc_chat = row.get("encrypted_chat_name")
-            chat_nonce = row.get("chat_name_nonce")
-            if enc_chat and chat_nonce:
-                try:
-                    nonce_bytes = _b64.b64decode(chat_nonce)
-                    cipher_bytes = _b64.b64decode(enc_chat)
-                    out["parent_chat_name"] = decryptor.decrypt(nonce_bytes, cipher_bytes)
-                except Exception as e:
-                    self.log.warning(f"Failed to decrypt chat name: {e}")
-                    out["parent_chat_name"] = "<decryption failed>"
+                    self.log.warning(f"Failed to decrypt message {row.get('id_serialized')}: {e}")
+                    out["body"] = "<decryption failed>"
 
             result.append(out)
 

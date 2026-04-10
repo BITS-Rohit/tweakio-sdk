@@ -74,6 +74,14 @@ class ChatModelAPI(ChatInterface):
     isAnnounceGrpRestrict: bool | None
     optional_attr_list: dict[str, str] | None
 
+    @property
+    def name(self) -> str:  # type: ignore[override]
+        return self.formattedTitle or self.id_serialized or "Unknown"
+
+    @property
+    def ui(self):  # type: ignore[override]
+        return None
+
     @classmethod
     def from_dict(cls, data: dict) -> "ChatModelAPI":
         """

@@ -106,7 +106,7 @@ async def test_fetch_chats_empty(chat_processor_instance, mock_ui_config):
 async def test_click_chat_success(chat_processor_instance, mock_page):
     """Test successful chat click."""
     mock_chat = Mock(spec=Chat)
-    mock_chat.chat_name = "TestChat"
+    mock_chat.name = "TestChat"
 
     # Mock locator chain
     mock_locator = AsyncMock(spec=Locator)
@@ -136,7 +136,7 @@ async def test_click_chat_none(chat_processor_instance):
 async def test_click_chat_retry_fails(chat_processor_instance, mock_page):
     """Test _click_chat handles exhaustion of retries."""
     mock_chat = Mock(spec=Chat)
-    mock_chat.chat_name = "TestChat"
+    mock_chat.name = "TestChat"
 
     # Mock locator chain that never finds the element
     mock_locator = AsyncMock(spec=Locator)
@@ -156,7 +156,7 @@ async def test_is_unread_count(chat_processor_instance):
     mock_ui = AsyncMock(spec=Locator)
     mock_element = AsyncMock(spec=ElementHandle)
 
-    mock_chat.chat_ui = mock_ui
+    mock_chat.ui = mock_ui
     mock_ui.element_handle.return_value = mock_element
 
     # Mock badge chain
@@ -181,7 +181,7 @@ async def test_is_unread_no_badge(chat_processor_instance):
     mock_ui = AsyncMock(spec=Locator)
     mock_element = AsyncMock(spec=ElementHandle)
 
-    mock_chat.chat_ui = mock_ui
+    mock_chat.ui = mock_ui
     mock_ui.element_handle.return_value = mock_element
 
     # query_selector returns None (no badge)
@@ -198,7 +198,7 @@ async def test_do_unread_success(chat_processor_instance, mock_page):
     mock_ui = AsyncMock(spec=Locator)
     mock_element = AsyncMock(spec=ElementHandle)
 
-    mock_chat.chat_ui = mock_ui
+    mock_chat.ui = mock_ui
     mock_ui.element_handle.return_value = mock_element
 
     # Mock context menu
@@ -233,7 +233,7 @@ async def test_do_unread_already_unread(chat_processor_instance, mock_page, mock
     mock_ui = AsyncMock(spec=Locator)
     mock_element = AsyncMock(spec=ElementHandle)
 
-    mock_chat.chat_ui = mock_ui
+    mock_chat.ui = mock_ui
     mock_ui.element_handle.return_value = mock_element
 
     mock_menu = AsyncMock(spec=ElementHandle)
@@ -263,7 +263,7 @@ async def test_do_unread_option_missing(chat_processor_instance, mock_page, mock
     mock_chat = Mock(spec=Chat)
     mock_ui = AsyncMock(spec=Locator)
     mock_element = AsyncMock(spec=ElementHandle)
-    mock_chat.chat_ui = mock_ui
+    mock_chat.ui = mock_ui
     mock_ui.element_handle.return_value = mock_element
 
     mock_menu = AsyncMock(spec=ElementHandle)
@@ -283,7 +283,7 @@ async def test_do_unread_timeout(chat_processor_instance, mock_page):
     mock_chat = Mock(spec=Chat)
     mock_ui = AsyncMock(spec=Locator)
     mock_element = AsyncMock(spec=ElementHandle)
-    mock_chat.chat_ui = mock_ui
+    mock_chat.ui = mock_ui
     mock_ui.element_handle.return_value = mock_element
 
     mock_element.click.side_effect = PlaywrightTimeoutError("Timeout")

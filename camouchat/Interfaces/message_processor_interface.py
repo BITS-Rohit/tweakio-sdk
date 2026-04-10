@@ -22,7 +22,7 @@ U = TypeVar("U", bound=WebUISelectorCapable)
 class MessageProcessorInterface(ABC, Generic[T, U]):
     """Base interface for message extraction and processing."""
 
-    UIConfig: U
+    UIConfig: Optional[U] = None
 
     def __init__(
         self,

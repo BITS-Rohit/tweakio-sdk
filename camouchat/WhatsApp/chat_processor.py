@@ -71,6 +71,7 @@ class ChatProcessor(ChatProcessorInterface):
     async def _get_Wrapped_Chat(self, limit: int = 5, retry: int = 5, **kwargs) -> Sequence[Chat]:
         """Extract chat elements and wrap them."""
 
+        assert self.UIConfig is not None
         sc = self.UIConfig
 
         for attempt in range(1, retry + 1):
@@ -132,13 +133,14 @@ class ChatProcessor(ChatProcessorInterface):
         if not chat:
             raise ChatNotFoundError("None passed, expected Chat in _click_chat")
 
-        chat_name = chat.chat_name
+        chat_name = chat.name
 
         for attempt in range(1, retries + 1):
             try:
+                assert self.page is not None
                 chat_locator = (
                     self.page.locator("div#pane-side, div[aria-label*='Chat list' i]")
-                    .locator(f"span[title='{chat_name}']")
+                    .locator(f"span[title='{chat_name}'], div[title='{chat_name}']")
                     .first
                 )
 
@@ -154,6 +156,7 @@ class ChatProcessor(ChatProcessorInterface):
                         )
                         await asyncio.sleep(random.uniform(0.2, 0.5))
 
+                        assert self.page is not None
                         await self.page.mouse.click(
                             target_x + random.uniform(-2, 2),
                             target_y + random.uniform(-2, 2),
@@ -192,9 +195,9 @@ class ChatProcessor(ChatProcessorInterface):
                 raise ChatNotFoundError("none passed , expected chat in is_unread")
 
             handle: ElementHandle = (
-                await chat.chat_ui.element_handle(timeout=1500)
-                if isinstance(chat.chat_ui, Locator)
-                else chat.chat_ui  # type: ignore[assignment]
+                await chat.ui.element_handle(timeout=1500)
+                if isinstance(chat.ui, Locator)
+                else chat.ui  # type: ignore[assignment]
             )
 
             unread_Badge = await handle.query_selector("[aria-label*='unread']")
@@ -210,6 +213,7 @@ class ChatProcessor(ChatProcessorInterface):
 
     async def do_unread(self, chat: Optional[Chat]) -> bool:
         """Mark a chat as unread via context menu."""
+        assert self.page is not None
         page = self.page
 
         if chat is None:
@@ -217,12 +221,12 @@ class ChatProcessor(ChatProcessorInterface):
 
         try:
             chat_handle: ElementHandle = (
-                await chat.chat_ui.element_handle(timeout=1500)
-                if isinstance(chat.chat_ui, Locator)
-                else chat.chat_ui  # type: ignore[assignment]
+                await chat.ui.element_handle(timeout=1500)
+                if isinstance(chat.ui, Locator)
+                else chat.ui  # type: ignore[assignment]
             )
 
-            if chat.chat_ui is None:
+            if chat.ui is None:
                 raise ChatError("chat UI not initialized")
 
             await chat_handle.click(button="right")

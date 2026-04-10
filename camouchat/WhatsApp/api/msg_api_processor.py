@@ -245,26 +245,22 @@ class MessageApiManager(MessageProcessorInterface[MessageModelAPI, Any]):
         )
         return [MessageModelAPI.from_dict(r) for r in (raw_list or [])]
 
-    async def _get_wrapped_Messages(self, **kwargs) -> List[MessageModelAPI]:
-        """[Type: RAM] Extract and wrap messages, fulfilling interface."""
-        chat: Optional[ChatInterface] = kwargs.get("chat")
-        if not chat:
-            return []
-        return await self.get_messages(chat.chat_id, count=kwargs.get("count", 50))
-
     async def fetch_messages(
         self, chat: ChatInterface, retry: int = 5, **kwargs
     ) -> List[MessageModelAPI]:
         """[Type: RAM] Fetch messages, fulfilling interface via generic storage pass."""
-        msgList = await self._get_wrapped_Messages(chat=chat, **kwargs)
+        chat_id = chat.id_serialized
+        assert chat_id is not None
+        msgList = await self.get_messages(chat_id, count=kwargs.get("count", 50))
 
         new_msgs = msgList
         if self.storage and hasattr(self.storage, "check_message_if_exists_async"):
-            new_msgs = [
-                m
-                for m in msgList
-                if not await self.storage.check_message_if_exists_async(msg_id=m.message_id)
-            ]
+            new_msgs = []
+            for m in msgList:
+                msg_id = m.id_serialized
+                if msg_id is not None:
+                    if not await self.storage.check_message_if_exists_async(msg_id=msg_id):
+                        new_msgs.append(m)
 
         if new_msgs and self.storage and hasattr(self.storage, "enqueue_insert"):
             await self.storage.enqueue_insert(msgs=new_msgs)
@@ -306,126 +302,22 @@ class MessageApiManager(MessageProcessorInterface[MessageModelAPI, Any]):
         """
         return await self.get_messages(chat_id, count=-1, only_unread=True)
 
-    async def decrypt_media(
-        self,
-        direct_path: str,
-        media_key_b64: str,
-        media_type: str,
-        msg_id: Optional[str] = None,
-        save_path: Optional[str] = None,
-    ) -> Optional[bytes]:
-        """
-        [Type: RAM Primary / NETWORK Fallback]
-        Extract and decrypt WhatsApp media. Tries to read from the browser Cache API
-        (zero network) first. Falls back to wa-js's CDN downloader if the blob is missing.
-
-        Args:
-            direct_path:   msg['directPath']    — CDN path e.g. "/v/t62.7117-24/..."
-            media_key_b64: msg['mediaKey']      — base64 AES root key (32 bytes)
-            media_type:    msg['type']          — 'image'|'video'|'audio'|'ptt'|'document'|'sticker'
-            msg_id:        msg['id_serialized'] — Required for CDN fallback only.
-            save_path:     Optional filesystem path to write decrypted bytes to.
-
-        Returns:
-            Raw decrypted bytes, or None if both paths fail.
-        """
-        # Primary: Cache API (zero network)
-        b64 = await self._bridge._evaluate_stealth(
-            WAJS_Scripts.decrypt_media(
-                direct_path=direct_path,
-                media_key_b64=media_key_b64,
-                media_type=media_type,
-            )
-        )
-
-        if b64 is None:
-            # Fallback: CDN download (NETWORK)
-            if not msg_id:
-                self.log.warning(
-                    "decrypt_media: Cache miss & no msg_id passed. Cannot use CDN fallback."
-                )
-                return None
-
-            self.log.info(f"decrypt_media: Cache miss for {direct_path!r} — CDN fallback [NETWORK]")
-            b64 = await self._bridge._evaluate_stealth(WAJS_Scripts.download_media(msg_id=msg_id))
-
-        if not b64:
-            return None
-
-        raw_bytes = base64.b64decode(b64)
-
-        if save_path:
-            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(save_path).write_bytes(raw_bytes)
-            self.log.info(f"decrypt_media: Saved {len(raw_bytes):,} bytes → {save_path}")
-
-        return raw_bytes
-
-    _MIME_TO_EXT: Dict[str, str] = {
-        "image/jpeg": ".jpg",
-        "image/png": ".png",
-        "image/webp": ".webp",
-        "image/gif": ".gif",
-        "video/mp4": ".mp4",
-        "video/3gpp": ".3gp",
-        "video/quicktime": ".mov",
-        "audio/ogg": ".ogg",
-        "audio/mp4": ".m4a",
-        "audio/mpeg": ".mp3",
-        "audio/aac": ".aac",
-        "application/pdf": ".pdf",
-        "application/zip": ".zip",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-    }
-
-    _TYPE_EXT_FALLBACK: Dict[str, str] = {
-        "image": ".jpg",
-        "video": ".mp4",
-        "audio": ".ogg",
-        "ptt": ".ogg",
-        "sticker": ".webp",
-        "document": ".bin",
-    }
-
-    @staticmethod
-    def _ext_from_mime(mimetype: Optional[str], media_type: str = "image") -> str:
-        """Derive file extension from mimetype, falling back to media_type."""
-        if mimetype:
-            base = mimetype.split(";")[0].strip().lower()
-            if base in MessageApiManager._MIME_TO_EXT:
-                return MessageApiManager._MIME_TO_EXT[base]
-        return MessageApiManager._TYPE_EXT_FALLBACK.get(media_type, ".bin")
-
-    @staticmethod
-    def media_save_path(message: MessageModelAPI, save_dir: str) -> str:
-        """Auto-generate a filesystem path for a media message."""
-        ext = MessageApiManager._ext_from_mime(message.mimetype, message.msgtype or "media")
-        safe_id = (
-            (message.id_serialized or "unknown")
-            .replace("/", "_")
-            .replace("@", "_")
-            .replace(":", "_")
-        )
-        return str(Path(save_dir) / f"{message.msgtype or 'media'}_{safe_id}{ext}")
-
     async def extract_media(
         self,
         message: MessageModelAPI,
         save_path: str,
     ) -> Dict[str, Any]:
         """
-        [Type: RAM Primary / NETWORK Fallback]
+        [Type: NETWORK]
         High-level media extraction directly from the normalized MessageModelAPI object.
 
         Args:
             message:   The populated MessageModelAPI.
-            save_path: Full path where the decrypted file will be written.
+            save_path: Full path where the downloaded file will be written.
 
         Returns:
             Dictionary with extraction success state, path, size, and metadata.
         """
-        direct_path = message.directPath
-        media_key_b64 = message.mediaKey
         media_type = message.msgtype or "image"
         msg_id = message.id_serialized
 
@@ -437,34 +329,22 @@ class MessageApiManager(MessageProcessorInterface[MessageModelAPI, Any]):
             "path": None,
             "msg_id": msg_id,
             "view_once": message.isViewOnce,
-            "used_fallback": False,
+            "used_fallback": True,
             "error": None,
         }
 
-        if not direct_path:
+        if not message.directPath:
             result["error"] = "Message has no directPath — not a downloadable media message."
             return result
 
-        b64 = None
-        if media_key_b64:
-            b64 = await self._bridge._evaluate_stealth(
-                WAJS_Scripts.decrypt_media(
-                    direct_path=direct_path, media_key_b64=media_key_b64, media_type=media_type
-                )
-            )
+        if not msg_id:
+            result["error"] = "no id_serialized — cannot use download_media."
+            return result
 
-        if b64 is None:
-            if not msg_id:
-                result["error"] = "Cache miss & no id_serialized — cannot use CDN fallback."
-                return result
-            self.log.info(f"extract_media: Cache miss for {direct_path!r} — CDN fallback [NETWORK]")
-            result["used_fallback"] = True
-            js_result = await self._bridge._evaluate_stealth(
-                WAJS_Scripts.download_media(msg_id=msg_id)
-            )
+        js_result = await self._bridge._evaluate_stealth(WAJS_Scripts.download_media(msg_id=msg_id))
 
         if not js_result:
-            result["error"] = "Both Cache api and CDN fallback returned None — media unavailable."
+            result["error"] = "download_media returned None — media unavailable."
             return result
 
         # Unpack structured result {b64, isCached, latencyMs}
@@ -479,10 +359,7 @@ class MessageApiManager(MessageProcessorInterface[MessageModelAPI, Any]):
         raw_bytes = base64.b64decode(b64)
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         Path(save_path).write_bytes(raw_bytes)
-        self.log.info(
-            f"extract_media: [{media_type}] {len(raw_bytes):,} bytes → {save_path}"
-            + (" [CDN fallback]" if result["used_fallback"] else " [Cache api]")
-        )
+        self.log.info(f"extract_media: [{media_type}] {len(raw_bytes):,} bytes → {save_path}")
 
         result.update({"success": True, "size_bytes": len(raw_bytes), "path": save_path})
         return result

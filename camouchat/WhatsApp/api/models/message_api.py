@@ -203,7 +203,7 @@ class MessageModelAPI(MessageInterface):
     isViewed: Optional[bool]
 
     # ─────────────────────────────────────────────────────────────────────────
-    ui: Optional[str] = None
+    ui: Optional[str] = None  # type: ignore[assignment]
     _MEDIA_THUMB_TYPES: frozenset = frozenset(
         {
             "image",

@@ -140,7 +140,7 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
             if not message.id_serialized:
                 raise ReplyCapableError("Message or data_id is missing.")
             data_id = str(message.id_serialized)
-            is_incoming = getattr(message, "direction", "IN") == "IN"
+            is_incoming = not message.fromMe
 
         elif isinstance(message, MessageModelAPI):
             if not message.id_serialized:

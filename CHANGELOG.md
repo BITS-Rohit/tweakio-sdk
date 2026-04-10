@@ -17,19 +17,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Media Extraction Pipeline**: Introduced `save_media` with automatic type-based categorisation (image, video, audio, document, sticker) and local-first retrieval prioritising the browser LRU cache over CDN calls.
 - **Message Event Hook**: Added the `@msg_event_hook` decorator for zero-latency, asynchronous interception of incoming WhatsApp messages.
 - **Extended Data Models**: Expanded `ChatModelAPI` and `MessageModelAPI` to achieve full schema parity with internal WhatsApp structures.
+- **Unified Boolean Direction**: Introduced type-safe `fromMe` boolean across all models and storage layers, replacing legacy string-based `direction` literals.
+- **Normalized Attribute Schema**: Standardized `Chat` and `Message` models with `id_serialized`, `name`, and `ui` fields for cross-platform consistency.
 - **Contextual Reply**: Integrated `WapiSession` into `ReplyCapable`, enabling precise message quoting via DOM-focus fallback and scroll-to-message support.
 - **Bridge API Parity**: Added `mark_is_composing` and `decrypt_media` methods to the `WAJS_Scripts` layer, completing the internal API surface.
 - **Test Infrastructure**: Decoupled interactive E2E and smoke validation scripts from the automated Pytest suite, enabling clean CI/CD execution without live browser dependencies.
 
 ### Changed
 
+- **Storage Architecture Hardening**: Refactored `SQLAlchemyStorage` into a normalized ingestion pipeline supporting both Browser (DOM) and API (RAM) message sources.
+- **Type-Safe Filtering**: Rebuilt `MessageFilter` to utilize `id_serialized` for deterministic message identification and deduplication.
 - **Media API Contract**: Unified the `extract_media` return schema across `WapiWrapper`, `MessageApiManager`, and `MediaCapable`, providing consistent structured output including success state, file path, MIME type, byte size, and cache/CDN latency telemetry.
 - **Module Organisation**: Relocated decorator modules into the `WhatsApp/` package for improved structural cohesion.
 - **Binary Serialisation**: Improved `Uint8Array`-to-base64 handling in message fetching to ensure reliable `mediaKey` and media metadata extraction.
 
 ### Fixed
 
-- **Static Analysis**: Resolved all Mypy type errors across 82 source files via protocol stubs, explicit casts, and corrected return type annotations.
+- **Static Analysis**: Resolved all Mypy type errors across 82 source files via protocol stubs, strict assertions, and corrected Liskov substitution principle violations.
+- **Unit Test Parity**: Restored 100% pass rate across the full test suite by aligning mocks with the updated attribute naming and boolean logic.
+- **Manager Instantiation**: Fixed critical initialization bug in `WapiSession` ensuring all API managers receive the required browser page references.
 - **Concurrent Logging**: Hardened `camouchat_logger` with a graceful conditional import for `concurrent-log-handler`, falling back to a standard rotating handler when unavailable.
 - **Unit Tests**: Corrected `ReplyCapable` test suite to reflect method renames and updated mock object requirements introduced during the `quote_only` API refactor.
 - **Initialisation**: Fixed indentation errors and potential initialisation races in `CamoufoxBrowser` and `ProfileManager`.
@@ -38,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Diagnostic Verbosity**: Stripped redundant media debug output from `MessageModelAPI.__str__` to produce clean, production-safe log lines.
 - **Legacy Scraping Layer**: Removed the monolithic `ChatProcessor` DOM scraper and the first-generation `BrowserForge` wrapper.
+- **Deprecated Attrs**: Eliminated legacy `chat_name`, `chat_ui`, and `direction` string references throughout the core messaging pipeline.
 
 ---
 

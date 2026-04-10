@@ -20,10 +20,10 @@ class ChatApiManager(ChatProcessorInterface):
         self._last_opened_chat_id: str | None = None
 
     async def fetch_chats(self, **kwargs) -> Sequence[ChatInterface]:
-        pass
+        return await self.get_chat_list(**kwargs)
 
-    async def _click_chat(self, chat: ChatModelAPI, **kwargs) -> bool:
-        return await self.open_chat(chat=chat)
+    async def _click_chat(self, chat: ChatInterface | None, **kwargs) -> bool:
+        return await self.open_chat(chat=chat)  # type: ignore
 
     async def open_chat(self, chat: ChatModelAPI) -> bool:
         """
@@ -31,6 +31,8 @@ class ChatApiManager(ChatProcessorInterface):
         1. Tries to find the chat physically on the screen and injects human CDP mouse clicks.
         2. If virtualized (hidden), falls back to the RAM bridge.
         """
+        assert self.page is not None
+        assert self.log is not None
         page = self.page
         if chat is None:
             raise ValueError("Chat is None, cannot open chat")
@@ -68,6 +70,7 @@ class ChatApiManager(ChatProcessorInterface):
                         await asyncio.sleep(random.uniform(0.1, 0.4))
 
                         # Hardware level click, bypasses execution locks
+                        assert page is not None
                         await page.mouse.click(
                             target_x + random.uniform(-2, 2),
                             target_y + random.uniform(-2, 2),
@@ -85,6 +88,7 @@ class ChatApiManager(ChatProcessorInterface):
         )
 
         # Inject ambient human pointer telemetry before triggering magical DOM re-renders.
+        assert page is not None
         await page.mouse.move(random.randint(150, 800), random.randint(150, 600))
         await asyncio.sleep(random.uniform(1.8, 2.5))
 
