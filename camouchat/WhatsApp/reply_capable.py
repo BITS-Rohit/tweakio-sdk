@@ -80,6 +80,7 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
     async def _focus_message_in_dom(
         self,
         msg_id: str,
+        chat_id: str,
     ) -> bool:
         """
         Ask WPP to ensure the specific message is rendered in the live DOM.
@@ -87,7 +88,7 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
         This handles two scenarios:
         1. If the message is already in the DOM, we do nothing.
         2. If the message is virtualized (scrolled away), we call WPP's
-           scrollToMessage to force-render and mount the node.
+           openChatAt to force-render and mount the node.
         """
         if self._wapi is None:
             raise ValueError(
@@ -95,20 +96,21 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
             )
 
         try:
+            base_data_id = "_".join(msg_id.split("_")[:3]) if msg_id.count("_") >= 2 else msg_id
             exists = await self.page.evaluate(
-                f"document.querySelector('div[data-id=\"{msg_id}\"]') !== null"
+                f"document.querySelector('div[data-id^=\"{base_data_id}\"]') !== null"
             )
             if exists:
                 self.log.debug("Msg already is on-Screen.")
                 return True
 
             result = await self._wapi.bridge._evaluate_stealth(
-                f"wpp.chat.scrollToMessage('{msg_id}')"
+                f"wpp.chat.openChatAt('{chat_id}', '{msg_id}')"
             )
-            self.log.debug(f"[focus_message_in_dom] scrollToMessage result: {result!r}")
+            self.log.debug(f"[focus_message_in_dom] openChatAt result: {result!r}")
             return True
         except Exception as e:
-            self.log.warning(f"[focus_message_in_dom] scrollToMessage failed: {e}")
+            self.log.warning(f"[focus_message_in_dom] openChatAt failed: {e}")
             return False
 
     async def quote_only(self, message: Message | MessageModelAPI) -> bool:
@@ -154,7 +156,8 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
             raise ReplyCapableError(f"Unsupported message type: {type(message)}")
 
         if isinstance(message, MessageModelAPI) and self._wapi is not None:
-            await self._focus_message_in_dom(data_id)
+            chat_id = data_id.split("_")[1] if "_" in data_id else data_id
+            await self._focus_message_in_dom(data_id, chat_id)
             await self.page.wait_for_timeout(300)
 
         retries = 20
@@ -162,15 +165,18 @@ class ReplyCapable(ReplyCapableInterface[Message, HumanInteractionController, We
 
         for attempt in range(1, retries + 1):
             try:
+                base_data_id = (
+                    "_".join(data_id.split("_")[:3]) if data_id.count("_") >= 2 else data_id
+                )
                 dims = await self.page.evaluate(
-                    """(id) => {
-                        const el = document.querySelector(`div[data-id="${id}"]`);
+                    """(idBase) => {
+                        const el = document.querySelector(`div[data-id^="${idBase}"]`);
                         if (!el) return null;
                         el.scrollIntoView({ behavior: 'instant', block: 'center' });
                         const r = el.getBoundingClientRect();
                         return { x: r.left, y: r.top, width: r.width, height: r.height };
                     }""",
-                    data_id,
+                    base_data_id,
                 )
 
                 if dims and dims.get("width") and dims.get("height"):

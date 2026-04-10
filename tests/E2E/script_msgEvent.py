@@ -68,7 +68,7 @@ async def main():
         chat = await wapi.chat_manager.get_chat_by_id(msg.jid_From)  # get chatData
         print("Chat ---")
         print(chat)
-        await wapi.chat_manager.open_chat(chat, page)
+        await wapi.chat_manager.open_chat(chat=chat)
         print(
             f"----------------Chat Opened name = {chat.formattedTitle} , id = {chat.id_serialized} \n"
         )
@@ -76,17 +76,18 @@ async def main():
         # Process the msg Commands by some dummy commands.
         if msg.body == "!ping":
             print(f"[*] Command triggered: !ping from {msg.jid_From}")
-            await replyObj.quote_only(message=msg)  # UI: Trigger the quote/reply bubble
+            # await replyObj.quote_only(message=msg)  # UI: Trigger the quote/reply bubble
             await hum.send_api_text(
                 chat_id=msg.jid_From,
                 bridge=wapi.bridge,
                 text="**You have been Ponged!!!** \ud83c\udfd3\n_Reply from CamouChat Stealth Bridge_",
+                quoted_msg_id=msg.id_serialized,
             )
 
         elif msg.body == "!info":
             print(f"[*] Command triggered: !info from {msg.jid_From}")
             # Tests ChatModelAPI and dynamic metadata extraction
-            await replyObj.quote_only(message=msg)
+            # await replyObj.quote_only(message=msg)
             info_text = (
                 f"\ud83d\udcdd *Chat Info*\n"
                 f"\u2022 Title: {chat.formattedTitle}\n"
@@ -95,14 +96,19 @@ async def main():
                 f"\u2022 Is Group: {chat.groupType}\n"
                 f"\u2022 Is Archived: {chat.isArchived}\n"
             )
-            await hum.send_api_text(bridge=wapi.bridge, text=info_text, chat_id=msg.jid_From)
+            await hum.send_api_text(
+                bridge=wapi.bridge,
+                text=info_text,
+                chat_id=msg.jid_From,
+                quoted_msg_id=msg.id_serialized,
+            )
 
         elif msg.body == "!me":
             print("[*] Command triggered: !me (Identity Extraction)")
             # Tests identity and sender objects
             sender_name = getattr(msg.senderObj, "formattedName", "Unknown")
             push_name = getattr(msg.senderObj, "pushname", "Unknown")
-            await replyObj.quote_only(message=msg)
+            # await replyObj.quote_only(message=msg)
             await hum.send_api_text(
                 chat_id=msg.jid_From,
                 bridge=wapi.bridge,

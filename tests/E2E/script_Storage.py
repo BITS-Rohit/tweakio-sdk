@@ -57,9 +57,7 @@ async def main():
     await new_msg()
 
     try:
-        print(
-            "\n>>> Listening for messages... Press Ctrl+C to stop and view data from DB."
-        )
+        print("\n>>> Listening for messages... Press Ctrl+C to stop and view data from DB.")
         while True:
             await asyncio.sleep(1)
     except asyncio.CancelledError:
@@ -76,7 +74,7 @@ async def main():
         print("=" * 50)
 
         for msg in db_msgs:
-            body = msg.get('body') or ""
+            body = msg.get("body") or ""
             if len(body) > 100:
                 body_disp = f"{body[:40]}...[truncated {len(body)} chars]"
             else:

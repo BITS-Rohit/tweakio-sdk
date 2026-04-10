@@ -1277,7 +1277,7 @@ class WAJS_Scripts:
     @classmethod
     def mark_is_composing(cls, chat_id: str, duration_ms: int = 3000) -> str:
         """Sends typing state to the chat."""
-        return f"wpp.chat.markIsComposing('{chat_id}', {duration_ms})"
+        return f"wpp.chat.markIsComposing('{chat_id}', {duration_ms}).then(() => true)"
 
     @classmethod
     def decrypt_media(cls, direct_path: str, media_key_b64: str, media_type: str) -> str:

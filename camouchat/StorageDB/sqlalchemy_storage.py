@@ -28,6 +28,7 @@ from camouchat.Interfaces.storage_interface import StorageInterface
 from camouchat.StorageDB.models import Base, Message
 from camouchat.WhatsApp.models import Message as WhatsAppMessage
 
+
 class SQLAlchemyStorage(StorageInterface):
     """
     Generic SQLAlchemy storage implementation for MessageInterface data.
@@ -466,7 +467,7 @@ class SQLAlchemyStorage(StorageInterface):
                 result = await session.execute(stmt, params or {})
 
                 # If query returns rows (like SELECT), convert to dicts
-                if result.returns_rows:
+                if getattr(result, "returns_rows", False):
                     return [dict(row._mapping) for row in result.all()]
 
                 # For DML, commit and return empty

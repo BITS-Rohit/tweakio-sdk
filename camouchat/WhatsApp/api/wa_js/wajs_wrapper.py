@@ -470,20 +470,20 @@ class WapiWrapper:
     # 4. ACTIONS — TIER 3 FALLBACKS
     # ─────────────────────────────────────────────
 
-    async def send_text_message(self, chat_id: str, message: str) -> bool:
+    async def send_text_message(
+        self, chat_id: str, message: str, options: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Pure api text send (Tier 3 fallback).
         Use only when Playwright UI interaction fails.
         """
         try:
-            # Bypass _evaluate_stealth — wpp.chat.sendTextMessage triggers a WS/
-            # network event inside Playwright that CDP-deadlocks page.evaluate().
-            # Direct mw: evaluate returns instantly; WPP fires in the next macrotask.
             safe_msg = json.dumps(message)
+            safe_options = json.dumps(options or {"waitForAck": False})
             await self.page.evaluate(
                 f"mw:(() => {{"
                 f"  const wpp = window.__react_devtools_hook;"
-                f"  setTimeout(() => wpp.chat.sendTextMessage('{chat_id}', {safe_msg}, {{waitForAck: false}}).catch(() => null), 0);"
+                f"  setTimeout(() => wpp.chat.sendTextMessage('{chat_id}', {safe_msg}, {safe_options}).catch(() => null), 0);"
                 f"}})()"
             )
             return True

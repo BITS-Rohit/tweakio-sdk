@@ -67,8 +67,8 @@ async def test_reply_success(reply_capable_instance, mock_humanize, mock_ui_conf
     """Test reply successfully types and sends text."""
     # Setup Mocks
     mock_msg = Mock(spec=Message)
-    mock_msg.data_id = "test-id"
-    mock_msg.direction = "IN"
+    mock_msg.id_serialized = "test-id"
+    mock_msg.fromMe = False
     reply_capable_instance.quote_only = AsyncMock()  # Skip real click
 
     mock_input_box = AsyncMock(spec=Locator)
@@ -94,7 +94,7 @@ async def test_reply_success(reply_capable_instance, mock_humanize, mock_ui_conf
 async def test_reply_timeout(reply_capable_instance, mock_humanize):
     """Test reply raises error on timeout."""
     mock_msg = Mock(spec=Message)
-    mock_msg.data_id = "test-id"
+    mock_msg.id_serialized = "test-id"
     reply_capable_instance.quote_only = AsyncMock(side_effect=PlaywrightTimeoutError("Timeout"))
 
     with pytest.raises(ReplyCapableError, match="reply timed out"):
@@ -105,8 +105,8 @@ async def test_reply_timeout(reply_capable_instance, mock_humanize):
 async def test_side_edge_click_success(reply_capable_instance, mock_page):
     """Test quote_only successfully triggers reply click."""
     mock_msg = Mock(spec=Message)
-    mock_msg.data_id = "test-id"
-    mock_msg.direction = "IN"
+    mock_msg.id_serialized = "test-id"
+    mock_msg.fromMe = False
 
     mock_page.evaluate.return_value = {"x": 100, "y": 200, "width": 50, "height": 30}
 
@@ -123,8 +123,8 @@ async def test_side_edge_click_success(reply_capable_instance, mock_page):
 async def test_side_edge_click_no_bbox(reply_capable_instance, mock_page):
     """Test quote_only raises error if bbox is None."""
     mock_msg = Mock(spec=Message)
-    mock_msg.data_id = "test-id"
-    mock_msg.direction = "IN"
+    mock_msg.id_serialized = "test-id"
+    mock_msg.fromMe = False
 
     mock_page.evaluate.return_value = None
 

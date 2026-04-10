@@ -8,7 +8,7 @@ import random
 import tempfile
 import weakref
 from logging import Logger, LoggerAdapter
-from typing import Union, Optional
+from typing import Union, Optional, Any
 
 import pyperclip
 from filelock import FileLock
@@ -167,7 +167,9 @@ class HumanInteractionController:
                     await loop.run_in_executor(None, pyperclip.copy, previous_clipboard)
                 await loop.run_in_executor(None, _clipboard_file_lock.release)
 
-    async def send_api_text(self, bridge: WapiWrapper, text: str, chat_id: str) -> bool:
+    async def send_api_text(
+        self, bridge: WapiWrapper, text: str, chat_id: str, quoted_msg_id: Optional[str] = None
+    ) -> bool:
         """
         Skips native OS usage & Directly send text via RAM Func.
         Initially supported for direct text msg sending only & works for Qouted Replies also.
@@ -177,6 +179,8 @@ class HumanInteractionController:
         Args :
             bridge : WapiWrapper instance
             text : Text to be sent
+            chat_id: Target chat ID
+            quoted_msg_id: Optional message ID to quote/reply to
         Returns:
             bool: True if text is sent successfully.
         """
@@ -210,8 +214,12 @@ class HumanInteractionController:
             self.log.debug(f"Sleeping for {sec} before API send to {chat_id}...")
             await asyncio.sleep(sec)
 
+            options: dict[str, Any] = {"waitForAck": False}
+            if quoted_msg_id:
+                options["quotedMsg"] = quoted_msg_id
+
             self.log.debug("Invoking bridge.send_text_message...")
-            success = await bridge.send_text_message(chat_id=chat_id, message=text)
+            success = await bridge.send_text_message(chat_id=chat_id, message=text, options=options)
             if success:
                 self.log.debug("Text Sent via RAM Func.")
             else:
