@@ -133,6 +133,6 @@ The dual-lock system prevents this:
 
 ## 💡 Pro Tips
 
-- **Always pass `source`**: The `source` kwarg is required — without it, `ElementNotFoundError` is raised immediately. Get it via `element_handle()` on a locator (as `ReplyCapable.reply()` does) or pass the `Locator` directly.
+- **Always pass `source`**: The `source` kwarg is required — without it, `ElementNotFoundError` is raised immediately. Get it via `element_handle()` on a locator (as `InteractionController.reply()` does) or pass the `Locator` directly.
 - **Long messages**: For messages over 50 characters, the clipboard paste strategy is used automatically. You don't need to worry about this — the strategy selection is internal.
-- **`ReplyCapable` already handles this**: When you call `reply_handler.reply(..., humanize=humanizer, text="...")`, the humanizer's `typing()` is called internally. You don't need to call `humanizer.typing()` separately for replies.
+- **`InteractionController` already handles this**: When you call `reply_handler.reply(..., humanize=humanizer, text="...")`, the humanizer's `typing()` is called internally. You don't need to call `humanizer.typing()` separately for replies.

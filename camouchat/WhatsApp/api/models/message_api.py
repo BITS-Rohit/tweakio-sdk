@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 from playwright.async_api import ElementHandle, Locator
 from camouchat.contracts.message import MessageProtocol
 
+
 @dataclass
 class MessageModelAPI(MessageProtocol):
     """
@@ -25,9 +26,7 @@ class MessageModelAPI(MessageProtocol):
         ack (int | None): 0=Pending, 1=Sent, 2=Delivered, 3=Read(Blue Ticks), 4=Played.
 
         # ── Presence / arrival flags ──────────────────────────────────────────
-        isNew (bool | None): True if the message is unread LOCALLY in the browser UI.
-        isNewMsg (bool | None): True if the message arrived on the wire in this session
-                                (distinct from isNew which is the UI unread dot).
+        isNewMsg (bool | None): True if the message arrived on the wire in this session.
         recvFresh (bool | None): True when the message arrived in real-time, False when
                                  it was replayed from history-sync on reconnect.
         isMdHistoryMsg (bool | None): True if this is a message that was synced from history
@@ -103,6 +102,7 @@ class MessageModelAPI(MessageProtocol):
 
     # ── Identity ──────────────────────────────────────────────────────────────
     id_serialized: Optional[str]
+    encryption_nonce: Optional[str]
     timestamp: Optional[int]
     msgtype: Optional[str]
     body: Optional[str]
@@ -118,7 +118,6 @@ class MessageModelAPI(MessageProtocol):
     ack: Optional[int]
 
     # ── Presence / arrival flags ──────────────────────────────────────────────
-    isNew: Optional[bool]
     isNewMsg: Optional[bool]
     recvFresh: Optional[bool]
     isMdHistoryMsg: Optional[bool]
@@ -202,7 +201,7 @@ class MessageModelAPI(MessageProtocol):
     isViewed: Optional[bool]
 
     # ─────────────────────────────────────────────────────────────────────────
-    ui: Optional[Union[ElementHandle, Locator]] = None # type: ignore[assignment]
+    ui: Optional[Union[ElementHandle, Locator]] = None  # type: ignore[assignment]
     _MEDIA_THUMB_TYPES: frozenset = frozenset(
         {
             "image",
@@ -271,6 +270,7 @@ class MessageModelAPI(MessageProtocol):
         return cls(
             # ── Identity ──────────────────────────────────────────────────────
             id_serialized=g("id_serialized"),
+            encryption_nonce=g("encryption_nonce"),
             from_chat="",  # this can be personally invoked via get_chat_by_id but initially giving it as Empty saves Ram Call
             rowId=g("rowId"),
             fromMe=is_from_me,
@@ -285,7 +285,6 @@ class MessageModelAPI(MessageProtocol):
             timestamp=timestamp,
             ack=g("ack", 0),
             # ── Presence / arrival flags ───────────────────────────────────────
-            isNew=g("isNew"),
             isNewMsg=g("isNewMsg"),
             recvFresh=g("recvFresh"),
             isMdHistoryMsg=g("isMdHistoryMsg"),
@@ -590,6 +589,7 @@ class MessageModelAPI(MessageProtocol):
         raw: Dict[str, Any] = {
             # ── Identity ──────────────────────────────────────────────────────
             "id_serialized": self.id_serialized,
+            "encryption_nonce": self.encryption_nonce,
             "rowId": self.rowId,
             "fromMe": self.fromMe,
             "jid_From": self.jid_From,
@@ -603,7 +603,6 @@ class MessageModelAPI(MessageProtocol):
             "timestamp": self.timestamp,
             "ack": self.ack,
             # ── Presence / arrival ────────────────────────────────────────────
-            "isNew": self.isNew,
             "isNewMsg": self.isNewMsg,
             "recvFresh": self.recvFresh,
             "isMdHistoryMsg": self.isMdHistoryMsg,

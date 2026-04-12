@@ -35,7 +35,7 @@ camouchatError
     │
     ├── LoginError
     │
-    ├── ReplyCapableError
+    ├── InteractionControllerError
     │
     └── MediaCapableError
         └── MenuError
@@ -147,8 +147,8 @@ class LoginError(WhatsAppError):
     pass
 
 
-# ----------------- ReplyCapable Errors ----------------------------------------
-class ReplyCapableError(WhatsAppError):
+# ----------------- InteractionController Errors ----------------------------------------
+class InteractionControllerError(WhatsAppError):
     """Base Class for all WhatsApp Reply Capable Errors"""
 
     pass

@@ -52,10 +52,10 @@ async def main():
     from camouchat.WhatsApp.features.human_interaction_controller import (
         HumanInteractionController,
     )
-    from camouchat.WhatsApp.features.interaction_controller import ReplyCapable
+    from camouchat.WhatsApp.features.interaction_controller import InteractionController
 
     wapi = WapiSession(page=page)
-    replyObj = ReplyCapable(page=page, ui_config=ui, wapi=wapi)
+    replyObj = InteractionController(page=page, ui_config=ui, wapi=wapi)
     media = MediaCapable(page=page, UIConfig=ui, wapi=wapi, profile=profile)
     hum = HumanInteractionController(page=page, ui_config=ui)
 

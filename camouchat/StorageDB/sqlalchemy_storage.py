@@ -178,6 +178,7 @@ class SQLAlchemyStorage(StorageProtocol):
 
         migration_sqls = [
             "ALTER TABLE messages ADD COLUMN encryption_nonce VARCHAR(255)",
+            "ALTER TABLE messages ADD COLUMN meta_data JSON",
         ]
         if not self._engine:
             return
@@ -317,6 +318,13 @@ class SQLAlchemyStorage(StorageProtocol):
             if from_chat:
                 chat_id = getattr(from_chat, "id_serialized", "")
 
+        meta_data = None
+        if hasattr(msg, "to_dict"):
+            try:
+                meta_data = msg.to_dict()
+            except Exception:
+                pass
+
         return Message(
             id_serialized=str(msg_id),
             body=str(body) if body else "",
@@ -324,6 +332,7 @@ class SQLAlchemyStorage(StorageProtocol):
             msgtype=str(msgtype) if msgtype else None,
             fromMe=fromme,
             chat_id=str(chat_id),
+            meta_data=meta_data,
             timestamp=float(timestamp),
         )
 

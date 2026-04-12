@@ -5,7 +5,7 @@ Supports SQLite, PostgreSQL, and MySQL.
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, Float, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -39,6 +39,9 @@ class Message(Base):
     # Chat relationship
     chat_id: Mapped[str] = mapped_column(String(255), nullable=False, default="", index=True)
 
+    # Extra API metadata
+    meta_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     # Timing
     timestamp: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     created_at: Mapped[datetime] = mapped_column(
@@ -64,6 +67,7 @@ class Message(Base):
             "msgtype": self.msgtype,
             "fromMe": self.fromMe,
             "chat_id": self.chat_id,
+            "meta_data": self.meta_data,
             "timestamp": self.timestamp,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

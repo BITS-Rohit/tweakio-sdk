@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Extended Data Models**: Expanded `ChatModelAPI` and `MessageModelAPI` to achieve full schema parity with internal WhatsApp structures.
 - **Unified Boolean Direction**: Introduced type-safe `fromMe` boolean across all models and storage layers, replacing legacy string-based `direction` literals.
 - **Normalized Attribute Schema**: Standardized `Chat` and `Message` models with `id_serialized`, `name`, and `ui` fields for cross-platform consistency.
-- **Contextual Reply**: Integrated `WapiSession` into `ReplyCapable`, enabling precise message quoting via DOM-focus fallback and scroll-to-message support.
+- **Contextual Reply**: Integrated `WapiSession` into `InteractionController`, enabling precise message quoting via DOM-focus fallback and scroll-to-message support.
 - **Bridge API Parity**: Added `mark_is_composing` and `decrypt_media` methods to the `WAJS_Scripts` layer, completing the internal API surface.
 - **Test Infrastructure**: Decoupled interactive E2E and smoke validation scripts from the automated Pytest suite, enabling clean CI/CD execution without live browser dependencies.
 
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unit Test Parity**: Restored 100% pass rate across the full test suite by aligning mocks with the updated attribute naming and boolean logic.
 - **Manager Instantiation**: Fixed critical initialization bug in `WapiSession` ensuring all API managers receive the required browser page references.
 - **Concurrent Logging**: Hardened `camouchat_logger` with a graceful conditional import for `concurrent-log-handler`, falling back to a standard rotating handler when unavailable.
-- **Unit Tests**: Corrected `ReplyCapable` test suite to reflect method renames and updated mock object requirements introduced during the `quote_only` API refactor.
+- **Unit Tests**: Corrected `InteractionController` test suite to reflect method renames and updated mock object requirements introduced during the `quote_only` API refactor.
 - **Initialisation**: Fixed indentation errors and potential initialisation races in `CamoufoxBrowser` and `ProfileManager`.
 
 ### Removed

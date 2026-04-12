@@ -16,7 +16,7 @@ from playwright.async_api import Page, ElementHandle, Locator
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError, Error as PlaywrightError
 
 from camouchat.Exceptions.base import ElementNotFoundError, HumanizedOperationError
-from camouchat.Exceptions.whatsapp import ReplyCapableError
+from camouchat.Exceptions.whatsapp import InteractionControllerError
 from camouchat.contracts.interaction_controller import InteractionControllerProtocol
 from camouchat.WhatsApp.api import WapiSession
 from camouchat.WhatsApp.api.models import MessageModelAPI
@@ -29,18 +29,18 @@ _lock_file_path = os.path.join(tempfile.gettempdir(), "whatsapp_clipboard.lock")
 _clipboard_file_lock = FileLock(_lock_file_path)
 
 
-class ReplyCapable(InteractionControllerProtocol):
+class InteractionController(InteractionControllerProtocol):
     """Enables replying to specific WhatsApp messages."""
 
-    _instances: weakref.WeakKeyDictionary[Page, ReplyCapable] = weakref.WeakKeyDictionary()
+    _instances: weakref.WeakKeyDictionary[Page, InteractionController] = weakref.WeakKeyDictionary()
     _initialized: bool = False
 
-    def __new__(cls, *args, **kwargs) -> ReplyCapable:
+    def __new__(cls, *args, **kwargs) -> InteractionController:
         page = kwargs.get("page") or (args[0] if args else None)
         if page is None:
-            return super(ReplyCapable, cls).__new__(cls)
+            return super(InteractionController, cls).__new__(cls)
         if page not in cls._instances:
-            instance = super(ReplyCapable, cls).__new__(cls)
+            instance = super(InteractionController, cls).__new__(cls)
             cls._instances[page] = instance
         return cls._instances[page]
 
@@ -138,18 +138,18 @@ class ReplyCapable(InteractionControllerProtocol):
             return success
 
         except PlaywrightTimeoutError as e:
-            raise ReplyCapableError("reply timed out while preparing input box") from e
+            raise InteractionControllerError("reply timed out while preparing input box") from e
 
     async def quote(self, message: MessageModelAPI) -> bool:
         """Double-click the message container's side padding to trigger reply."""
         # ── Resolve data_id and direction ─────────────────────────────────────
         if not isinstance(message, MessageModelAPI):
-            raise ReplyCapableError(
+            raise InteractionControllerError(
                 f"Unsupported message type: {type(message)}. Expected MessageModelAPI."
             )
 
         if not message.id_serialized:
-            raise ReplyCapableError("Message or data_id is missing.")
+            raise InteractionControllerError("Message or data_id is missing.")
 
         data_id = str(message.id_serialized)
         from_me = self._message_from_me(message, data_id)
@@ -178,12 +178,12 @@ class ReplyCapable(InteractionControllerProtocol):
                 if attempt < retries:
                     await asyncio.sleep(delay)
                 else:
-                    raise ReplyCapableError(
+                    raise InteractionControllerError(
                         f"side_edge_click failed after {retries} attempts: "
                         f"'{data_id}' never appeared in DOM."
                     )
 
-            except ReplyCapableError:
+            except InteractionControllerError:
                 raise
 
             except Exception as e:
@@ -191,9 +191,9 @@ class ReplyCapable(InteractionControllerProtocol):
                 if attempt < retries:
                     await asyncio.sleep(delay)
                 else:
-                    raise ReplyCapableError(f"Unexpected error in side_edge_click: {e}") from e
+                    raise InteractionControllerError(f"Unexpected error in side_edge_click: {e}") from e
 
-        raise ReplyCapableError("side_edge_click failed after max attempts.")
+        raise InteractionControllerError("side_edge_click failed after max attempts.")
 
     async def focus_input(
         self, source: ElementHandle | Locator | None = None, **kwargs

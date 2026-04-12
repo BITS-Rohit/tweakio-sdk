@@ -1,8 +1,8 @@
-# ↩️ ReplyCapable
+# ↩️ InteractionController
 
 `camouchat.WhatsApp.reply_capable`
 
-`ReplyCapable` allows your bot to **reply to a specific message** in a chat by triggering WhatsApp's native reply UI. Instead of using a direct API call (which would look bot-like), it simulates the human behavior of double-clicking on the edge of a message bubble — the exact gesture WhatsApp Web uses to open the reply composer.
+`InteractionController` allows your bot to **reply to a specific message** in a chat by triggering WhatsApp's native reply UI. Instead of using a direct API call (which would look bot-like), it simulates the human behavior of double-clicking on the edge of a message bubble — the exact gesture WhatsApp Web uses to open the reply composer.
 
 Like all WhatsApp components, it enforces **Singleton-per-Page** binding.
 
@@ -11,7 +11,7 @@ Like all WhatsApp components, it enforces **Singleton-per-Page** binding.
 ## 🛠️ Constructor
 
 ```python
-ReplyCapable(
+InteractionController(
     page: Page,
     ui_config: WebSelectorConfig,
     log: Optional[Union[Logger, LoggerAdapter]] = None,
@@ -25,13 +25,13 @@ ReplyCapable(
 | `log` | `Logger \| LoggerAdapter` | ❌ No | Logger for click attempts and typing. |
 
 ```python
-from camouchat.WhatsApp import ReplyCapable, WebSelectorConfig, HumanInteractionController
+from camouchat.WhatsApp import InteractionController, WebSelectorConfig, HumanInteractionController
 from camouchat.camouchat_logger import camouchatLogger
 
 ui_config = WebSelectorConfig(page=page, log=camouchatLogger)
 humanizer = HumanInteractionController(page=page, ui_config=ui_config, log=camouchatLogger)
 
-reply_handler = ReplyCapable(
+reply_handler = InteractionController(
     page=page,
     ui_config=ui_config,
     log=camouchatLogger,
@@ -100,7 +100,7 @@ rel_x = dims["width"] * (0.2 if is_incoming else 0.8)
 
 ## 🔔 Error Handling
 
-All failures raise `ReplyCapableError` from `camouchat.Exceptions.whatsapp`:
+All failures raise `InteractionControllerError` from `camouchat.Exceptions.whatsapp`:
 
 | Scenario | Exception Message |
 |----------|------------------|
@@ -109,11 +109,11 @@ All failures raise `ReplyCapableError` from `camouchat.Exceptions.whatsapp`:
 | Input box click timed out | `"reply timed out while preparing input box"` |
 
 ```python
-from camouchat.Exceptions.whatsapp import ReplyCapableError
+from camouchat.Exceptions.whatsapp import InteractionControllerError
 
 try:
     await reply_handler.reply(message=msg, humanize=humanizer, text="Pong!")
-except ReplyCapableError as e:
+except InteractionControllerError as e:
     print(f"Reply failed: {e}")
 ```
 
@@ -122,5 +122,5 @@ except ReplyCapableError as e:
 ## 💡 Pro Tips
 
 - **Message visibility**: `_side_edge_click()` scrolls the target message into view via JavaScript before clicking. However, for very long chat histories (thousands of messages), it is still best practice to call `fetch_messages()` close to your reply action so the message node is likely near the bottom of the visible area.
-- **`data_id` is required**: `reply()` locates the message element using `div[data-id="..."]` in the DOM. If a `Message` object has a `None` or empty `data_id`, `ReplyCapableError` is raised immediately. Always verify messages from `fetch_messages()` are complete before replying.
+- **`data_id` is required**: `reply()` locates the message element using `div[data-id="..."]` in the DOM. If a `Message` object has a `None` or empty `data_id`, `InteractionControllerError` is raised immediately. Always verify messages from `fetch_messages()` are complete before replying.
 - **HumanInteractionController dependency**: You must create a `HumanInteractionController` instance and pass it to `reply()`. The humanizer handles the fine-motor simulation of variable-speed typing so the reply pattern doesn't match bot behavior profiles.

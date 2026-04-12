@@ -22,8 +22,6 @@ class MessageProcessorProtocol(Protocol, Generic[T, U]):
 
     ui_config: Optional[U] = None
 
-    async def fetch_messages(
-        self, chat: ChatProtocol, retry: int = 5, **kwargs
-    ) -> List[T]:
+    async def fetch_messages(self, chat: ChatProtocol, retry: int = 5, **kwargs) -> List[T]:
         """Fetch messages from a chat with storage and filtering."""
         ...
