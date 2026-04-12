@@ -1,35 +1,13 @@
 """Contracts and value objects for media capabilities."""
 
-from dataclasses import dataclass
-from enum import Enum
-from typing import Generic, Optional, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 from .ui_config import UiConfigProtocol
 
 T = TypeVar("T", bound=UiConfigProtocol)
 
 
-class MediaType(str, Enum):
-    """Supported media types for upload."""
-
-    TEXT = "text"
-    IMAGE = "image"
-    VIDEO = "video"
-    AUDIO = "audio"
-    DOCUMENT = "document"
-
-
-@dataclass(frozen=True)
-class FileTyped:
-    """File metadata for media upload."""
-
-    uri: str
-    name: str
-    mime_type: Optional[str] = None
-    size_bytes: Optional[int] = None
-
-
-class MediaCapableProtocol(Protocol, Generic[T]):
+class MediaCapableProtocol(Protocol[T]):
     """Base contract for media operations.
 
     Concrete implementations own platform-specific selectors, browser state,
@@ -38,6 +16,6 @@ class MediaCapableProtocol(Protocol, Generic[T]):
 
     ui_config: T
 
-    async def add_media(self, mtype: MediaType, file: FileTyped, **kwargs) -> bool:
+    async def add_media(self, **kwargs) -> bool:
         """Upload media file to a chat."""
         ...

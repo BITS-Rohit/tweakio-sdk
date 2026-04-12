@@ -6,5 +6,5 @@ class ChatProtocol(Protocol):
 
     name: str | None
     id_serialized: str | None
-    ui: Optional[Any]  # Browser-specific; typed concretely in plugin
+    ui: Optional[Any]
     timestamp: float | int | None
