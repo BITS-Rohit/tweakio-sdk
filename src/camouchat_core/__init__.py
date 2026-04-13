@@ -22,7 +22,7 @@ from .contracts import (
     StorageProtocol,
     LoginProtocol,
     InteractionControllerProtocol,
-    MediaCapableProtocol,
+    MediaControllerProtocol,
 )
 
 # Metadata
@@ -40,7 +40,7 @@ __all__ = [
     "StorageProtocol",
     "LoginProtocol",
     "InteractionControllerProtocol",
-    "MediaCapableProtocol",
+    "MediaControllerProtocol",
     "UiConfigProtocol",
     "MessageProcessorProtocol",
     "ChatProcessorProtocol",

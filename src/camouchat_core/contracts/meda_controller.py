@@ -7,7 +7,7 @@ from .ui_config import UiConfigProtocol
 T = TypeVar("T", bound=UiConfigProtocol)
 
 
-class MediaCapableProtocol(Protocol[T]):
+class MediaControllerProtocol(Protocol[T]):
     """Base contract for media operations.
 
     Concrete implementations own platform-specific selectors, browser state,
