@@ -35,8 +35,6 @@ camouchat/BrowserManager/profile_context.py
 docs/Logger
 
 wget-*
-camouchat/WhatsApp/wa-js/Hierarchy.md
 
 ignore/
 .codex
-camouchat/WhatsApp/dom/

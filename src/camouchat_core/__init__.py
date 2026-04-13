@@ -23,17 +23,17 @@ from .contracts import (
     LoginProtocol,
     InteractionControllerProtocol,
     MediaControllerProtocol,
+    MediaType,
+    FileTyped,
 )
 
 # Metadata
 from .global_metadata import Platform, StorageType
 
-
 __all__ = [
     # Metadata
     "Platform",
     "StorageType",
-
     # Contracts
     "ChatProtocol",
     "MessageProtocol",
@@ -44,12 +44,12 @@ __all__ = [
     "UiConfigProtocol",
     "MessageProcessorProtocol",
     "ChatProcessorProtocol",
-
+    "MediaType",
+    "FileTyped",
     # Encryption
     "MessageEncryptor",
     "MessageDecryptor",
     "KeyManager",
-
     # Exceptions
     "CamouChatError",
 ]

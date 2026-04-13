@@ -92,10 +92,10 @@ Changelog = "https://github.com/BITS-Rohit/camouchat/releases"
 minversion = "7.0"
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "--cov=camouchat --cov-report=term-missing"
+addopts = "--cov=camouchat_core --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["camouchat"]
+source = ["camouchat_core"]
 
 [tool.black]
 line-length = 100
@@ -107,11 +107,11 @@ ignore_missing_imports = true
 
 [tool.deptry]
 ignore = ["DEP002"]
-known_first_party = ["camouchat"]
+known_first_party = ["camouchat_core"]
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["Quartz", "camouchat", "concurrent_log_handler", "camoufox"]
-DEP003 = ["camouchat"]
+DEP001 = ["Quartz", "camouchat_core", "concurrent_log_handler", "camoufox"]
+DEP003 = ["camouchat_core"]
 
 [dependency-groups]
 dev = [

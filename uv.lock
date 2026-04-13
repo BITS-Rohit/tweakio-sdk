@@ -100,8 +100,8 @@ wheels = [
 ]
 
 [[package]]
-name = "camouchat"
-version = "0.6.1"
+name = "camouchat-core"
+version = "0.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "colorlog" },

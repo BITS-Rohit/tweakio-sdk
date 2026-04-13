@@ -6,7 +6,7 @@ from typing import Sequence, Protocol, TypeVar
 
 from .chat import ChatProtocol
 
-T = TypeVar("T", bound=ChatProtocol)
+T = TypeVar("T", bound=ChatProtocol, covariant=True)
 
 
 class ChatProcessorProtocol(Protocol[T]):

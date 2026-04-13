@@ -10,5 +10,7 @@ class MessageProtocol(Protocol):
     body: str | None
     msgtype: Optional[str]
     from_chat: ChatProtocol | str
-    ui: Optional[Any]  # Browser-specific; typed concretely in plugin (e.g. Playwright ElementHandle)
+    ui: Optional[
+        Any
+    ]  # Browser-specific; typed concretely in plugin (e.g. Playwright ElementHandle)
     id_serialized: Optional[str]

@@ -1,14 +1,15 @@
 """Contracts for message extraction and normalization."""
 
-from typing import List, TypeVar, Protocol, Sequence
+from typing import TypeVar, Protocol, Sequence
 
 from .chat import ChatProtocol
 from .message import MessageProtocol
 
-T = TypeVar("T", bound=MessageProtocol)
-C = TypeVar("C", bound=ChatProtocol)
+T = TypeVar("T", bound=MessageProtocol, covariant=True)
+C = TypeVar("C", bound=ChatProtocol, contravariant=True)
 
-class MessageProcessorProtocol(Protocol[T,C]):
+
+class MessageProcessorProtocol(Protocol[T, C]):
     """Contract for message processors.
 
     Defines a standard interface for fetching and normalizing messages
@@ -23,9 +24,7 @@ class MessageProcessorProtocol(Protocol[T,C]):
     message types while still adhering to the base MessageProtocol.
     """
 
-    async def fetch_messages(
-            self, chat: C, **kwargs
-    ) -> Sequence[T]:
+    async def fetch_messages(self, chat: C, **kwargs) -> Sequence[T]:
         """Fetch messages from a given chat.
 
         Args:

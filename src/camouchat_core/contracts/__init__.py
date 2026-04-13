@@ -6,7 +6,7 @@ from .chat_processor import ChatProcessorProtocol
 from .chat import ChatProtocol
 from .message_processor import MessageProcessorProtocol
 from .message import MessageProtocol
-from .meda_controller import MediaControllerProtocol
+from .media_controller import MediaControllerProtocol, MediaType, FileTyped
 from .interaction_controller import InteractionControllerProtocol
 from .ui_config import UiConfigProtocol
 from .storage import StorageProtocol
@@ -22,4 +22,6 @@ __all__ = [
     "UiConfigProtocol",
     "StorageProtocol",
     "LoginProtocol",
+    "MediaType",
+    "FileTyped",
 ]

@@ -7,7 +7,7 @@ Tests for MessageEncryptor, MessageDecryptor, and KeyManager.
 import pytest
 import base64
 
-from camouchat.Encryption import MessageEncryptor, MessageDecryptor, KeyManager
+from camouchat_core import MessageEncryptor, MessageDecryptor, KeyManager
 
 
 class TestKeyManager:
@@ -114,6 +114,12 @@ class TestMessageEncryptor:
         unique_nonces = set(nonces)
         assert len(unique_nonces) == 100, "All nonces should be unique"
 
+    def test_generate_static_key(self):
+        """Test the static generate_key method."""
+        key = MessageEncryptor.generate_key()
+        assert len(key) == 32
+        assert isinstance(key, bytes)
+
 
 class TestMessageDecryptor:
     """Test cases for MessageDecryptor."""
@@ -161,6 +167,27 @@ class TestMessageDecryptor:
         wrong_nonce = b"0" * 12
         with pytest.raises(Exception):  # InvalidTag
             decryptor.decrypt_message(wrong_nonce, ciphertext)
+
+    def test_decrypt_empty_ciphertext_raises_error(self):
+        """Test that empty ciphertext raises ValueError."""
+        key = KeyManager.generate_random_key()
+        decryptor = MessageDecryptor(key)
+        with pytest.raises(ValueError, match="Ciphertext cannot be empty"):
+            decryptor.decrypt(b"0" * 12, b"")
+
+    def test_decrypt_bytes_invalid_nonce_raises_error(self):
+        """Test that invalid nonce in decrypt_bytes raises ValueError."""
+        key = KeyManager.generate_random_key()
+        decryptor = MessageDecryptor(key)
+        with pytest.raises(ValueError, match="Nonce must be 12 bytes"):
+            decryptor.decrypt_bytes(b"short", b"data")
+
+    def test_decrypt_bytes_empty_ciphertext_raises_error(self):
+        """Test that empty ciphertext in decrypt_bytes raises ValueError."""
+        key = KeyManager.generate_random_key()
+        decryptor = MessageDecryptor(key)
+        with pytest.raises(ValueError, match="Ciphertext cannot be empty"):
+            decryptor.decrypt_bytes(b"0" * 12, b"")
 
     def test_decrypt_with_modified_ciphertext_fails(self):
         """Test that decrypting modified ciphertext fails (integrity check)."""
