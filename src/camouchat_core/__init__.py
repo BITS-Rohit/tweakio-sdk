@@ -9,8 +9,10 @@ from .Encryption import (
     KeyManager,
 )
 
-# Exceptions
 from .Exceptions import CamouChatError
+
+# Logging
+from .logger import LoggerFactory, CamouAdapter
 
 # Contracts
 from .contracts import (
@@ -52,4 +54,8 @@ __all__ = [
     "KeyManager",
     # Exceptions
     "CamouChatError",
+
+    # Logging
+    "LoggerFactory",
+    "CamouAdapter",
 ]
