@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 name = "camouchat-core"
 version = "0.7.0"
-description = "CamouChat: Stealth-aware WhatsApp automation SDK. Standardized, async, and encrypted by design."
+description = "Anti-detection Account automation SDK. Standardized protocols, async-first, and encrypted storage."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -40,7 +40,7 @@ keywords = [
 ]
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Communications :: Chat",
     "Topic :: Internet :: WWW/HTTP :: Browsers",
@@ -52,6 +52,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Framework :: AsyncIO",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Natural Language :: English",
 ]
@@ -63,29 +64,11 @@ dependencies = [
     "platformdirs>=4.9.4",
 ]
 
-[project.optional-dependencies]
-postgresql = [
-    "asyncpg>=0.29.0"
-]
-mysql = [
-    "aiomysql>=0.2.0"
-]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.1.0",
-    "pytest-mock>=3.11.0",
-    "black>=23.0.0",
-    "mypy>=1.5.0",
-    "ruff>=0.0.290",
-    "deptry>=0.16.0"
-]
-
 [project.urls]
-Homepage = "https://github.com/BITS-Rohit/camouchat"
-Repository = "https://github.com/BITS-Rohit/camouchat"
-"Bug Tracker" = "https://github.com/BITS-Rohit/camouchat/issues"
-Changelog = "https://github.com/BITS-Rohit/camouchat/releases"
+Homepage = "https://github.com/CamouChat-Team"
+Repository = "https://github.com/CamouChat-Team/camouchat-core"
+"Bug Tracker" = "https://github.com/CamouChat-Team/camouchat-core/issues"
+Changelog = "https://github.com/CamouChat-Team/camouchat-core/releases"
 
 
 [tool.pytest.ini_options]
@@ -106,11 +89,10 @@ python_version = "3.11"
 ignore_missing_imports = true
 
 [tool.deptry]
-ignore = ["DEP002"]
 known_first_party = ["camouchat_core"]
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["Quartz", "camouchat_core", "concurrent_log_handler", "camoufox"]
+DEP002 = ["concurrent_log_handler", "colorlog"]
 DEP003 = ["camouchat_core"]
 
 [dependency-groups]

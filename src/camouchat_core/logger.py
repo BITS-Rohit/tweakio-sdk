@@ -57,7 +57,9 @@ class LoggerFactory:
     """
 
     LOG_FORMAT = "%(asctime)s | %(levelname)s | [%(platform)s][%(profile_id)s][%(process_id)s] | %(name)s | %(message)s"
-    COLOR_FORMAT = "%(log_color)s%(asctime)s | %(levelname)s | [%(platform)s][%(profile_id)s] | %(message)s"
+    COLOR_FORMAT = (
+        "%(log_color)s%(asctime)s | %(levelname)s | [%(platform)s][%(profile_id)s] | %(message)s"
+    )
 
     _root_initialized = False
     _handlers: Dict[str, logging.Handler] = {}
@@ -78,7 +80,7 @@ class LoggerFactory:
     ) -> logging.LoggerAdapter:
         """
         Retrieves a contextual logger for a specific module or profile.
-        
+
         Args:
             name: Sub-logger name (e.g. 'browser', 'whatsapp')
             platform: Platform identifier

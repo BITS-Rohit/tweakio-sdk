@@ -54,7 +54,6 @@ __all__ = [
     "KeyManager",
     # Exceptions
     "CamouChatError",
-
     # Logging
     "LoggerFactory",
     "CamouAdapter",
