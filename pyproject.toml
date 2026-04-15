@@ -61,7 +61,6 @@ dependencies = [
     "cryptography>=41.0.0",
     "colorlog>=6.10.1",
     "concurrent-log-handler>=0.9.29",
-    "platformdirs>=4.9.4",
 ]
 
 [project.urls]
