@@ -114,41 +114,11 @@ MIT — see [LICENSE](https://github.com/CamouChat-Team/camouchat-core/blob/main
 
 ---
 
-## Security & Usage
+## ⚖️ Security & Ethics
 
-### Acceptable Use
+CamouChat's strict policy regarding acceptable automation, anti-spam, and stealth disclaimers can be found in our central ecosystem hub:
 
-* Research
-* Personal automation
-* Prototyping
-* Learning
-
-### Prohibited Use
-
-* ToS violations
-* Spam
-* Safeguard bypass attempts
-* Harmful automation
-
-### Best Practices
-
-* Use test accounts
-* Respect limits
-* Avoid unnatural behavior
-* Secure credentials
-
-### Data & Privacy
-
-* Local-first
-* No external transmission
-
-### Disclaimer
-
-* No guarantee of undetectability
-* Not responsible for misuse
-
-
-
+👉 **[SECURITY.md](https://github.com/CamouChat-Team/CamouChat/blob/main/SECURITY.md)**
 
 ## Thanks to all the Contributors
 
