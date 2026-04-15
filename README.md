@@ -117,75 +117,56 @@ CamouChat is a **developer-focused SDK**, not just another wrapper.
 
 ## Installation
 
-> 🚀 CamouChat v0.6 is officialy out on PyPI
+> 🚀 CamouChat v0.7 is on PyPI
 
 ### Using `uv` (Recommended)
 
 ```bash
-uv venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv add camouchat-core
+```
 
-uv pip install camouchat "camoufox[geoip]"
-python -m camoufox fetch
+> If installing the full stack with browser support:
+```bash
+uv add camouchat-whatsapp "camoufox[geoip]"
+uv run python -m camoufox fetch
 ```
 
 ### Using `pip`
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install camouchat-core
+```
 
-pip install camouchat "camoufox[geoip]"
+> If installing with full browser + WhatsApp support:
+```bash
+pip install camouchat-whatsapp "camoufox[geoip]"
 python -m camoufox fetch
 ```
+
+> [!WARNING]
+> `camoufox fetch` downloads the hardened Firefox binary used by [Camoufox](https://camoufox.com/). This is a **one-time setup step** and cannot be automated via `uv sync`.
 
 ---
 
 ## Documentation & Community
 
-Explore the following resources for detailed guides, architecture overviews, and community standards:
-
-👉 [Main Documentation](https://github.com/BITS-Rohit/CamouChat/tree/main/docs)
-
-👉 [Architecture & Key Designs](https://github.com/BITS-Rohit/CamouChat/blob/main/docs/Architecture%20&%20Key%20Designs.md)
-
-👉 [Contributors Guide](https://github.com/BITS-Rohit/CamouChat/blob/main/Contributors.md)
-
-👉 [Code of Conduct](https://github.com/BITS-Rohit/CamouChat/blob/main/CODE_OF_CONDUCT.md)
-
-👉 [Changelog](https://github.com/BITS-Rohit/CamouChat/blob/main/CHANGELOG.md)
-
+- 👉 [Core SDK Docs](https://github.com/CamouChat-Team/camouchat-core/tree/main/docs)
+- 👉 [Browser Plugin](https://github.com/CamouChat-Team/camouchat-browser)
+- 👉 [Browser Plugin Docs](https://github.com/CamouChat-Team/camouchat-browser/tree/main/docs)
+- 👉 [WhatsApp Plugin](https://github.com/CamouChat-Team/camouchat-whatsapp)
+- 👉 [WhatsApp Plugin Docs](https://github.com/CamouChat-Team/camouchat-whatsapp/tree/main/docs)
+- 👉 [Code of Conduct](https://github.com/CamouChat-Team/camouchat-core/blob/main/CODE_OF_CONDUCT.md)
+- 👉 [Changelog](https://github.com/CamouChat-Team/camouchat-core/releases)
 
 ---
 
 ## Roadmap
 
-### v0.6 — Core Infrastructure
+### v0.7 — Plugin Architecture
+- Decoupled `core`, `browser`, and `whatsapp` packages
+- Centralized logging via `LoggerFactory`
+- Standardized Protocol contracts
 
-👉 [Docs](https://github.com/BITS-Rohit/CamouChat/blob/main/docs/Series/v_0_6x.md)
-
-### v0.7
-
-* Selector stability improvements
-* WhatsApp reliability
-* Tests ≥80%
-
-### v0.8
-
-* Media saving
-* WebUI hardening
-* Tests ≥85%
-
-### v0.9
-
-* Additional WhatsApp features
-* Stability improvements
-
-### v1.0+
-
-* arattai integration
-
----
 
 ## FAQ
 
@@ -206,7 +187,7 @@ No. Use at your own risk.
 
 ## License
 
-MIT — see [LICENSE](https://github.com/BITS-Rohit/CamouChat/blob/main/LICENSE)
+MIT — see [LICENSE](https://github.com/CamouChat-Team/camouchat-core/blob/main/LICENSE)
 
 ---
 
@@ -243,17 +224,8 @@ MIT — see [LICENSE](https://github.com/BITS-Rohit/CamouChat/blob/main/LICENSE)
 * No guarantee of undetectability
 * Not responsible for misuse
 
----
 
-## Acknowledgements & Third-Party Code
 
-CamouChat utilizes portions of the highly innovative work done by the [wppconnect-team](https://github.com/wppconnect-team/wa-js). 
-Their WhatsApp DOM implementation (`wa-js`) is distributed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). 
-We are incredibly grateful to their contributors for mapping out the internal WhatsApp application layer. 
-
-Please see the [NOTICE](https://github.com/CamouChat-Team/camouchat/blob/main/NOTICE) file for full compliance details.
-
----
 
 ## Thanks to all the Contributors
 

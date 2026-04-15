@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.6.6,<0.7.0"]
+build-backend = "uv_build"
 
 [project]
-name = "camouchat"
-version = "0.6.1"
-description = "CamouChat: Stealth-aware WhatsApp automation SDK. Standardized, async, and encrypted by design."
+name = "camouchat-core"
+version = "0.7.0"
+description = "Anti-detection Account automation SDK. Standardized protocols, async-first, and encrypted storage."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -40,7 +40,7 @@ keywords = [
 ]
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Communications :: Chat",
     "Topic :: Internet :: WWW/HTTP :: Browsers",
@@ -52,59 +52,32 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Framework :: AsyncIO",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Natural Language :: English",
 ]
 
 dependencies = [
-    "playwright>=1.40.0",
-    "camoufox[geoip]>=0.3.0",
-    "pyperclip>=1.8.2",
     "cryptography>=41.0.0",
     "colorlog>=6.10.1",
-    "sqlalchemy>=2.0.36",
-    "aiosqlite>=0.19.0",
-    "browserforge>=1.2.4",
-    "platformdirs>=4.0.0",
-    "filelock>=3.25.2",
     "concurrent-log-handler>=0.9.29",
 ]
 
-[project.optional-dependencies]
-postgresql = [
-    "asyncpg>=0.29.0"
-]
-mysql = [
-    "aiomysql>=0.2.0"
-]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.1.0",
-    "pytest-mock>=3.11.0",
-    "black>=23.0.0",
-    "mypy>=1.5.0",
-    "ruff>=0.0.290",
-    "deptry>=0.16.0"
-]
-
 [project.urls]
-Homepage = "https://github.com/BITS-Rohit/camouchat"
-Repository = "https://github.com/BITS-Rohit/camouchat"
-"Bug Tracker" = "https://github.com/BITS-Rohit/camouchat/issues"
-Changelog = "https://github.com/BITS-Rohit/camouchat/releases"
+Homepage = "https://github.com/CamouChat-Team"
+Repository = "https://github.com/CamouChat-Team/camouchat-core"
+"Bug Tracker" = "https://github.com/CamouChat-Team/camouchat-core/issues"
+Changelog = "https://github.com/CamouChat-Team/camouchat-core/releases"
 
-[tool.setuptools.packages.find]
-include = ["camouchat*"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "--cov=camouchat --cov-report=term-missing"
+addopts = "--cov=camouchat_core --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["camouchat"]
+source = ["camouchat_core"]
 
 [tool.black]
 line-length = 100
@@ -115,12 +88,11 @@ python_version = "3.11"
 ignore_missing_imports = true
 
 [tool.deptry]
-ignore = ["DEP002"]
-known_first_party = ["camouchat"]
+known_first_party = ["camouchat_core"]
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["Quartz", "camouchat", "concurrent_log_handler", "camoufox"]
-DEP003 = ["camouchat"]
+DEP002 = ["concurrent_log_handler", "colorlog"]
+DEP003 = ["camouchat_core"]
 
 [dependency-groups]
 dev = [
