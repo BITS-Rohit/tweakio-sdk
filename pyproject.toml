@@ -58,7 +58,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "cryptography>=41.0.0",
+    "cryptography>=46.0.7",
     "colorlog>=6.10.1",
     "concurrent-log-handler>=0.9.29",
 ]
