@@ -2,116 +2,39 @@
   <img src="./assets/text.png" alt="CamouChat Text" />
 </div>
 
-**CamouChat** is a high-performance, stealth-aware WhatsApp automation SDK. Designed for researchers and developers, it
-provides a standardized framework for building multi-account WhatsApp agents with **end-to-end encrypted storage**, *
-*per-profile sandboxing**, and **human-like browser behavior**.
+> [!IMPORTANT]  
+> 🦊 **This is the CamouChat Core SDK Repository.**  
+> If you are looking for the main CamouChat project, full ecosystem documentation, or the WhatsApp plugin, please visit our **[Central Repository](https://github.com/CamouChat-Team/CamouChat)**.
 
-> [!IMPORTANT]
-> CamouChat v0.6 is officially released on PyPI. It is built on [Playwright](https://github.com/microsoft/playwright)
-> and [Camoufox](https://github.com/daijro/camoufox) to provide industry-leading anti-detection capabilities.
+**`camouchat-core`** is the foundational SDK package. It provides the strict asynchronous interfaces (`typing.Protocol`), end-to-end encrypted storage engines (`AES-GCM-256`), and standardized logging systems used by all CamouChat plugins.
 
 <p align= "center">
-   <a href="https://pepy.tech/projects/camouchat">
-      <img src="https://static.pepy.tech/personalized-badge/camouchat?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=RED&left_text=downloads" alt="PyPI Downloads">
-   </a>
   <a href="https://pypi.org/project/camouchat/">
-      <img src="https://img.shields.io/pypi/v/camouchat?label=camouchat&color=green" />
+      <img src="https://img.shields.io/pypi/v/camouchat?label=camouchat-core&color=green" />
   </a>
   <a href="https://opensource.org/licenses/MIT">
       <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
-  <a href="https://github.com/BITS-Rohit/tweakio-sdk">
-      <img src="https://img.shields.io/badge/coverage-%3E75%25-brightgreen" />
-  </a>
 </p>
 
+---
 
+## Core SDK Features
 
-<!--
-<p style="text-align: center;">
-  <a href="https://github.com/BITS-Rohit/CamouChat/actions/workflows/ci.yml">
-    <img src="https://github.com/BITS-Rohit/CamouChat/actions/workflows/ci.yml/badge.svg" />
-  </a>
-  <a href="https://github.com/BITS-Rohit/CamouChat/actions/workflows/github-code-scanning/codeql">
-    <img src="https://github.com/BITS-Rohit/CamouChat/actions/workflows/github-code-scanning/codeql/badge.svg" />
-  </a>
-</p>
--->
+* **Interface-First Design**: Pure `typing.Protocol` contracts for seamless cross-plugin interoperability.
+* **Encrypted Storage Pipeline**: Built-in 256-bit AES-GCM encryption bridging abstract messages to SQLAlchemy.
+* **Database Agnostic**: `SQLAlchemyStorage` supports SQLite, PostgreSQL, and MySQL completely natively.
+* **Unified Metadata**: Centralized enums (`Platform`, `StorageType`, `MediaType`) ensures consistency.
+* **Concurrent Logging**: Automatic structured, thread-safe, colored console & rotating file logging via `LoggerFactory`.
 
 ---
 
-## Why CamouChat?
+## Installation
 
-Before building CamouChat, several existing libraries were evaluated.
-
-👉 [Docs](https://github.com/BITS-Rohit/CamouChat/blob/main/docs/Platforms/Analysis/whatsapp_libs.md)
-
-### Problem Summary
-
-* Fragile selector-based automation
-* No proper multi-account isolation
-* Weak or no anti-detection strategies
-* Poor long-term maintenance
-* No unified architecture
-
----
-
-## Introducing CamouChat
-
-CamouChat is a **developer-focused SDK**, not just another wrapper.
-
-**Core priorities:**
-
-* Reliability over shortcuts
-* Stealth-aware automation
-* Extensible architecture
-
----
-
-## Key Benefits
-
-1. **Anti-Detection Browser Layer**
-   Built on [Camoufox](https://github.com/daijro/camoufox)
-
-2. **Dynamic Fingerprinting**
-   Uses [BrowserForge](https://github.com/daijro/browserforge)
-
-3. **Multi-Profile Management**
-
-4. **Secure Message Storage**
-   AES-GCM-256 encryption
-
-5. **Database Flexibility**
-   Powered by [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy)
-
-6. **Browser Sandboxing**
-
-7. **Reliable Session Handling**
-
-8. **Extensible Architecture**
-
-9. **Rate Limiting Support**
-
-10. **Humanized Interaction Layer**
-
-11. **Local-First Privacy**
-
-* No telemetry
-* No external transmission
-
-1. **Cross-Platform**
-
-* Linux
-* macOS
-* Windows
-
----
-
-## Philosophy
-
-> Provide a unified, reliable automation SDK
-
-> Focus on reducing detection signals, not bypassing safeguards
+```bash
+uv add camouchat-core
+```
+*(If you are building an agent, you likely want to install `camouchat-whatsapp` instead, which includes this core SDK automatically).*
 
 ---
 
@@ -191,41 +114,11 @@ MIT — see [LICENSE](https://github.com/CamouChat-Team/camouchat-core/blob/main
 
 ---
 
-## Security & Usage
+## ⚖️ Security & Ethics
 
-### Acceptable Use
+CamouChat's strict policy regarding acceptable automation, anti-spam, and stealth disclaimers can be found in our central ecosystem hub:
 
-* Research
-* Personal automation
-* Prototyping
-* Learning
-
-### Prohibited Use
-
-* ToS violations
-* Spam
-* Safeguard bypass attempts
-* Harmful automation
-
-### Best Practices
-
-* Use test accounts
-* Respect limits
-* Avoid unnatural behavior
-* Secure credentials
-
-### Data & Privacy
-
-* Local-first
-* No external transmission
-
-### Disclaimer
-
-* No guarantee of undetectability
-* Not responsible for misuse
-
-
-
+👉 **[SECURITY.md](https://github.com/CamouChat-Team/CamouChat/blob/main/SECURITY.md)**
 
 ## Thanks to all the Contributors
 
