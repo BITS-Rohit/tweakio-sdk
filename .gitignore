@@ -38,3 +38,19 @@ wget-*
 
 ignore/
 .codex
+
+# Secrets and environment
+.env
+*.env
+.env.*
+secrets/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,8 +1,7 @@
-from enum import Enum
-from typing import List
+from enum import StrEnum
 
 
-class StorageType(str, Enum):
+class StorageType(StrEnum):
     """Supported storage database dialects."""
 
     SQLITE = "sqlite"
@@ -10,6 +9,6 @@ class StorageType(str, Enum):
     POSTGRESQL = "postgresql"
 
     @staticmethod
-    def list_types() -> List[str]:
+    def list_types() -> list[str]:
         """List available storage types."""
         return [t.value for t in StorageType]

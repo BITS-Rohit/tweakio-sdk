@@ -8,7 +8,6 @@ both confidentiality and integrity of stored messages.
 from __future__ import annotations
 
 import os
-from typing import Tuple, Optional
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -45,8 +44,8 @@ class MessageEncryptor:
         self.aesgcm = AESGCM(key)
 
     def encrypt(
-        self, plaintext: str | bytes, associated_data: Optional[bytes] = None
-    ) -> Tuple[bytes, bytes]:
+        self, plaintext: str | bytes, associated_data: bytes | None = None
+    ) -> tuple[bytes, bytes]:
         """
         Encrypt plaintext using AES-256-GCM.
 
@@ -78,9 +77,7 @@ class MessageEncryptor:
 
         return nonce, ciphertext
 
-    def encrypt_message(
-        self, message: str, message_id: Optional[str] = None
-    ) -> Tuple[bytes, bytes]:
+    def encrypt_message(self, message: str, message_id: str | None = None) -> tuple[bytes, bytes]:
         """
         Encrypt a message with optional ID as associated data.
 
@@ -109,8 +106,8 @@ class MessageEncryptor:
         return AESGCM.generate_key(bit_length=256)
 
     def encrypt_bytes(
-        self, data: bytes, associated_data: Optional[bytes] = None
-    ) -> Tuple[bytes, bytes]:
+        self, data: bytes, associated_data: bytes | None = None
+    ) -> tuple[bytes, bytes]:
         """
         Encrypt raw bytes using AES-256-GCM.
 

@@ -2,6 +2,7 @@ import json
 import logging
 import sys
 from unittest.mock import patch
+
 from camouchat_core import LoggerFactory
 
 
@@ -103,6 +104,7 @@ def test_logger_import_fallbacks():
         # We need to reload or re-import the module to trigger the try-except blocks
         # or just inspect the definitions if we can re-execute the module code.
         import importlib
+
         import camouchat_core.logger
 
         importlib.reload(camouchat_core.logger)

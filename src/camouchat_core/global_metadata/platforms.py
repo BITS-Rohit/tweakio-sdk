@@ -1,14 +1,13 @@
-from enum import Enum
-from typing import List
+from enum import StrEnum
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     """Absolute names"""
 
     WHATSAPP = "WhatsApp"
     ARATTAI = "Arattai"
 
     @staticmethod
-    def list_platforms() -> List[str]:
+    def list_platforms() -> list[str]:
         """List available platforms"""
         return [p.value for p in Platform]

@@ -7,9 +7,8 @@ a secure key derivation function with configurable iterations.
 
 from __future__ import annotations
 
-import os
 import base64
-from typing import Optional
+import os
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -44,9 +43,7 @@ class KeyManager:
         """
         self.iterations = iterations
 
-    def derive_key_and_salt(
-        self, password: str, salt: Optional[bytes] = None
-    ) -> tuple[bytes, bytes]:
+    def derive_key_and_salt(self, password: str, salt: bytes | None = None) -> tuple[bytes, bytes]:
         """
         Derive an encryption key from password using PBKDF2-HMAC.
 

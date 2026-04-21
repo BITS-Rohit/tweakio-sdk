@@ -22,8 +22,8 @@ Usage:
     plaintext = decryptor.decrypt_message(nonce, ciphertext)
 """
 
-from .encryptor import MessageEncryptor
 from .decryptor import MessageDecryptor
+from .encryptor import MessageEncryptor
 from .key_manager import KeyManager
 
 __all__ = [

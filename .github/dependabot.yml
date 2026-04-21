@@ -1,21 +1,20 @@
 version: 2
 updates:
-  # Maintain dependencies for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "actions"
-
-  # Maintain pip/uv dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "dev"
     labels:
       - "dependencies"
-      - "python"
-    ignore:
-      - dependency-name: "tweakio-sdk"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    open-pull-requests-limit: 5

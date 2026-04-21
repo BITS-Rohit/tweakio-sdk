@@ -1,11 +1,11 @@
-from enum import Enum
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, Any, Optional
+from enum import StrEnum
+from typing import Any, Protocol, TypeVar
 
 from .ui_config import UiConfigProtocol
 
 
-class MediaType(str, Enum):
+class MediaType(StrEnum):
     """Supported media types for upload across all platforms."""
 
     TEXT = "text"
@@ -21,8 +21,8 @@ class FileTyped:
 
     uri: str
     name: str
-    mime_type: Optional[str] = None
-    size_bytes: Optional[int] = None
+    mime_type: str | None = None
+    size_bytes: int | None = None
 
 
 T = TypeVar("T", bound=UiConfigProtocol)

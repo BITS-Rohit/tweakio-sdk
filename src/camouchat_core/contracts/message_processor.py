@@ -1,6 +1,7 @@
 """Contracts for message extraction and normalization."""
 
-from typing import TypeVar, Protocol, Sequence
+from collections.abc import Sequence
+from typing import Protocol, TypeVar
 
 from .chat import ChatProtocol
 from .message import MessageProtocol

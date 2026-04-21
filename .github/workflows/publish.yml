@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Publish to PyPI
 
 on:
@@ -8,7 +9,8 @@ jobs:
   pypi-publish:
     name: Build and upload release to PyPI
     runs-on: ubuntu-latest
-    
+    environment: pypi
+
     # Required for PyPI Trusted Publisher (OIDC)
     permissions:
       id-token: write
@@ -21,7 +23,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          enable-cache: true
           version: "latest"
 
       - name: Set up Python
@@ -30,7 +31,7 @@ jobs:
           python-version-file: "pyproject.toml"
 
       - name: Build distributions
-        run: uv build
+        run: uv build --package camouchat-core
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

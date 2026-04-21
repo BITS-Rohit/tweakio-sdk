@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from logging.handlers import RotatingFileHandler
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 try:
     from colorlog import ColoredFormatter
@@ -62,10 +62,10 @@ class LoggerFactory:
     )
 
     _root_initialized = False
-    _handlers: Dict[str, logging.Handler] = {}
+    _handlers: dict[str, logging.Handler] = {}
 
     @classmethod
-    def set_level(cls, level: Union[int, str]) -> None:
+    def set_level(cls, level: int | str) -> None:
         """Globally sets the logging level for the camouchat namespace."""
         logging.getLogger("camouchat").setLevel(level)
 
@@ -75,8 +75,8 @@ class LoggerFactory:
         name: str,
         platform: str = "CORE",
         profile_id: str = "GLOBAL",
-        log_file: Optional[str] = None,
-        level: Optional[Union[int, str]] = None,
+        log_file: str | None = None,
+        level: int | str | None = None,
     ) -> logging.LoggerAdapter:
         """
         Retrieves a contextual logger for a specific module or profile.
@@ -109,7 +109,7 @@ class LoggerFactory:
         return adapter
 
     @classmethod
-    def _setup_root_handlers(cls, log_file: Optional[str] = None) -> None:
+    def _setup_root_handlers(cls, log_file: str | None = None) -> None:
         root = logging.getLogger("camouchat")
         root.setLevel(logging.INFO)
         root.propagate = False
