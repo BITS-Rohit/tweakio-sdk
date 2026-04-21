@@ -1,6 +1,5 @@
-<div style="text-align: center;">
-  <img src="./assets/text.png" alt="CamouChat Text" />
-</div>
+
+# CamouChat Core 🛠️
 
 > [!IMPORTANT]
 > 🦊 **This is the CamouChat Core SDK Repository.**
