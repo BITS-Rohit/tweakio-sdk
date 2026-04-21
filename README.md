@@ -11,6 +11,9 @@
   <a href="https://pypi.org/project/camouchat-core/">
       <img src="https://img.shields.io/pypi/v/camouchat-core?label=camouchat-core&color=green" />
   </a>
+  <a href="https://pepy.tech/projects/camouchat-core">
+      <img src="https://static.pepy.tech/personalized-badge/camouchat-core?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads" alt="PyPI Downloads" />
+  </a>
   <a href="https://opensource.org/licenses/MIT">
       <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
