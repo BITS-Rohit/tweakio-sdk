@@ -39,14 +39,6 @@ Or with `pip`:
 pip install camouchat-core
 ```
 
-> If building a full WhatsApp agent (recommended):
-> ```bash
-> uv add camouchat-whatsapp "camoufox[geoip]"
-> uv run python -m camoufox fetch
-> ```
-
-> [!WARNING]
-> `camoufox fetch` downloads the hardened Firefox binary. This is a **one-time setup step** that cannot be automated via `uv sync`.
 
 ## Documentation
 
