@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Sequence, Protocol, TypeVar
+from collections.abc import Sequence
+from typing import Protocol, TypeVar
 
 from .chat import ChatProtocol
 

@@ -4,10 +4,12 @@ Unit tests for Encryption package.
 Tests for MessageEncryptor, MessageDecryptor, and KeyManager.
 """
 
-import pytest
 import base64
 
-from camouchat_core import MessageEncryptor, MessageDecryptor, KeyManager
+import pytest
+from cryptography.exceptions import InvalidTag
+
+from camouchat_core import KeyManager, MessageDecryptor, MessageEncryptor
 
 
 class TestKeyManager:
@@ -155,7 +157,7 @@ class TestMessageDecryptor:
         encryptor = MessageEncryptor(key1)
         decryptor = MessageDecryptor(key2)
         nonce, ciphertext = encryptor.encrypt_message("secret")
-        with pytest.raises(Exception):  # InvalidTag
+        with pytest.raises(InvalidTag):  # InvalidTag
             decryptor.decrypt_message(nonce, ciphertext)
 
     def test_decrypt_with_wrong_nonce_fails(self):
@@ -165,7 +167,7 @@ class TestMessageDecryptor:
         decryptor = MessageDecryptor(key)
         nonce, ciphertext = encryptor.encrypt_message("secret")
         wrong_nonce = b"0" * 12
-        with pytest.raises(Exception):  # InvalidTag
+        with pytest.raises(InvalidTag):  # InvalidTag
             decryptor.decrypt_message(wrong_nonce, ciphertext)
 
     def test_decrypt_empty_ciphertext_raises_error(self):
@@ -196,7 +198,7 @@ class TestMessageDecryptor:
         decryptor = MessageDecryptor(key)
         nonce, ciphertext = encryptor.encrypt_message("secret")
         modified_ciphertext = ciphertext[:-1] + bytes([ciphertext[-1] ^ 0xFF])
-        with pytest.raises(Exception):  # InvalidTag
+        with pytest.raises(InvalidTag):  # InvalidTag
             decryptor.decrypt_message(nonce, modified_ciphertext)
 
     def test_decrypt_safe_returns_none_on_failure(self):

@@ -7,8 +7,6 @@ to ensure data integrity and authenticity.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -42,9 +40,7 @@ class MessageDecryptor:
         self.key = key
         self.aesgcm = AESGCM(key)
 
-    def decrypt(
-        self, nonce: bytes, ciphertext: bytes, associated_data: Optional[bytes] = None
-    ) -> str:
+    def decrypt(self, nonce: bytes, ciphertext: bytes, associated_data: bytes | None = None) -> str:
         """
         Decrypt ciphertext using AES-256-GCM.
 
@@ -74,7 +70,7 @@ class MessageDecryptor:
         return plaintext.decode("utf-8")
 
     def decrypt_message(
-        self, nonce: bytes, ciphertext: bytes, message_id: Optional[str] = None
+        self, nonce: bytes, ciphertext: bytes, message_id: str | None = None
     ) -> str:
         """
         Decrypt a message with optional ID as associated data.
@@ -94,7 +90,7 @@ class MessageDecryptor:
         return self.decrypt(nonce, ciphertext, associated_data)
 
     def decrypt_bytes(
-        self, nonce: bytes, ciphertext: bytes, associated_data: Optional[bytes] = None
+        self, nonce: bytes, ciphertext: bytes, associated_data: bytes | None = None
     ) -> bytes:
         """
         Decrypt raw bytes using AES-256-GCM.
@@ -121,8 +117,8 @@ class MessageDecryptor:
         return self.aesgcm.decrypt(nonce, ciphertext, associated_data)
 
     def decrypt_safe(
-        self, nonce: bytes, ciphertext: bytes, associated_data: Optional[bytes] = None
-    ) -> Optional[str]:
+        self, nonce: bytes, ciphertext: bytes, associated_data: bytes | None = None
+    ) -> str | None:
         """
         Safely decrypt with error handling.
 

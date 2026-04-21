@@ -1,4 +1,6 @@
-from typing import List, Dict, Any, Protocol, Sequence
+from collections.abc import Sequence
+from typing import Any, Protocol
+
 from .message import MessageProtocol
 
 
@@ -39,7 +41,7 @@ class StorageProtocol(Protocol):
         """Check if a message exists by ID asynchronously."""
         ...
 
-    def get_all_messages(self, **kwargs) -> List[Dict[str, Any]]:
+    def get_all_messages(self, **kwargs) -> list[dict[str, Any]]:
         """Retrieve all messages from storage."""
         ...
 

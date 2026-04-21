@@ -1,4 +1,4 @@
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 
 class ChatProtocol(Protocol):
@@ -6,5 +6,5 @@ class ChatProtocol(Protocol):
 
     name: str | None
     id_serialized: str | None
-    ui: Optional[Any]
+    ui: Any | None
     timestamp: float | int | None
