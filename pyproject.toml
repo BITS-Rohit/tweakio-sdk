@@ -79,9 +79,19 @@ addopts = "--cov=camouchat_core --cov-report=term-missing"
 [tool.coverage.run]
 source = ["camouchat_core"]
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ["py311", "py312", "py313", "py314"]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.mypy]
 python_version = "3.11"
@@ -96,7 +106,6 @@ DEP003 = ["camouchat_core"]
 
 [dependency-groups]
 dev = [
-    "black>=26.3.1",
     "deptry>=0.25.1",
     "mypy>=1.20.0",
     "ruff>=0.15.8",

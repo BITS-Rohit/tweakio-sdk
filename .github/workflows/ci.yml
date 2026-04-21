@@ -6,9 +6,9 @@ permissions:
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["main", "master", "dev"]
   pull_request:
-    branches: ["main", "master"]
+    branches: ["main", "master", "dev"]
 
 jobs:
   lint-and-typecheck:
@@ -35,8 +35,8 @@ jobs:
       - name: Run Ruff (Linter)
         run: uv run ruff check src tests
 
-      - name: Run Black (Formatter Check)
-        run: uv run black --check src tests
+      - name: Run Ruff (Formatter Check)
+        run: uv run ruff format --check src tests
 
       - name: Run Mypy (Type Checker)
         run: uv run mypy src tests
