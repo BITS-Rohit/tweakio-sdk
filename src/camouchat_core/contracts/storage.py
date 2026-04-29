@@ -1,9 +1,10 @@
 from collections.abc import Sequence
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from .message import MessageProtocol
 
 
+@runtime_checkable
 class StorageProtocol(Protocol):
     """Base contract for storage implementations.
 
