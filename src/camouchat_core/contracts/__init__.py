@@ -1,5 +1,7 @@
 """
 Contracts for platform & browser based plugins.
+
+@runtime_checkable added for chat , message, storage protocols for runtime checking.
 """
 
 from .chat import ChatProtocol

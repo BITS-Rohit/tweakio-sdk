@@ -1,8 +1,9 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from .chat import ChatProtocol
 
 
+@runtime_checkable
 class MessageProtocol(Protocol):
     """Message Interface Base Class — platform-agnostic."""
 
