@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "camouchat-core"
-version = "0.7.2rc1"
+version = "0.7.2"
 description = "Anti-detection Account automation SDK. Standardized protocols, async-first, and encrypted storage."
 readme = "README.md"
 requires-python = ">=3.11"
