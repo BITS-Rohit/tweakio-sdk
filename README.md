@@ -29,16 +29,31 @@
 
 ## Installation
 
+### Requirements
+
+- Python **3.11 or higher**
+- Recommended: Use a virtual environment
+
+### Setup (Recommended)
+
+Create and activate a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### Install using `uv` (recommended)
+
 ```bash
 uv add camouchat-core
 ```
 
-Or with `pip`:
+### Install using `pip`
 
 ```bash
 pip install camouchat-core
 ```
-
 
 ## Documentation
 
