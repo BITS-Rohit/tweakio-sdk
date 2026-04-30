@@ -44,13 +44,14 @@ pip install camouchat-core
 
 - [Core SDK Docs](https://github.com/CamouChat-Team/camouchat-core/tree/main/docs) — Contracts, storage, logging.
 - [Browser Plugin](https://github.com/CamouChat-Team/camouchat-browser) — Stealth browser engine.
-- [WhatsApp Plugin](https://github.com/CamouChat-Team/camouchat-whatsapp) — Full automation plugin.
 - [CHANGELOG](https://github.com/CamouChat-Team/camouchat-core/blob/main/CHANGELOG.md) — Full release history.
 
-## Roadmap
+### Supported Social Platforms :
 
-- 🌐 **More Plugins**: Signal, Telegram, and Instagram automation plugins planned.
-- 🐳 **Docker**: Headless container with Xvfb and Camoufox pre-configured (Targeting v0.8.0).
+- whatsapp : [WhatsApp Plugin](https://github.com/CamouChat-Team/camouchat-whatsapp) — Full automation plugin.
+
+
+
 
 ## ⚖️ Security & Ethics
 
