@@ -24,3 +24,29 @@ from camouchat_core import StorageType
 # StorageType.MYSQL
 # StorageType.POSTGRESQL
 ```
+
+## `MessageType` Enum
+
+Identifies the classification of a message payload, essential for routing and processing.
+
+```python
+from camouchat_core import MessageType
+
+# Examples:
+# MessageType.TEXT
+# MessageType.IMAGE
+# MessageType.CAMOU_CIPHERTEXT
+```
+
+## `MediaType` Enum
+
+Identifies standard media types across all supported platforms.
+
+```python
+from camouchat_core import MediaType
+
+# Examples:
+# MediaType.IMAGE
+# MediaType.VIDEO
+# MediaType.DOCUMENT
+```

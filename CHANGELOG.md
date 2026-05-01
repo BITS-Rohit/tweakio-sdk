@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `__init__.py` to export `MediaType` and `MessageType`.
 - removed FileTyped from core.
+- MessageProtocol's `msg_type` now supports `str|MessageType`
 
 
 ### Fixed

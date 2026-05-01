@@ -2,7 +2,7 @@
 
 __version__ = "0.7.0"
 
-# Encryption
+
 # Contracts
 from .contracts import (
     ChatProcessorProtocol,
@@ -15,6 +15,8 @@ from .contracts import (
     StorageProtocol,
     UiConfigProtocol,
 )
+
+# Encryption
 from .Encryption import (
     KeyManager,
     MessageDecryptor,

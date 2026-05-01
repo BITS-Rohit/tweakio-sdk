@@ -61,6 +61,11 @@ pip install camouchat-core
 - [Browser Plugin](https://github.com/CamouChat-Team/camouchat-browser) — Stealth browser engine.
 - [CHANGELOG](https://github.com/CamouChat-Team/camouchat-core/blob/main/CHANGELOG.md) — Full release history.
 
+### 🤖 For AI Agents
+
+Are you an AI assistant helping to build or debug CamouChat?
+👉 **[Read the Agents Guide (`Agents.md`)](./Agents.md)** for a strict breakdown of core protocols, encryption flows, and architectural rules.
+
 ### Supported Social Platforms :
 
 - whatsapp : [WhatsApp Plugin](https://github.com/CamouChat-Team/camouchat-whatsapp) — Full automation plugin.

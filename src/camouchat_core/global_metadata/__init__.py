@@ -3,6 +3,8 @@ Global Metadata enforce to every plugin to use this instead of creating their ow
 provides :
 - Platform
 - StorageType
+- MessageType
+- MediaType
 """
 
 from .media_type import MediaType

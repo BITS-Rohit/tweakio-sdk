@@ -11,7 +11,7 @@ class MessageProtocol(Protocol):
 
     timestamp: float | int | None
     body: str | None
-    msgtype: MessageType | None
+    msgtype: str | MessageType | None
     from_chat: ChatProtocol | str
     ui: Any | None
     id_serialized: str | None
