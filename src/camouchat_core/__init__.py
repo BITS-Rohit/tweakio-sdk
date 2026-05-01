@@ -7,11 +7,9 @@ __version__ = "0.7.0"
 from .contracts import (
     ChatProcessorProtocol,
     ChatProtocol,
-    FileTyped,
     InteractionControllerProtocol,
     LoginProtocol,
     MediaControllerProtocol,
-    MediaType,
     MessageProcessorProtocol,
     MessageProtocol,
     StorageProtocol,
@@ -25,7 +23,7 @@ from .Encryption import (
 from .Exceptions import CamouChatError
 
 # Metadata
-from .global_metadata import Platform, StorageType
+from .global_metadata import MediaType, MessageType, Platform, StorageType
 
 # Logging
 from .logger import CamouAdapter, LoggerFactory
@@ -34,6 +32,8 @@ __all__ = [
     # Metadata
     "Platform",
     "StorageType",
+    "MessageType",
+    "MediaType",
     # Contracts
     "ChatProtocol",
     "MessageProtocol",
@@ -44,8 +44,6 @@ __all__ = [
     "UiConfigProtocol",
     "MessageProcessorProtocol",
     "ChatProcessorProtocol",
-    "MediaType",
-    "FileTyped",
     # Encryption
     "MessageEncryptor",
     "MessageDecryptor",

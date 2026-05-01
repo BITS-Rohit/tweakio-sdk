@@ -1,5 +1,7 @@
 from typing import Any, Protocol, runtime_checkable
 
+from camouchat_core.global_metadata.msg_type import MessageType
+
 from .chat import ChatProtocol
 
 
@@ -9,8 +11,8 @@ class MessageProtocol(Protocol):
 
     timestamp: float | int | None
     body: str | None
-    msgtype: str | None
+    msgtype: MessageType | None
     from_chat: ChatProtocol | str
-    ui: Any | None  # Browser-specific; typed concretely in plugin (e.g. Playwright ElementHandle)
+    ui: Any | None
     id_serialized: str | None
-    encryption_nonce: bytes | None 
+    encryption_nonce: bytes | None

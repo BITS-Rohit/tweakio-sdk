@@ -5,7 +5,9 @@ provides :
 - StorageType
 """
 
+from .media_type import MediaType
+from .msg_type import MessageType
 from .platforms import Platform
 from .storage_type import StorageType
 
-__all__ = ["Platform", "StorageType"]
+__all__ = ["Platform", "StorageType", "MessageType", "MediaType"]
