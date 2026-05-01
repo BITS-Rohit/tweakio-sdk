@@ -130,6 +130,13 @@ CamouChat's strict policy regarding acceptable automation, anti-spam, and stealt
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/KarishmaTewatia">
+                    <img src="https://avatars.githubusercontent.com/u/188566551?v=4" width="60;" alt="KarishmaTewatia"/>
+                    <br />
+                    <sub><b>Karishma</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/OVERDOZZZE">
                     <img src="https://avatars.githubusercontent.com/u/113797353?v=4" width="60;" alt="OVERDOZZZE"/>
                     <br />
