@@ -13,3 +13,4 @@ class MessageProtocol(Protocol):
     from_chat: ChatProtocol | str
     ui: Any | None  # Browser-specific; typed concretely in plugin (e.g. Playwright ElementHandle)
     id_serialized: str | None
+    encryption_nonce: bytes | None 
