@@ -44,7 +44,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.7.0] — Unreleased
+### [0.7.1] - 2026-04-21
+
+### Added
+
+- Pre-commit CI workflow to enforce code formatting and linting.
+- PePy Tech badge and title to README.
+
+### Changed
+
+- Streamlined and updated `README.md` documentation.
+
+### Fixed
+
+- None
+
+---
+
+### [0.7.0] - 2026-04-15
 
 ### Added
 

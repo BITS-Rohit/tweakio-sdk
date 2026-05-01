@@ -58,7 +58,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "cryptography>=41.0.0",
+    "cryptography==46.0.7",
     "colorlog>=6.10.1",
     "concurrent-log-handler>=0.9.29",
 ]
@@ -107,9 +107,9 @@ DEP003 = ["camouchat_core"]
 [dependency-groups]
 dev = [
     "deptry>=0.25.1",
-    "mypy>=1.20.0",
+    "mypy==1.20.1",
     "ruff>=0.15.8",
-    "pytest>=7.4.0",
+    "pytest==9.0.3",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.11.0",
