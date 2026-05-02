@@ -7,7 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.7.0] — Unreleased
+### [0.7.3] - unreleased
+
+### Added
+
+- `message.py` now has `encryption_nonce: bytes | None` field.
+- `MessageType` StrEnum added to `src/camouchat_core/global_metadata/msg_type.py`.
+
+### Changed
+
+- Updated `__init__.py` to export `MediaType` and `MessageType`.
+- removed FileTyped from core.
+- MessageProtocol's `msg_type` now supports `str|MessageType`
+
+
+### Fixed
+
+- MediaControllerProtocol now uses Any for file making file based plugins to define thier own file handling ref.
+
+---
+
+### [0.7.2] - 2026-04-30
+
+### Added
+
+- added runtime_checkable to MessageProtocol , ChatProtocol , StorageProtocol
+- Readme updated for better installations.
+
+### Changed
+
+- None
+
+### Fixed
+
+- None
+
+
+---
+
+### [0.7.1] - 2026-04-21
+
+### Added
+
+- Pre-commit CI workflow to enforce code formatting and linting.
+- PePy Tech badge and title to README.
+
+### Changed
+
+- Streamlined and updated `README.md` documentation.
+
+### Fixed
+
+- None
+
+---
+
+### [0.7.0] - 2026-04-15
 
 ### Added
 
